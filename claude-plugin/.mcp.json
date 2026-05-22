@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ia-webmaster": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-gateway/dist/index.js"]
+    }
+  }
+}

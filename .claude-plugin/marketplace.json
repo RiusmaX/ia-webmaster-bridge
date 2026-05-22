@@ -1,0 +1,13 @@
+{
+  "name": "ia-webmaster-bridge",
+  "owner": {
+    "name": "Marius Sergent"
+  },
+  "plugins": [
+    {
+      "name": "ia-webmaster",
+      "source": "./claude-plugin",
+      "description": "Webmaster WordPress piloté par IA : piloter un site WordPress (contenu, médias, menus, configuration, diagnostic) depuis Claude Code, via un adaptateur sécurisé (signature HMAC, journal d'audit, garde-fous)."
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "baseUrl": "http://site-local.example",
+  "keyId": "iawm_xxxxxxxxxxxx",
+  "secret": "REMPLACER_PAR_LE_SECRET_DE_LA_PAGE_ADMIN"
+}

@@ -1,0 +1,17 @@
+# Dépendances Node
+node_modules/
+
+# Configuration sensible — NE JAMAIS publier (secret HMAC, URL du site)
+config.json
+
+# Build du pont MCP : seul le bundle autonome est versionné
+claude-plugin/mcp-gateway/dist/*
+!claude-plugin/mcp-gateway/dist/index.js
+
+# Connexion MCP locale temporaire (chemin absolu, propre au poste de dev)
+/.mcp.json
+
+# Divers
+*.log
+.DS_Store
+Thumbs.db

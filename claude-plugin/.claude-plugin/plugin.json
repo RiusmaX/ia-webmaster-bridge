@@ -1,0 +1,8 @@
+{
+  "name": "ia-webmaster",
+  "version": "0.1.0",
+  "description": "Webmaster WordPress piloté par IA : connecte Claude à un site WordPress (contenu, médias, menus, configuration, diagnostic) via l'adaptateur IA Webmaster Bridge — authentification signée et garde-fous.",
+  "author": {
+    "name": "Marius Sergent"
+  }
+}

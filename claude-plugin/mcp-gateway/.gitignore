@@ -1,0 +1,9 @@
+# Dépendances
+node_modules/
+
+# Build : seul le bundle autonome dist/index.js est versionné
+dist/*
+!dist/index.js
+
+# Configuration sensible (URL du site + secret HMAC) — ne jamais versionner
+config.json
