@@ -31560,6 +31560,48 @@ function registerDivi(server, client) {
     async (args) => toToolResult("divi/page/read", await client.post("/divi/page/read", args))
   );
   server.registerTool(
+    "iawm_divi_library_list",
+    {
+      title: "Lister la biblioth\xE8que Divi",
+      description: "Liste les \xE9l\xE9ments disponibles dans la biblioth\xE8que Divi locale (et Cloud si connect\xE9) : layouts, sections, rows ou modules. Renvoie categories, packs, tags et items.",
+      inputSchema: {
+        type: external_exports.enum(["layout", "section", "row", "module"]).optional().describe("Type d'\xE9l\xE9ments \xE0 lister (d\xE9faut : layout)"),
+        exclude: external_exports.array(external_exports.string()).optional().describe("IDs \xE0 exclure")
+      }
+    },
+    async (args) => toToolResult("divi/library/list", await client.post("/divi/library/list", args))
+  );
+  server.registerTool(
+    "iawm_divi_library_item",
+    {
+      title: "R\xE9cup\xE9rer un item de la biblioth\xE8que Divi",
+      description: "R\xE9cup\xE8re le contenu complet d'un item de la biblioth\xE8que Divi (layout, section, row, module) : balisage pr\xEAt \xE0 l'emploi + global colors + global variables du site.",
+      inputSchema: {
+        id: external_exports.union([external_exports.number(), external_exports.string()]).describe("Identifiant de l'item"),
+        library_type: external_exports.string().optional().describe("Type (d\xE9faut : layout)"),
+        built_for: external_exports.string().optional().describe("Pour quel post type (d\xE9faut : page)"),
+        content_type: external_exports.string().optional().describe("Type de contenu (d\xE9faut : layout)")
+      }
+    },
+    async (args) => toToolResult("divi/library/item", await client.post("/divi/library/item", args))
+  );
+  server.registerTool(
+    "iawm_divi_cloud_status",
+    {
+      title: "\xC9tat Divi Cloud",
+      description: "\xC9tat de la connexion \xE0 Divi Cloud : licence Elegant Themes pr\xE9sente, identifiant du compte, pr\xE9sence d'un cloudToken (sans exposer sa valeur)."
+    },
+    async () => toToolResult("divi/cloud/status", await client.post("/divi/cloud/status", {}))
+  );
+  server.registerTool(
+    "iawm_divi_global_data",
+    {
+      title: "Design system Divi (global data)",
+      description: "R\xE9cup\xE8re le design system Divi du site : global colors (gcid-*), global variables (variables CSS), global fonts. \xC0 utiliser AVANT de g\xE9n\xE9rer un layout pour r\xE9f\xE9rencer les couleurs/fontes globales."
+    },
+    async () => toToolResult("divi/global-data", await client.post("/divi/global-data", {}))
+  );
+  server.registerTool(
     "iawm_divi_page_write",
     {
       title: "\xC9crire un layout Divi 5",

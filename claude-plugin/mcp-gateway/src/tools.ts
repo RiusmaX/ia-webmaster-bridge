@@ -620,6 +620,59 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   );
 
   server.registerTool(
+    "iawm_divi_library_list",
+    {
+      title: "Lister la bibliothèque Divi",
+      description:
+        "Liste les éléments disponibles dans la bibliothèque Divi locale (et Cloud si connecté) : layouts, sections, rows ou modules. Renvoie categories, packs, tags et items.",
+      inputSchema: {
+        type: z
+          .enum(["layout", "section", "row", "module"])
+          .optional()
+          .describe("Type d'éléments à lister (défaut : layout)"),
+        exclude: z.array(z.string()).optional().describe("IDs à exclure"),
+      },
+    },
+    async (args) => toToolResult("divi/library/list", await client.post("/divi/library/list", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_library_item",
+    {
+      title: "Récupérer un item de la bibliothèque Divi",
+      description:
+        "Récupère le contenu complet d'un item de la bibliothèque Divi (layout, section, row, module) : balisage prêt à l'emploi + global colors + global variables du site.",
+      inputSchema: {
+        id: z.union([z.number(), z.string()]).describe("Identifiant de l'item"),
+        library_type: z.string().optional().describe("Type (défaut : layout)"),
+        built_for: z.string().optional().describe("Pour quel post type (défaut : page)"),
+        content_type: z.string().optional().describe("Type de contenu (défaut : layout)"),
+      },
+    },
+    async (args) => toToolResult("divi/library/item", await client.post("/divi/library/item", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_cloud_status",
+    {
+      title: "État Divi Cloud",
+      description:
+        "État de la connexion à Divi Cloud : licence Elegant Themes présente, identifiant du compte, présence d'un cloudToken (sans exposer sa valeur).",
+    },
+    async () => toToolResult("divi/cloud/status", await client.post("/divi/cloud/status", {})),
+  );
+
+  server.registerTool(
+    "iawm_divi_global_data",
+    {
+      title: "Design system Divi (global data)",
+      description:
+        "Récupère le design system Divi du site : global colors (gcid-*), global variables (variables CSS), global fonts. À utiliser AVANT de générer un layout pour référencer les couleurs/fontes globales.",
+    },
+    async () => toToolResult("divi/global-data", await client.post("/divi/global-data", {})),
+  );
+
+  server.registerTool(
     "iawm_divi_page_write",
     {
       title: "Écrire un layout Divi 5",

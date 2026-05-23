@@ -53,9 +53,13 @@ class IAWM_Divi {
 	 */
 	public static function register_routes() {
 		$routes = array(
-			'/divi/page/read'  => array( 'handle_page_read', 'guard_read' ),
-			'/divi/page/write' => array( 'handle_page_write', 'guard_write' ),
-			'/divi/status'     => array( 'handle_status', 'guard_read' ),
+			'/divi/page/read'      => array( 'handle_page_read', 'guard_read' ),
+			'/divi/page/write'     => array( 'handle_page_write', 'guard_write' ),
+			'/divi/status'         => array( 'handle_status', 'guard_read' ),
+			'/divi/library/list'   => array( 'handle_library_list', 'guard_read' ),
+			'/divi/library/item'   => array( 'handle_library_item', 'guard_read' ),
+			'/divi/cloud/status'   => array( 'handle_cloud_status', 'guard_read' ),
+			'/divi/global-data'    => array( 'handle_global_data', 'guard_read' ),
 		);
 
 		foreach ( $routes as $path => $config ) {
@@ -181,6 +185,211 @@ class IAWM_Divi {
 					'section_count'  => isset( $counts['divi/section'] ) ? $counts['divi/section'] : 0,
 				),
 				'layout'  => $output,
+			),
+			200
+		);
+	}
+
+	/**
+	 * Proxy interne vers une route divi/v1 protégée par nonce.
+	 *
+	 * Divi 5 protège ses routes REST par un nonce nommé selon le pattern :
+	 *   "{full_route}--{METHOD}"  (ex. "/divi/v1/divi-library--POST")
+	 *
+	 * On se connecte comme admin, on génère le nonce attendu, on injecte
+	 * dans le header X-ET-Nonce et on appelle rest_do_request().
+	 *
+	 * @param string $route    Route relative (ex. "/divi-library").
+	 * @param string $method   Méthode HTTP (POST par défaut).
+	 * @param array  $body     Corps JSON.
+	 * @return array { status, data, headers }
+	 */
+	protected static function call_divi_route( $route, $method = 'POST', $body = array() ) {
+		IAWM_Support::act_as_agent();
+
+		$namespace  = 'divi/v1';
+		$full_route = '/' . $namespace . '/' . ltrim( $route, '/' );
+		$nonce_name = $full_route . '--' . strtoupper( $method );
+		$nonce      = wp_create_nonce( $nonce_name );
+
+		$req = new WP_REST_Request( $method, $full_route );
+		$req->set_header( 'Content-Type', 'application/json' );
+		$req->set_header( 'X-ET-Nonce', $nonce );
+		if ( ! empty( $body ) ) {
+			$req->set_body( wp_json_encode( $body ) );
+		} else {
+			// Divi attend parfois un body JSON même vide.
+			$req->set_body( '{}' );
+		}
+
+		$response = rest_do_request( $req );
+
+		return array(
+			'status' => $response->get_status(),
+			'data'   => $response->get_data(),
+		);
+	}
+
+	/**
+	 * POST /divi/library/list — liste la library Divi locale (et Cloud si connecté).
+	 *
+	 * Paramètres :
+	 *   - type (string, optionnel) : "layout" (défaut) | "section" | "row" | "module".
+	 *
+	 * Renvoie : { categories, packs, tags, items } provenant de Divi.
+	 *
+	 * @param WP_REST_Request $request Requête.
+	 * @return WP_REST_Response
+	 */
+	public static function handle_library_list( $request ) {
+		$params  = IAWM_Support::json_params( $request );
+		$type    = isset( $params['type'] ) ? (string) $params['type'] : 'layout';
+		$exclude = isset( $params['exclude'] ) && is_array( $params['exclude'] ) ? $params['exclude'] : array();
+
+		$valid_types = array( 'layout', 'section', 'row', 'module' );
+		if ( ! in_array( $type, $valid_types, true ) ) {
+			return IAWM_Support::rest_error( 'invalid_type', "Type invalide. Attendu : " . implode( ', ', $valid_types ), 400 );
+		}
+
+		$res = self::call_divi_route( '/divi-library', 'POST', array(
+			'type'    => $type,
+			'exclude' => $exclude,
+		) );
+
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'divi_library_failed', 'Échec de l\'appel à divi-library.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+
+		// Aplatir : Divi renvoie { layout: { categories, packs, tags, items } }
+		// ou directement la structure selon le type.
+		$payload = $res['data'];
+		$root_key = $type; // ex. "layout" / "section"
+		if ( isset( $payload[ $root_key ] ) ) {
+			$payload = $payload[ $root_key ];
+		}
+
+		$summary = array(
+			'category_count' => isset( $payload['categories'] ) ? count( (array) $payload['categories'] ) : 0,
+			'pack_count'     => isset( $payload['packs'] ) ? count( (array) $payload['packs'] ) : 0,
+			'tag_count'      => isset( $payload['tags'] ) ? count( (array) $payload['tags'] ) : 0,
+			'item_count'     => isset( $payload['items'] ) ? count( (array) $payload['items'] ) : 0,
+		);
+
+		return new WP_REST_Response(
+			array(
+				'ok'      => true,
+				'type'    => $type,
+				'summary' => $summary,
+				'library' => $payload,
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /divi/library/item — récupère un item de la library Divi.
+	 *
+	 * Paramètres :
+	 *   - id (int|string, requis) : identifiant de l'item.
+	 *   - library_type (string, optionnel) : "layout" (défaut).
+	 *   - built_for (string, optionnel) : "page" (défaut).
+	 *   - content_type (string, optionnel) : "layout" (défaut).
+	 *
+	 * Renvoie : { content, globalColors, globalVariables }.
+	 *
+	 * @param WP_REST_Request $request Requête.
+	 * @return WP_REST_Response
+	 */
+	public static function handle_library_item( $request ) {
+		$params = IAWM_Support::json_params( $request );
+		if ( ! isset( $params['id'] ) || '' === $params['id'] ) {
+			return IAWM_Support::rest_error( 'invalid_id', 'id requis.', 400 );
+		}
+
+		$res = self::call_divi_route( '/divi-library/item', 'POST', array(
+			'id'           => $params['id'],
+			'libraryType'  => isset( $params['library_type'] ) ? $params['library_type'] : 'layout',
+			'builtFor'     => isset( $params['built_for'] ) ? $params['built_for'] : 'page',
+			'contentType'  => isset( $params['content_type'] ) ? $params['content_type'] : 'layout',
+		) );
+
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'divi_library_item_failed', 'Échec de l\'appel à divi-library/item.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+
+		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
+	}
+
+	/**
+	 * POST /divi/cloud/status — état de la connexion Divi Cloud.
+	 *
+	 * Récupère le cloudToken et l'identité de l'API Elegant Marketplace si
+	 * disponibles (sans exposer la clé d'API en clair).
+	 *
+	 * @param WP_REST_Request $request Requête.
+	 * @return WP_REST_Response
+	 */
+	public static function handle_cloud_status( $request ) {
+		unset( $request );
+
+		$token_res = self::call_divi_route( '/divi-library/cloud-token', 'POST', array() );
+
+		$marketplace = get_option( 'et_automatic_updates_options', array() );
+		$has_license = is_array( $marketplace ) && ! empty( $marketplace['username'] ) && ! empty( $marketplace['api_key'] );
+
+		$cloud_token = '';
+		if ( $token_res['status'] < 400 && is_array( $token_res['data'] ) ) {
+			$cloud_token = isset( $token_res['data']['cloudToken'] ) ? (string) $token_res['data']['cloudToken'] : '';
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'                       => true,
+				'has_elegant_license'      => $has_license,
+				'elegant_username'         => $has_license ? (string) $marketplace['username'] : null,
+				'cloud_token_present'      => '' !== $cloud_token,
+				// On NE renvoie PAS le token brut (sensible).
+				'cloud_token_length'       => strlen( $cloud_token ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /divi/global-data — récupère le design system Divi du site.
+	 *
+	 * Astuce : on récupère un item de la library Divi (n'importe lequel)
+	 * dont la réponse inclut systématiquement les global colors et
+	 * global variables. On peut aussi aller plus loin avec les routes
+	 * divi/v1/global-data/* directes.
+	 *
+	 * Cette route est utile pour piloter les pages générées en
+	 * référençant les variables du design system (gcid-*).
+	 *
+	 * @param WP_REST_Request $request Requête.
+	 * @return WP_REST_Response
+	 */
+	public static function handle_global_data( $request ) {
+		unset( $request );
+
+		// On essaie via un appel item avec id=1 pour piggybacker globalColors+globalVariables.
+		$res = self::call_divi_route( '/divi-library/item', 'POST', array(
+			'id'          => 1,
+			'libraryType' => 'layout',
+			'builtFor'    => 'page',
+			'contentType' => 'layout',
+		) );
+
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'global_data_unavailable', 'Impossible de récupérer le design system Divi.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+
+		$data = (array) $res['data'];
+		return new WP_REST_Response(
+			array(
+				'ok'              => true,
+				'global_colors'   => isset( $data['globalColors'] ) ? $data['globalColors'] : null,
+				'global_variables' => isset( $data['globalVariables'] ) ? $data['globalVariables'] : null,
 			),
 			200
 		);
