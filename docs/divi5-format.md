@@ -435,19 +435,252 @@ structure `innerContent.desktop.value.{text, linkUrl}`.
    simplifié (sans le bruit `desktop.value`).
 4. **Round-trip** : lire la page 19, la réécrire ailleurs, comparer.
 
-## Modules à explorer (TODO)
+## Modules avancés (page de référence n°29)
 
-Encore non rencontrés sur cette page — à peupler en Phase 3.2 :
+Documentés à partir de la 2e page de référence peuplée dans le builder dans
+le builder Divi 5.5.2.
 
-- `wp:divi/button` (bouton seul)
-- `wp:divi/heading` (titre dédié)
-- `wp:divi/video`
-- `wp:divi/gallery`
-- `wp:divi/testimonial`
-- `wp:divi/number-counter`
-- `wp:divi/form` (formulaire de contact)
-- `wp:divi/menu`
-- `wp:divi/code` (à éviter sauf nécessité)
+### `wp:divi/heading`
 
-Quand on en aura besoin, Marius pourra peupler une 2e page de référence
-avec ces modules, et on étendra cette doc.
+Module dédié pour les titres (alternative au `<h1>` dans `wp:divi/text`).
+
+```json
+{
+  "title": { "innerContent": { "desktop": { "value": "Your Title" } } }
+}
+```
+
+Plus simple que `wp:divi/text` quand on veut juste un titre. La balise
+HTML produite (`<h1>`, `<h2>`…) se règle via `module.advanced.headingLevel`.
+
+### `wp:divi/button`
+
+Bouton seul (à distinguer du bouton intégré au CTA / slide).
+
+```json
+{
+  "button": {
+    "innerContent": {
+      "desktop": {
+        "value": { "text": "Click Here", "linkUrl": "..." }
+      }
+    }
+  }
+}
+```
+
+**Astuce** : `linkUrl` peut être une **variable de contenu Divi** :
+
+```
+$variable({"type":"content","value":{"name":"home_url","settings":{}}})$
+```
+
+Variables de contenu connues : `home_url`, et probablement `page_url`,
+`site_url`, etc. Utile pour ne pas hardcoder les URLs.
+
+### `wp:divi/number-counter`
+
+Chiffre animé au scroll (idéal pour les KPIs).
+
+```json
+{
+  "title":  { "innerContent": { "desktop": { "value": "Clients" } } },
+  "number": {
+    "innerContent": { "desktop": { "value": "247" } },
+    "advanced":     { "enablePercentSign": { "desktop": { "value": "off" } } }
+  }
+}
+```
+
+`enablePercentSign` ajoute un `%` automatique (utile pour les taux).
+
+### `wp:divi/testimonial`
+
+Citation avec photo + nom.
+
+```json
+{
+  "content":  { "innerContent": { "desktop": { "value": "<p>Quote…</p>" } } },
+  "author":   { "innerContent": { "desktop": { "value": "Name" } } },
+  "portrait": {
+    "innerContent": {
+      "desktop": { "value": { "url": "..." } }
+    }
+  }
+}
+```
+
+Champ `job_title` (fonction) probablement aussi disponible — à vérifier.
+
+### `wp:divi/gallery`
+
+Galerie d'images, **liste d'IDs media en CSV**.
+
+```json
+{
+  "image": {
+    "advanced": {
+      "galleryIds": { "desktop": { "value": "32,33,34,35,36,37,38" } }
+    }
+  },
+  "galleryGrid": {
+    "decoration": {
+      "layout": {
+        "tablet": { "value": { "gridColumnCount": "3" } },
+        "phone":  { "value": { "gridColumnCount": "1" } }
+      }
+    }
+  }
+}
+```
+
+Les IDs renvoient à des attachments WP (post_type=attachment). À générer
+on uploade d'abord les images via `iawm_media_sideload` puis on
+récupère leurs IDs.
+
+### `wp:divi/video`
+
+Vidéo, **URL YouTube/Vimeo auto-détectée**.
+
+```json
+{
+  "video": {
+    "innerContent": {
+      "desktop": { "value": { "src": "https://www.youtube.com/watch?v=…" } }
+    }
+  }
+}
+```
+
+Pour une vidéo self-hosted, fournir l'URL `.mp4` directement.
+
+### `wp:divi/code`
+
+Bloc HTML brut. **À éviter sauf nécessité** — contourne la logique du
+builder et complique la maintenance.
+
+```json
+{
+  "content": { "innerContent": { "desktop": { "value": "<div>...</div>" } } }
+}
+```
+
+### Modules composés (nested)
+
+Quatre modules contiennent des enfants : `accordion`, `tabs`, `slider`,
+`contact-form`. Leurs enfants sont des blocs Divi à part entière dans
+`innerBlocks`.
+
+#### `wp:divi/accordion` + `wp:divi/accordion-item`
+
+```
+wp:divi/accordion
+└── wp:divi/accordion-item × N
+```
+
+Item :
+```json
+{
+  "title":   { "innerContent": { "desktop": { "value": "Question ?" } } },
+  "content": { "innerContent": { "desktop": { "value": "<p>Réponse…</p>" } } },
+  "module": {
+    "advanced": { "open": { "desktop": { "value": "on" } } }  // optionnel
+  }
+}
+```
+
+`open: "on"` ouvre l'item par défaut (souvent posé sur le premier).
+
+#### `wp:divi/tabs` + `wp:divi/tab`
+
+```
+wp:divi/tabs
+└── wp:divi/tab × N
+```
+
+Tab :
+```json
+{
+  "title":   { "innerContent": { "desktop": { "value": "Tab Title" } } },
+  "content": { "innerContent": { "desktop": { "value": "<p>…</p>" } } }
+}
+```
+
+#### `wp:divi/slider` + `wp:divi/slide`
+
+```
+wp:divi/slider
+└── wp:divi/slide × N
+```
+
+Slide :
+```json
+{
+  "title":   { "innerContent": { "desktop": { "value": "Slide Title" } } },
+  "content": { "innerContent": { "desktop": { "value": "<p>…</p>" } } },
+  "button":  {
+    "innerContent": {
+      "desktop": { "value": { "text": "Click Here", "linkUrl": "#" } }
+    }
+  }
+}
+```
+
+#### `wp:divi/contact-form` + `wp:divi/contact-field`
+
+```
+wp:divi/contact-form
+└── wp:divi/contact-field × N
+```
+
+Le form a un **uniqueId** UUID (auto-généré par le builder, à régénérer
+côté nous via `wp_generate_uuid4()` ou équivalent JS) :
+
+```json
+{
+  "module": {
+    "advanced": {
+      "uniqueId": { "desktop": { "value": "aa2b25f7-44fc-41da-af32-b665cedb10d0" } }
+    }
+  }
+}
+```
+
+Field :
+```json
+{
+  "fieldItem": {
+    "advanced": {
+      "fullwidth": { "desktop": { "value": "on" } },
+      "id":        { "desktop": { "value": "Name" } },
+      "type":      { "desktop": { "value": "input" } }
+    },
+    "innerContent": { "desktop": { "value": "Name" } }
+  },
+  "module": {
+    "decoration": {
+      "sizing": { "desktop": { "value": { "flexType": "12_24" } } }
+    }
+  }
+}
+```
+
+**Types de field** : `input` (texte court), `email`, `text` (textarea),
+probablement aussi `select`, `checkbox`, `radio`, `phone`. `flexType`
+contrôle la largeur (12_24 = demi, 24_24 = pleine).
+
+`id` est l'identifiant interne du champ (utilisé dans les notifications
+email reçues par le destinataire). À donner sans espaces.
+
+## Variables Divi (au-delà des couleurs)
+
+On a vu `$variable({"type":"color",...})$` pour les couleurs globales.
+**Le même mécanisme** sert pour d'autres types :
+
+| `type`     | Utilisation | Exemples de `name` observés |
+|-----------|-------------|------------------------------|
+| `color`   | Couleur globale | `gcid-primary-color`, `gcid-heading-color`, … |
+| `content` | Contenu dynamique | `home_url`, probablement `page_url`, `post_title`, … |
+
+D'autres types possibles (à confirmer) : `font`, `text`, `image`,
+`number`, `link`.

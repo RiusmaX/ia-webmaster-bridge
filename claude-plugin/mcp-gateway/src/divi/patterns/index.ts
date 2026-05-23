@@ -43,3 +43,18 @@ export type { CtaBannerOptions } from "./cta-banner.js";
 
 export { imageTextSplit } from "./image-text-split.js";
 export type { ImageTextSplitOptions } from "./image-text-split.js";
+
+export { testimonials } from "./testimonials.js";
+export type { TestimonialsOptions, TestimonialItem } from "./testimonials.js";
+
+export { faqAccordion } from "./faq-accordion.js";
+export type { FaqAccordionOptions, FaqItem } from "./faq-accordion.js";
+
+export { numbersBar } from "./numbers-bar.js";
+export type { NumbersBarOptions, NumberItem } from "./numbers-bar.js";
+
+export { videoSection } from "./video-section.js";
+export type { VideoSectionOptions } from "./video-section.js";
+
+export { contactSection } from "./contact-section.js";
+export type { ContactSectionOptions } from "./contact-section.js";

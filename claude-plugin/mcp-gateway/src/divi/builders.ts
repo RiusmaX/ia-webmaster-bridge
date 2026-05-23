@@ -301,3 +301,306 @@ export function image(options: ImageOptions): GutenbergBlock {
     },
   });
 }
+
+/**
+ * Module Heading (titre dédié, alternative à text avec h1).
+ */
+export interface HeadingOptions {
+  text: string;
+}
+
+export function heading(options: HeadingOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Heading, {
+    title: { innerContent: desktopValue(options.text) },
+  });
+}
+
+/**
+ * Module Button (bouton seul). linkUrl peut être une variable Divi
+ * (ex. `$variable({"type":"content","value":{"name":"home_url",…}})$`).
+ */
+export interface ButtonOptions {
+  text: string;
+  linkUrl: string;
+}
+
+export function button(options: ButtonOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Button, {
+    button: {
+      innerContent: desktopValue({
+        text: options.text,
+        linkUrl: options.linkUrl,
+      }),
+    },
+  });
+}
+
+/**
+ * Module Number Counter (chiffre animé au scroll, idéal pour KPIs).
+ */
+export interface NumberCounterOptions {
+  title: string;
+  /** Valeur à afficher (string pour supporter "1.5k" si besoin). */
+  number: string;
+  /** Ajoute un "%" auto. Défaut : false. */
+  percent?: boolean;
+}
+
+export function numberCounter(options: NumberCounterOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.NumberCounter, {
+    title: { innerContent: desktopValue(options.title) },
+    number: {
+      innerContent: desktopValue(options.number),
+      advanced: {
+        enablePercentSign: desktopValue(options.percent ? "on" : "off"),
+      },
+    },
+  });
+}
+
+/**
+ * Module Testimonial (citation client avec photo).
+ */
+export interface TestimonialOptions {
+  quoteHtml: string;
+  author: string;
+  /** URL de la photo (optionnel). */
+  portraitUrl?: string;
+}
+
+export function testimonial(options: TestimonialOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Testimonial, {
+    content: { innerContent: desktopValue(options.quoteHtml) },
+    author: { innerContent: desktopValue(options.author) },
+    ...(options.portraitUrl
+      ? {
+          portrait: {
+            innerContent: desktopValue({ url: options.portraitUrl }),
+          },
+        }
+      : {}),
+  });
+}
+
+/**
+ * Module Gallery (liste d'IDs media WP).
+ */
+export interface GalleryOptions {
+  /** IDs d'attachments WP. */
+  ids: number[];
+  /** Nb de colonnes en desktop. Défaut : 4. */
+  columns?: number;
+}
+
+export function gallery(options: GalleryOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Gallery, {
+    image: {
+      advanced: {
+        galleryIds: desktopValue(options.ids.join(",")),
+      },
+    },
+    galleryGrid: {
+      decoration: {
+        layout: {
+          desktop: { value: { gridColumnCount: String(options.columns ?? 4) } },
+          tablet: { value: { gridColumnCount: "3" } },
+          phone: { value: { gridColumnCount: "1" } },
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Module Video (URL YouTube/Vimeo/mp4).
+ */
+export interface VideoOptions {
+  src: string;
+}
+
+export function video(options: VideoOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Video, {
+    video: {
+      innerContent: desktopValue({ src: options.src }),
+    },
+  });
+}
+
+/**
+ * Module Code (HTML brut — à utiliser avec parcimonie).
+ */
+export interface CodeOptions {
+  html: string;
+}
+
+export function code(options: CodeOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Code, {
+    content: { innerContent: desktopValue(options.html) },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Modules composés (nested)                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Item d'accordion.
+ */
+export interface AccordionItemOptions {
+  title: string;
+  contentHtml: string;
+  /** Ouvert par défaut ? */
+  open?: boolean;
+}
+
+export function accordionItem(options: AccordionItemOptions): GutenbergBlock {
+  const attrs: Record<string, unknown> = {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) },
+  };
+  if (options.open) {
+    attrs.module = { advanced: { open: desktopValue("on") } };
+  }
+  return makeBlock(DiviBlock.AccordionItem, attrs);
+}
+
+/**
+ * Module Accordion (contient des accordion-item).
+ */
+export function accordion(items: AccordionItemOptions[]): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.Accordion,
+    {},
+    items.map((item) => accordionItem(item)),
+  );
+}
+
+/**
+ * Tab d'un module Tabs.
+ */
+export interface TabOptions {
+  title: string;
+  contentHtml: string;
+}
+
+export function tab(options: TabOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Tab, {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) },
+  });
+}
+
+/**
+ * Module Tabs (contient des tab).
+ */
+export function tabs(items: TabOptions[]): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.Tabs,
+    {},
+    items.map((item) => tab(item)),
+  );
+}
+
+/**
+ * Slide d'un module Slider.
+ */
+export interface SlideOptions {
+  title: string;
+  contentHtml: string;
+  buttonText?: string;
+  buttonUrl?: string;
+}
+
+export function slide(options: SlideOptions): GutenbergBlock {
+  const attrs: Record<string, unknown> = {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) },
+  };
+  if (options.buttonText) {
+    attrs.button = {
+      innerContent: desktopValue({
+        text: options.buttonText,
+        linkUrl: options.buttonUrl ?? "#",
+      }),
+    };
+  }
+  return makeBlock(DiviBlock.Slide, attrs);
+}
+
+/**
+ * Module Slider (contient des slide).
+ */
+export function slider(items: SlideOptions[]): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.Slider,
+    {},
+    items.map((item) => slide(item)),
+  );
+}
+
+/**
+ * Champ d'un formulaire de contact.
+ */
+export interface ContactFieldOptions {
+  /** Identifiant interne (sans espaces : "name", "email", "message"). */
+  id: string;
+  /** Libellé visible. */
+  label: string;
+  /** Type. */
+  type?: "input" | "email" | "text" | "phone" | "select" | "checkbox" | "radio";
+  /** Champ pleine largeur ? Défaut : false (sauf "text"). */
+  fullwidth?: boolean;
+}
+
+export function contactField(options: ContactFieldOptions): GutenbergBlock {
+  const type = options.type ?? "input";
+  const fullwidth = options.fullwidth ?? type === "text";
+
+  return makeBlock(DiviBlock.ContactField, {
+    fieldItem: {
+      advanced: {
+        fullwidth: desktopValue(fullwidth ? "on" : "off"),
+        id: desktopValue(options.id),
+        type: desktopValue(type),
+      },
+      innerContent: desktopValue(options.label),
+    },
+    module: {
+      decoration: {
+        sizing: desktopValue({ flexType: fullwidth ? "24_24" : "12_24" }),
+      },
+    },
+  });
+}
+
+/**
+ * Module Contact Form (contient des contact-field).
+ *
+ * Le uniqueId est généré automatiquement (UUID-like) — utilisé par Divi
+ * pour identifier les soumissions dans les notifications email.
+ */
+export interface ContactFormOptions {
+  fields: ContactFieldOptions[];
+  /** UUID custom (sinon généré). */
+  uniqueId?: string;
+}
+
+function generateUniqueId(): string {
+  // Format UUID-like minimaliste suffisant pour Divi.
+  const hex = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
+  return `${hex()}${hex()}-${hex()}-${hex()}-${hex()}-${hex()}${hex()}${hex()}`;
+}
+
+export function contactForm(options: ContactFormOptions): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.ContactForm,
+    {
+      module: {
+        advanced: {
+          uniqueId: desktopValue(options.uniqueId ?? generateUniqueId()),
+        },
+      },
+    },
+    options.fields.map((f) => contactField(f)),
+  );
+}
