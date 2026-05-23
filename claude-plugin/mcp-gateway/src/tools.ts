@@ -587,6 +587,39 @@ function registerSeo(server: McpServer, client: IawmClient): void {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Divi 5 (lecture + manipulation de layouts)                         */
+/* ------------------------------------------------------------------ */
+
+function registerDivi(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_divi_status",
+    {
+      title: "État de Divi 5",
+      description:
+        "Indique si Divi 5 est actif sur le site, sa version, le thème courant, et la capacité de parser des layouts au format Gutenberg.",
+    },
+    async () => toToolResult("divi/status", await client.post("/divi/status", {})),
+  );
+
+  server.registerTool(
+    "iawm_divi_page_read",
+    {
+      title: "Lire une page Divi 5",
+      description:
+        "Lit une page Divi 5 et projette son contenu en arbre structuré (sections > rows > columns > modules) avec attributs normalisés. Trois modes : tree (défaut, hiérarchique), flat (liste linéaire avec chemins), raw (parse_blocks brut). Renvoie également des statistiques (nb de sections, comptage par type de bloc).",
+      inputSchema: {
+        post_id: z.number().int().describe("Identifiant du post/page"),
+        mode: z
+          .enum(["tree", "flat", "raw"])
+          .optional()
+          .describe("Format de sortie : tree (défaut) | flat | raw"),
+      },
+    },
+    async (args) => toToolResult("divi/page/read", await client.post("/divi/page/read", args)),
+  );
+}
+
 /**
  * Enregistre tous les outils du pont sur le serveur MCP.
  *
@@ -603,4 +636,5 @@ export function registerTools(server: McpServer, client: IawmClient): void {
   registerConfig(server, client);
   registerPlugins(server, client);
   registerSeo(server, client);
+  registerDivi(server, client);
 }

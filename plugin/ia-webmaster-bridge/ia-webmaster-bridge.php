@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       IA Webmaster Bridge
  * Description:       Adaptateur permettant à une IA (Claude) d'agir comme webmaster sur ce site WordPress. Expose une API REST contrôlée et signée sous le namespace ia-webmaster/v1.
- * Version:           0.13.0
+ * Version:           0.14.0
  * Requires at least: 7.0
  * Requires PHP:      7.4
  * Author:            Marius Sergent
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'IAWM_VERSION', '0.13.0' );
+define( 'IAWM_VERSION', '0.14.0' );
 define( 'IAWM_REST_NAMESPACE', 'ia-webmaster/v1' );
 define( 'IAWM_PLUGIN_FILE', __FILE__ );
 define( 'IAWM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -37,6 +37,7 @@ require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-diagnostics.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-config.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-plugins.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-seo.php';
+require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-divi.php';
 
 // Création / migration du schéma de la base lors de l'activation du plugin.
 register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Audit', 'maybe_upgrade' ) );
@@ -52,4 +53,5 @@ IAWM_Diagnostics::init();
 IAWM_Config::init();
 IAWM_Plugins::init();
 IAWM_Seo::init();
+IAWM_Divi::init();
 IAWM_Admin::init();

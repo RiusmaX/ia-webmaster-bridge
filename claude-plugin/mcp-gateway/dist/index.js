@@ -31538,6 +31538,28 @@ function registerSeo(server, client) {
     async (args) => toToolResult("seo/page/update", await client.post("/seo/page/update", args))
   );
 }
+function registerDivi(server, client) {
+  server.registerTool(
+    "iawm_divi_status",
+    {
+      title: "\xC9tat de Divi 5",
+      description: "Indique si Divi 5 est actif sur le site, sa version, le th\xE8me courant, et la capacit\xE9 de parser des layouts au format Gutenberg."
+    },
+    async () => toToolResult("divi/status", await client.post("/divi/status", {}))
+  );
+  server.registerTool(
+    "iawm_divi_page_read",
+    {
+      title: "Lire une page Divi 5",
+      description: "Lit une page Divi 5 et projette son contenu en arbre structur\xE9 (sections > rows > columns > modules) avec attributs normalis\xE9s. Trois modes : tree (d\xE9faut, hi\xE9rarchique), flat (liste lin\xE9aire avec chemins), raw (parse_blocks brut). Renvoie \xE9galement des statistiques (nb de sections, comptage par type de bloc).",
+      inputSchema: {
+        post_id: external_exports.number().int().describe("Identifiant du post/page"),
+        mode: external_exports.enum(["tree", "flat", "raw"]).optional().describe("Format de sortie : tree (d\xE9faut) | flat | raw")
+      }
+    },
+    async (args) => toToolResult("divi/page/read", await client.post("/divi/page/read", args))
+  );
+}
 function registerTools(server, client) {
   registerSystem(server, client);
   registerContent(server, client);
@@ -31548,6 +31570,7 @@ function registerTools(server, client) {
   registerConfig(server, client);
   registerPlugins(server, client);
   registerSeo(server, client);
+  registerDivi(server, client);
 }
 
 // src/index.ts
