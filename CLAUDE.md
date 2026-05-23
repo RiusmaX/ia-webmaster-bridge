@@ -38,10 +38,25 @@ Voir `docs/decisions.md` pour le détail et le contexte. En résumé :
 
 ## État courant
 
-**Phases 0 à 2 terminées** — connexion sécurisée (authentification HMAC, journal
-d'audit, garde-fous) et plan contenu complet (contenu, médias, taxonomies, menus,
-configuration, diagnostic). Plugin WordPress en v0.11.0 ; plugin Claude Code
-packagé et diffusé en open source. **Phase 3 — Divi 5** à venir. Voir
+**Phases 0 à 3 terminées** — système complet capable de **générer un site
+WordPress + Divi 5 depuis un prompt** (header, footer, page d'accueil,
+contenu, SEO).
+
+- **Plugin WordPress** : v0.18.3, ~12 modules, ~56 endpoints REST.
+- **Pont MCP gateway** : v0.12.0, bundle 1.1 Mo, 38+ outils MCP.
+- **Plugin Claude Code** : v0.2.0, 7 skills (méthodes webmaster + design
+  + marketing + SEO + créer page + créer page Divi + audit).
+- **Couverture Divi 5** : 41 modules natifs implémentés (sur ~99
+  inventoriés), 13 patterns paramétrables (hero, features3col, pricing,
+  testimonials, team, FAQ, headerSimple, footerStandard…), Theme Builder
+  complet (header / footer / templates dynamiques), round-trip fidèle au
+  bit.
+- **SEO Rank Math** intégré (API normalisée, prête pour Yoast).
+- **Test E2E réussi** : page d'accueil complète + header + footer + SEO
+  générés en draft en une commande, à partir d'un brief client.
+
+Reste : Phase 4 (infrastructure : thèmes, BDD, sauvegardes), Phase 5
+(durcissement sécurité), modules WooCommerce, backend SEO Yoast. Voir
 `docs/roadmap.md`.
 
 ## Règles de collaboration

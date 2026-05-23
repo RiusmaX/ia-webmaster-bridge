@@ -11,6 +11,14 @@ claude-plugin/mcp-gateway/dist/*
 # Connexion MCP locale temporaire (chemin absolu, propre au poste de dev)
 /.mcp.json
 
+# Scripts spécifiques à des projets / clients — JAMAIS dans le repo public.
+# Le repo doit rester agnostique : il fournit le plugin + le connecteur,
+# pas des intégrations propres à un site donné. Les scripts par client
+# vont dans un dossier externe au repo (ex. ../iawm-clients/<nom>/).
+tools/*-client.mjs
+tools/*-client.php
+tools/clients/
+
 # Divers
 *.log
 .DS_Store

@@ -1,6 +1,6 @@
 # Roadmap
 
-> Statut : Vivant · Dernière mise à jour : 2026-05-23
+> Statut : Phases 0-3 complètes · Dernière mise à jour : 2026-05-23
 
 Plan d'action par phases. Les cases reflètent l'avancement réel. La sécurité
 (`specs/02-securite.md`) est transversale : construite dès la Phase 1 et durcie
@@ -32,15 +32,25 @@ en continu, la Phase 5 étant la passe de durcissement formelle.
 - [x] Capacités de diagnostic & accès aux logs (debug.log, Site Health, extensions)
 - [x] Garde-fous : mode dry-run, brouillon avant publication, kill switch
 
-## Phase 3 — Plan Divi 5 *(prioritaire)*
+## Phase 3 — Plan Divi 5 *(complète)*
 
-- [x] Cartographie de l'API `divi/v1` (102 routes, voir `docs/divi5-api-index.md`)
-- [ ] Rétro-ingénierie du format de layout Divi 5 sur le site local (page de référence en cours)
-- [ ] Lecture d'un layout Divi 5 existant
-- [ ] Bibliothèque de génération de layouts (`lib/divi/`)
-- [ ] Création d'une page Divi 5 simple de bout en bout
-- [ ] Aller-retour fiable (générer → éditer dans le builder → relire)
-- [ ] Lecture/import depuis la bibliothèque Divi Cloud
+- [x] **3.1** — Cartographie complète de l'API `divi/v1` (102 routes documentées dans `docs/divi5-api-index.md`)
+- [x] **3.1** — Rétro-ingénierie du format Divi 5 (3 pages de référence peuplées : id 19, 29, 53)
+- [x] **3.1** — Catalogue exhaustif des ~99 modules natifs (`docs/divi5-modules-catalog.md`)
+- [x] **3.2** — Endpoint `/divi/page/read` (lecture en arbre : tree / flat / raw)
+- [x] **3.2** — Endpoint `/divi/page/write` (écriture content + blocks)
+- [x] **3.2** — Round-trip fidèle au bit (bug `wp_slash` corrigé)
+- [x] **3.3** — Endpoint `/divi/library/list` + `/library/item` + `/library/local`
+- [x] **3.3** — Endpoint `/divi/cloud/status` + `/divi/global-data` (design system)
+- [x] **3.3** — Workflow hybride Divi Cloud documenté (Save to Library côté builder)
+- [x] **3.4** — Bibliothèque `lib/divi/` (builders + 11 patterns paramétrables)
+- [x] **3.4** — Skill `creer-page-divi-wordpress` (workflow prompt → page)
+- [x] **3.5** — 41 modules implémentés (modules avancés, structurels, dynamiques)
+- [x] **3.5** — 13 patterns : hero, features3col, ctaBanner, imageTextSplit, testimonials, faqAccordion, numbersBar, videoSection, contactSection, pricing3col, teamGrid, headerSimple, footerStandard
+- [x] **3.6** — Theme Builder : endpoints `/divi/theme-builder/*` (8 routes)
+- [x] **3.6** — Wrapper `setup-site-defaults` (header + footer + template default en 1 appel)
+- [x] **3.6** — Logique override Divi décodée (`enabled=true + id=0` pour rendu natif)
+- [x] **Test E2E réel** : page d'accueil complète (header + footer + 10 sections + SEO Rank Math) générée en draft sur le site de test à partir d'un brief — validation du workflow prompt → site
 
 ## Phase 4 — Plan infrastructure
 
@@ -61,13 +71,14 @@ en continu, la Phase 5 étant la passe de durcissement formelle.
 
 ## Phase 6 — Couche webmaster
 
-- [x] Skills Claude Code (créer une landing page, audit SEO, debug, etc.)
+- [x] Skills Claude Code de base (webmaster, créer page, audit)
 - [x] Empaquetage en plugin Claude Code + diffusion open source (GitHub, GPL-3.0)
 - [x] Skill `design-frontend-wordpress` (hiérarchie, typo, couleurs, espacement, mobile-first)
 - [x] Skill `marketing-conversion-wordpress` (AIDA/PAS/FAB, preuve sociale, hiérarchie des CTA)
 - [x] Skill `seo-wordpress` (audit SEO, Rank Math, structure sémantique)
-- [ ] API SEO normalisée avec backend Rank Math (implémentée, à enrichir)
-- [ ] Backend Yoast SEO en alternative
+- [x] Skill `creer-page-divi-wordpress` (workflow prompt → page Divi complète)
+- [x] API SEO normalisée avec backend Rank Math
+- [ ] Backend Yoast SEO en alternative (#33)
 - [ ] Fichier de contexte par site
 - [ ] Workflows webmaster documentés
 - [ ] Éventuelles routines planifiées
