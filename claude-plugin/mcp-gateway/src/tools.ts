@@ -482,6 +482,111 @@ function registerConfig(server: McpServer, client: IawmClient): void {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Plugins (infrastructure — installation/activation)                 */
+/* ------------------------------------------------------------------ */
+
+function registerPlugins(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_plugins_info",
+    {
+      title: "Informations sur un plugin WP.org",
+      description:
+        "Récupère les métadonnées d'un plugin du dépôt WordPress.org à partir de son slug (version, auteur, compatibilité, dernière mise à jour).",
+      inputSchema: {
+        slug: z.string().describe("Slug WordPress.org (ex. rank-math-seo)"),
+      },
+    },
+    async (args) => toToolResult("plugins/info", await client.post("/plugins/info", args)),
+  );
+
+  server.registerTool(
+    "iawm_plugins_install",
+    {
+      title: "Installer un plugin",
+      description:
+        "Installe un plugin depuis le dépôt WordPress.org. Avec activate=true, l'active dans la foulée. Renvoie le chemin du fichier-plugin installé.",
+      inputSchema: {
+        slug: z.string().describe("Slug WordPress.org du plugin à installer"),
+        activate: z.boolean().optional().describe("Activer immédiatement après installation (défaut false)"),
+      },
+    },
+    async (args) => toToolResult("plugins/install", await client.post("/plugins/install", args)),
+  );
+
+  server.registerTool(
+    "iawm_plugins_activate",
+    {
+      title: "Activer un plugin",
+      description:
+        "Active un plugin déjà installé. Le file est le chemin renvoyé par diagnostics/plugins (ex. rank-math-seo/rank-math.php).",
+      inputSchema: {
+        file: z.string().describe("Fichier-plugin (ex. rank-math-seo/rank-math.php)"),
+      },
+    },
+    async (args) => toToolResult("plugins/activate", await client.post("/plugins/activate", args)),
+  );
+
+  server.registerTool(
+    "iawm_plugins_deactivate",
+    {
+      title: "Désactiver un plugin",
+      description:
+        "Désactive un plugin. Le plugin IA Webmaster Bridge ne peut pas être désactivé via l'API (garde-fou).",
+      inputSchema: {
+        file: z.string().describe("Fichier-plugin à désactiver"),
+      },
+    },
+    async (args) => toToolResult("plugins/deactivate", await client.post("/plugins/deactivate", args)),
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* SEO (Rank Math / Yoast)                                            */
+/* ------------------------------------------------------------------ */
+
+function registerSeo(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_seo_status",
+    {
+      title: "État du backend SEO",
+      description:
+        "Indique quel plugin SEO est actif sur le site (Rank Math prioritaire, Yoast secondaire) et la liste des champs supportés par l'API.",
+    },
+    async () => toToolResult("seo/status", await client.post("/seo/status", {})),
+  );
+
+  server.registerTool(
+    "iawm_seo_page_get",
+    {
+      title: "Lire le SEO d'une page",
+      description:
+        "Renvoie les méta-données SEO d'un post : meta_title, meta_description, focus_keyword, canonical_url, robots, Open Graph, Twitter.",
+      inputSchema: {
+        post_id: z.number().int().describe("Identifiant du post/page"),
+      },
+    },
+    async (args) => toToolResult("seo/page/get", await client.post("/seo/page/get", args)),
+  );
+
+  server.registerTool(
+    "iawm_seo_page_update",
+    {
+      title: "Modifier le SEO d'une page",
+      description:
+        "Met à jour les méta-données SEO d'un post. Les noms de champs sont normalisés (indépendants du backend) : meta_title, meta_description, focus_keyword, canonical_url, robots_noindex, robots_nofollow, og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id. dry_run=true prévisualise.",
+      inputSchema: {
+        post_id: z.number().int().describe("Identifiant du post/page"),
+        fields: z
+          .record(z.string(), z.unknown())
+          .describe("Champs à mettre à jour. Mettre null/\"\" pour supprimer un champ."),
+        dry_run: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("seo/page/update", await client.post("/seo/page/update", args)),
+  );
+}
+
 /**
  * Enregistre tous les outils du pont sur le serveur MCP.
  *
@@ -496,4 +601,6 @@ export function registerTools(server: McpServer, client: IawmClient): void {
   registerMenu(server, client);
   registerDiagnostics(server, client);
   registerConfig(server, client);
+  registerPlugins(server, client);
+  registerSeo(server, client);
 }

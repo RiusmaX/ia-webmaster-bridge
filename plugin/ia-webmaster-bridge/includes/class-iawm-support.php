@@ -63,9 +63,14 @@ class IAWM_Support {
 	 * @param string $code    Code d'erreur.
 	 * @param string $message Message lisible.
 	 * @param int    $status  Code HTTP.
+	 * @param array  $extra   Données additionnelles à joindre (optionnel).
 	 * @return WP_Error
 	 */
-	public static function rest_error( $code, $message, $status ) {
-		return new WP_Error( $code, $message, array( 'status' => $status ) );
+	public static function rest_error( $code, $message, $status, $extra = array() ) {
+		$data = array( 'status' => $status );
+		if ( is_array( $extra ) && ! empty( $extra ) ) {
+			$data = array_merge( $data, $extra );
+		}
+		return new WP_Error( $code, $message, $data );
 	}
 }

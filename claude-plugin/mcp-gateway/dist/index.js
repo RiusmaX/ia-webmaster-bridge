@@ -31457,6 +31457,87 @@ function registerConfig(server, client) {
     async (args) => toToolResult("config/users/update", await client.post("/config/users/update", args))
   );
 }
+function registerPlugins(server, client) {
+  server.registerTool(
+    "iawm_plugins_info",
+    {
+      title: "Informations sur un plugin WP.org",
+      description: "R\xE9cup\xE8re les m\xE9tadonn\xE9es d'un plugin du d\xE9p\xF4t WordPress.org \xE0 partir de son slug (version, auteur, compatibilit\xE9, derni\xE8re mise \xE0 jour).",
+      inputSchema: {
+        slug: external_exports.string().describe("Slug WordPress.org (ex. rank-math-seo)")
+      }
+    },
+    async (args) => toToolResult("plugins/info", await client.post("/plugins/info", args))
+  );
+  server.registerTool(
+    "iawm_plugins_install",
+    {
+      title: "Installer un plugin",
+      description: "Installe un plugin depuis le d\xE9p\xF4t WordPress.org. Avec activate=true, l'active dans la foul\xE9e. Renvoie le chemin du fichier-plugin install\xE9.",
+      inputSchema: {
+        slug: external_exports.string().describe("Slug WordPress.org du plugin \xE0 installer"),
+        activate: external_exports.boolean().optional().describe("Activer imm\xE9diatement apr\xE8s installation (d\xE9faut false)")
+      }
+    },
+    async (args) => toToolResult("plugins/install", await client.post("/plugins/install", args))
+  );
+  server.registerTool(
+    "iawm_plugins_activate",
+    {
+      title: "Activer un plugin",
+      description: "Active un plugin d\xE9j\xE0 install\xE9. Le file est le chemin renvoy\xE9 par diagnostics/plugins (ex. rank-math-seo/rank-math.php).",
+      inputSchema: {
+        file: external_exports.string().describe("Fichier-plugin (ex. rank-math-seo/rank-math.php)")
+      }
+    },
+    async (args) => toToolResult("plugins/activate", await client.post("/plugins/activate", args))
+  );
+  server.registerTool(
+    "iawm_plugins_deactivate",
+    {
+      title: "D\xE9sactiver un plugin",
+      description: "D\xE9sactive un plugin. Le plugin IA Webmaster Bridge ne peut pas \xEAtre d\xE9sactiv\xE9 via l'API (garde-fou).",
+      inputSchema: {
+        file: external_exports.string().describe("Fichier-plugin \xE0 d\xE9sactiver")
+      }
+    },
+    async (args) => toToolResult("plugins/deactivate", await client.post("/plugins/deactivate", args))
+  );
+}
+function registerSeo(server, client) {
+  server.registerTool(
+    "iawm_seo_status",
+    {
+      title: "\xC9tat du backend SEO",
+      description: "Indique quel plugin SEO est actif sur le site (Rank Math prioritaire, Yoast secondaire) et la liste des champs support\xE9s par l'API."
+    },
+    async () => toToolResult("seo/status", await client.post("/seo/status", {}))
+  );
+  server.registerTool(
+    "iawm_seo_page_get",
+    {
+      title: "Lire le SEO d'une page",
+      description: "Renvoie les m\xE9ta-donn\xE9es SEO d'un post : meta_title, meta_description, focus_keyword, canonical_url, robots, Open Graph, Twitter.",
+      inputSchema: {
+        post_id: external_exports.number().int().describe("Identifiant du post/page")
+      }
+    },
+    async (args) => toToolResult("seo/page/get", await client.post("/seo/page/get", args))
+  );
+  server.registerTool(
+    "iawm_seo_page_update",
+    {
+      title: "Modifier le SEO d'une page",
+      description: "Met \xE0 jour les m\xE9ta-donn\xE9es SEO d'un post. Les noms de champs sont normalis\xE9s (ind\xE9pendants du backend) : meta_title, meta_description, focus_keyword, canonical_url, robots_noindex, robots_nofollow, og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id. dry_run=true pr\xE9visualise.",
+      inputSchema: {
+        post_id: external_exports.number().int().describe("Identifiant du post/page"),
+        fields: external_exports.record(external_exports.string(), external_exports.unknown()).describe('Champs \xE0 mettre \xE0 jour. Mettre null/"" pour supprimer un champ.'),
+        dry_run: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("seo/page/update", await client.post("/seo/page/update", args))
+  );
+}
 function registerTools(server, client) {
   registerSystem(server, client);
   registerContent(server, client);
@@ -31465,6 +31546,8 @@ function registerTools(server, client) {
   registerMenu(server, client);
   registerDiagnostics(server, client);
   registerConfig(server, client);
+  registerPlugins(server, client);
+  registerSeo(server, client);
 }
 
 // src/index.ts
