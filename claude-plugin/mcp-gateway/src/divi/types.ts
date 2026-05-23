@@ -80,4 +80,24 @@ export const DiviBlock = {
   Slide: "divi/slide",
   ContactForm: "divi/contact-form",
   ContactField: "divi/contact-field",
+  // Modules prioritaires Phase 3.5 (page de référence n°53).
+  Divider: "divi/divider",
+  Icon: "divi/icon",
+  Toggle: "divi/toggle",
+  // ⚠️ Convention : tables (pluriel) + table (singulier).
+  PricingTables: "divi/pricing-tables",
+  PricingTable: "divi/pricing-table",
+  IconList: "divi/icon-list",
+  IconListItem: "divi/icon-list-item",
+  // ⚠️ Convention : -network et pas -item.
+  SocialMediaFollow: "divi/social-media-follow",
+  SocialMediaFollowNetwork: "divi/social-media-follow-network",
+  TeamMember: "divi/team-member",
+  Signup: "divi/signup",
+  Map: "divi/map",
+  CircleCounter: "divi/circle-counter",
+  // ⚠️ blockName = divi/counters (pas divi/bar-counters).
+  Counters: "divi/counters",
+  Counter: "divi/counter",
+  Audio: "divi/audio",
 } as const;

@@ -58,3 +58,9 @@ export type { VideoSectionOptions } from "./video-section.js";
 
 export { contactSection } from "./contact-section.js";
 export type { ContactSectionOptions } from "./contact-section.js";
+
+export { pricing3col } from "./pricing-3col.js";
+export type { Pricing3ColOptions, PricingPlan } from "./pricing-3col.js";
+
+export { teamGrid } from "./team-grid.js";
+export type { TeamGridOptions } from "./team-grid.js";

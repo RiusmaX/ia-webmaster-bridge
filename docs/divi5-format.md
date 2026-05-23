@@ -674,6 +674,230 @@ contrôle la largeur (12_24 = demi, 24_24 = pleine).
 `id` est l'identifiant interne du champ (utilisé dans les notifications
 email reçues par le destinataire). À donner sans espaces.
 
+## Modules natifs prioritaires (page de référence n°53)
+
+Documentés à partir de la 3e page de référence peuplée dans le builder.
+
+### `wp:divi/divider`
+
+Séparateur visuel. Avec valeurs par défaut, attributs minimaux. Options
+de style (couleur, hauteur, alignement) dans `module.decoration.divider`.
+
+```json
+{ "builderVersion": "5.5.2" }
+```
+
+### `wp:divi/icon`
+
+Icône Divi seule. Par défaut, attributs minimaux. La configuration
+(unicode + couleur + taille) est dans `icon.innerContent.desktop.value`.
+
+```json
+{
+  "icon": {
+    "innerContent": {
+      "desktop": { "value": { "unicode": "&#x21;", "type": "divi", "weight": "400" } }
+    }
+  }
+}
+```
+
+### `wp:divi/toggle`
+
+Bloc révélable (équivalent à un accordion à 1 item).
+
+```json
+{
+  "title":   { "innerContent": { "desktop": { "value": "Title" } } },
+  "content": { "innerContent": { "desktop": { "value": "<p>…</p>" } } }
+}
+```
+
+### `wp:divi/pricing-tables` + `wp:divi/pricing-table` ⚠️
+
+**Convention de nommage spécifique** : le conteneur est *tables* (pluriel)
+et l'enfant est *table* (singulier), pas *table-item*.
+
+```
+wp:divi/pricing-tables
+└── wp:divi/pricing-table × N
+```
+
+Item :
+```json
+{
+  "title":    { "innerContent": { "desktop": { "value": "Table Title" } } },
+  "subtitle": { "innerContent": { "desktop": { "value": "Subtitle" } } },
+  "currencyFrequency": {
+    "innerContent": {
+      "desktop": { "value": { "currency": "$" } }
+    }
+  },
+  "price":   { "innerContent": { "desktop": { "value": "50" } } },
+  "content": {
+    "innerContent": {
+      "desktop": {
+        "value": "+ Inclus 1\n+ Inclus 2\n- Non inclus"
+      }
+    }
+  }
+}
+```
+
+`content` est un texte multi-lignes où chaque ligne commence par :
+- `+` pour une fonctionnalité **incluse**
+- `-` pour une fonctionnalité **non incluse**
+
+### `wp:divi/icon-list` + `wp:divi/icon-list-item`
+
+Liste à puces stylées (icône + texte par item).
+
+Item :
+```json
+{
+  "content": { "innerContent": { "desktop": { "value": "List item text" } } },
+  "icon": {
+    "innerContent": {
+      "desktop": {
+        "value": {
+          "unicode": "&#x21;",
+          "type":    "divi",
+          "weight":  "400",
+          "target":  "off"
+        }
+      }
+    }
+  }
+}
+```
+
+`target: "on"` ouvre le lien dans un nouvel onglet (si l'item est lié).
+
+### `wp:divi/social-media-follow` + `wp:divi/social-media-follow-network` ⚠️
+
+**Convention** : l'enfant s'appelle `*-network` (pas `*-item`).
+
+Item :
+```json
+{
+  "socialNetwork": {
+    "innerContent": {
+      "desktop": {
+        "value": { "title": "facebook", "label": "Facebook" }
+      }
+    }
+  },
+  "module": {
+    "decoration": {
+      "background": {
+        "desktop": { "value": { "color": "#3b5998" } }
+      }
+    }
+  }
+}
+```
+
+`title` = identifiant interne du réseau (`facebook`, `twitter`,
+`instagram`, `linkedin`, `youtube`, `tiktok`, etc.). `label` = texte
+affiché. La couleur de fond est typiquement celle de la marque.
+
+### `wp:divi/team-member`
+
+Membre d'équipe (photo + nom + fonction + bio).
+
+```json
+{
+  "name":     { "innerContent": { "desktop": { "value": "Name" } } },
+  "position": { "innerContent": { "desktop": { "value": "Position" } } },
+  "image": {
+    "innerContent": {
+      "desktop": { "value": { "url": "https://..." } }
+    }
+  },
+  "content": { "innerContent": { "desktop": { "value": "<p>Bio…</p>" } } }
+}
+```
+
+⚠️ Note : l'image utilise `url` (pas `src` comme dans `wp:divi/image`).
+Le module gère aussi les profils sociaux du membre via des attributs
+avancés (facebook, twitter, …).
+
+### `wp:divi/signup`
+
+Email opt-in (capture newsletter).
+
+```json
+{
+  "title":   { "innerContent": { "desktop": { "value": "Title" } } },
+  "content": { "innerContent": { "desktop": { "value": "<p>…</p>" } } }
+}
+```
+
+Le provider (Mailchimp, ConvertKit, etc.) et la liste de destination
+sont configurés dans des attributs avancés non observés ici.
+
+### `wp:divi/map`
+
+Google Maps. Avec valeurs par défaut, attributs minimaux. L'adresse,
+le zoom et les marqueurs (modules `wp:divi/map-item` enfants) se posent
+en attributs avancés.
+
+```json
+{ "builderVersion": "5.5.2" }
+```
+
+### `wp:divi/circle-counter`
+
+Variation circulaire du number counter (pourcentage en cercle animé).
+
+```json
+{
+  "title":  { "innerContent": { "desktop": { "value": "Title" } } },
+  "number": { "innerContent": { "desktop": { "value": "50" } } }
+}
+```
+
+Par défaut affiché en pourcentage (de 0 à `number`).
+
+### `wp:divi/counters` + `wp:divi/counter` ⚠️
+
+**Bar counters** : le blockName est **`divi/counters`** (et non
+`divi/bar-counters` comme suggéré par le nom de classe `BarCounters`).
+Item = `divi/counter` (singulier).
+
+Conteneur :
+```json
+{
+  "barProgress": {
+    "advanced": {
+      "usePercentages": { "desktop": { "value": "on" } }
+    }
+  }
+}
+```
+
+Item :
+```json
+{
+  "title":      { "innerContent": { "desktop": { "value": "Skill" } } },
+  "barProgress":{ "innerContent": { "desktop": { "value": "50" } } }
+}
+```
+
+### `wp:divi/audio`
+
+Lecteur audio HTML5.
+
+```json
+{
+  "title":      { "innerContent": { "desktop": { "value": "Track Title" } } },
+  "artistName": { "innerContent": { "desktop": { "value": "Artist" } } }
+}
+```
+
+L'URL du fichier audio est dans un attribut `audio` ou similaire (à
+confirmer en peuplant l'URL dans le builder).
+
 ## Variables Divi (au-delà des couleurs)
 
 On a vu `$variable({"type":"color",...})$` pour les couleurs globales.

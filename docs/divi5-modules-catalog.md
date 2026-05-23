@@ -56,10 +56,10 @@ Les briques fondamentales du builder. **Tous documentés ou implémentés.**
 | `divi/image` | ✅ | `image({ src, alt? })` | imageTextSplit |
 | `divi/video` | ✅ | `video({ src })` | videoSection |
 | `divi/code` | ✅ | `code({ html })` | (à éviter) |
-| `divi/divider` | 🟡 | À ajouter | utile pour séparation visuelle |
-| `divi/icon` | 🟡 | À ajouter | code Divi unicode |
+| `divi/divider` | ✅ | `divider({ color?, height? })` | utile pour séparation visuelle |
+| `divi/icon` | ✅ | `icon({ unicode, color?, size? })` | code Divi unicode |
 | `divi/gallery` | ✅ | `gallery({ ids[], columns? })` | — |
-| `divi/audio` | 🟡 | À ajouter | lecteur audio HTML5 |
+| `divi/audio` | ✅ | `audio({ title, artistName?, audioUrl? })` | lecteur audio HTML5 |
 
 ---
 
@@ -74,13 +74,13 @@ Modules qui contiennent d'autres blocs Divi en `innerBlocks`.
 | `divi/slider` | `divi/slide` | ✅ | `slider([items])` |
 | `divi/contact-form` | `divi/contact-field` | ✅ | `contactForm({ fields })` |
 | `divi/toggle` | — (simple) | 🟡 | À ajouter (accordion mais 1 seul item) |
-| `divi/pricing-tables` | `divi/pricing-tables-item` | 🟡 | À ajouter — **prioritaire** |
-| `divi/icon-list` | `divi/icon-list-item` | 🟡 | À ajouter — utile partout |
-| `divi/social-media-follow` | `divi/social-media-follow-item` | 🟡 | À ajouter — footer/header |
+| `divi/pricing-tables` | `divi/pricing-table` ⚠️ | ✅ | **singulier** (pas -item ni -s) |
+| `divi/icon-list` | `divi/icon-list-item` | ✅ | |
+| `divi/social-media-follow` | `divi/social-media-follow-network` ⚠️ | ✅ | **`-network`** (pas `-item`) |
 | `divi/timeline` | `divi/timeline-item` | 🟡 | À ajouter — histoire entreprise |
-| `divi/map` | `divi/map-item` | 🟡 | À ajouter — page contact |
+| `divi/map` | `divi/map-item` | ✅ | (item à ajouter pour les marqueurs) |
 | `divi/video-slider` | `divi/video-slider-item` | 🟡 | À ajouter |
-| `divi/bar-counters` | `divi/bar-counters-item` | 🟡 | À ajouter — KPIs animés |
+| `divi/counters` ⚠️ | `divi/counter` ⚠️ | ✅ | **`counters`**, pas `bar-counters` |
 
 ---
 
@@ -89,8 +89,8 @@ Modules qui contiennent d'autres blocs Divi en `innerBlocks`.
 | blockName | Statut | Builder TS | Note |
 |-----------|--------|------------|------|
 | `divi/number-counter` | ✅ | `numberCounter({ title, number, percent? })` | Animation au scroll |
-| `divi/circle-counter` | 🟡 | À ajouter | Variante circulaire |
-| `divi/bar-counters` (composé) | 🟡 | À ajouter | Barres horizontales |
+| `divi/circle-counter` | ✅ | `circleCounter({ title, number })` | Variante circulaire |
+| `divi/counters` ⚠️ (composé) | ✅ | `counters({ items, showPercentages? })` | Barres horizontales (PAS `bar-counters`) |
 | `divi/countdown-timer` | 🟡 | À ajouter | Compte à rebours réel |
 
 ---
@@ -100,7 +100,7 @@ Modules qui contiennent d'autres blocs Divi en `innerBlocks`.
 | blockName | Statut | Builder TS | Note |
 |-----------|--------|------------|------|
 | `divi/testimonial` | ✅ | `testimonial({ quoteHtml, author, portraitUrl? })` | Citation + photo |
-| `divi/team-member` | 🟡 | À ajouter | Photo + bio + réseaux sociaux |
+| `divi/team-member` | ✅ | `teamMember({ name, position, imageUrl?, bioHtml? })` | Photo + bio + réseaux sociaux |
 
 ---
 
@@ -161,7 +161,7 @@ Variantes pleine largeur (`fullwidth-*`) :
 |-----------|--------|------------|------|
 | `divi/contact-form` (composé) | ✅ | `contactForm({ fields })` | Form natif Divi |
 | `divi/contact-form-7` | 🟡 | — | Intégration CF7 |
-| `divi/signup` | 🟡 | À ajouter | Email opt-in (newsletter) |
+| `divi/signup` | ✅ | `signup({ title, contentHtml })` | Email opt-in (newsletter) |
 | `divi/signup-custom-field` | 🟡 | — | Enfant de signup |
 | `divi/login` | 🟡 | À ajouter | Formulaire de login WP |
 

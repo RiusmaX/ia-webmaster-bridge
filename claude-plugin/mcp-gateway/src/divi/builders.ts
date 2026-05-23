@@ -604,3 +604,381 @@ export function contactForm(options: ContactFormOptions): GutenbergBlock {
     options.fields.map((f) => contactField(f)),
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Modules prioritaires Phase 3.5 (page de référence n°53)            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Module Divider — séparateur visuel.
+ */
+export interface DividerOptions {
+  /** Couleur de la ligne. */
+  color?: DiviColor;
+  /** Hauteur en pixels. */
+  height?: string;
+}
+
+export function divider(options: DividerOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  if (options.color || options.height) {
+    const dividerValue: Record<string, unknown> = {};
+    if (options.color) dividerValue.color = colorToString(options.color);
+    if (options.height) dividerValue.height = options.height;
+    attrs.module = {
+      decoration: {
+        divider: desktopValue(dividerValue),
+      },
+    };
+  }
+  return makeBlock(DiviBlock.Divider, attrs);
+}
+
+/**
+ * Module Icon — icône standalone (Divi font icon).
+ */
+export interface IconOptions {
+  /** Code unicode de l'icône Divi, ex. "&#xe0e1;". */
+  unicode: string;
+  /** Couleur de l'icône. */
+  color?: DiviColor;
+  /** Taille (ex. "48px"). */
+  size?: string;
+}
+
+export function icon(options: IconOptions): GutenbergBlock {
+  const value: Record<string, unknown> = {
+    unicode: options.unicode,
+    type: "divi",
+    weight: "400",
+  };
+  if (options.color) value.color = colorToString(options.color);
+
+  const attrs: Record<string, unknown> = {
+    icon: { innerContent: desktopValue(value) },
+  };
+  if (options.size) {
+    attrs.module = {
+      decoration: {
+        font: desktopValue({ size: options.size }),
+      },
+    };
+  }
+  return makeBlock(DiviBlock.Icon, attrs);
+}
+
+/**
+ * Module Toggle — bloc révélable (équivalent accordion 1 item).
+ */
+export interface ToggleOptions {
+  title: string;
+  contentHtml: string;
+}
+
+export function toggle(options: ToggleOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Toggle, {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) },
+  });
+}
+
+/**
+ * Item d'une grille de pricing.
+ */
+export interface PricingTableOptions {
+  title: string;
+  subtitle?: string;
+  /** Symbole monétaire ("$", "€", "£"…). */
+  currency?: string;
+  price: string;
+  /** Fréquence ("month", "year"…). */
+  frequency?: string;
+  /** Liste de features : commence par `+` (incluse) ou `-` (non incluse). */
+  features: Array<{ text: string; included?: boolean }>;
+  /** Texte du bouton (optionnel). */
+  buttonText?: string;
+  buttonUrl?: string;
+}
+
+export function pricingTable(options: PricingTableOptions): GutenbergBlock {
+  // Format content : "+ feature\n+ feature\n- feature"
+  const contentValue = options.features
+    .map((f) => `${f.included !== false ? "+" : "-"} ${f.text}`)
+    .join("\n");
+
+  const currencyFreqValue: Record<string, unknown> = {
+    currency: options.currency ?? "$",
+  };
+  if (options.frequency) currencyFreqValue.frequency = options.frequency;
+
+  const attrs: Record<string, unknown> = {
+    title: { innerContent: desktopValue(options.title) },
+    price: { innerContent: desktopValue(options.price) },
+    currencyFrequency: { innerContent: desktopValue(currencyFreqValue) },
+    content: { innerContent: desktopValue(contentValue) },
+  };
+  if (options.subtitle) {
+    attrs.subtitle = { innerContent: desktopValue(options.subtitle) };
+  }
+  if (options.buttonText) {
+    attrs.button = {
+      innerContent: desktopValue({
+        text: options.buttonText,
+        linkUrl: options.buttonUrl ?? "#",
+      }),
+    };
+  }
+  return makeBlock(DiviBlock.PricingTable, attrs);
+}
+
+/**
+ * Module Pricing Tables (contient des pricing-table).
+ */
+export function pricingTables(items: PricingTableOptions[]): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.PricingTables,
+    {},
+    items.map((i) => pricingTable(i)),
+  );
+}
+
+/**
+ * Item d'une icon-list.
+ */
+export interface IconListItemOptions {
+  text: string;
+  /** Code unicode de l'icône Divi. */
+  iconUnicode?: string;
+  /** Lien optionnel. */
+  url?: string;
+  /** Ouvrir dans un nouvel onglet. */
+  newTab?: boolean;
+}
+
+export function iconListItem(options: IconListItemOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.IconListItem, {
+    content: { innerContent: desktopValue(options.text) },
+    icon: {
+      innerContent: desktopValue({
+        unicode: options.iconUnicode ?? "&#x21;",
+        type: "divi",
+        weight: "400",
+        target: options.newTab ? "on" : "off",
+        ...(options.url ? { url: options.url } : {}),
+      }),
+    },
+  });
+}
+
+/**
+ * Module Icon List (contient des icon-list-item).
+ */
+export function iconList(items: IconListItemOptions[]): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.IconList,
+    {},
+    items.map((i) => iconListItem(i)),
+  );
+}
+
+/**
+ * Réseau social pour Social Media Follow.
+ */
+export interface SocialNetworkOptions {
+  /** Identifiant : "facebook", "twitter", "instagram", "linkedin", "youtube", "tiktok"… */
+  network: string;
+  /** Label affiché (utile pour l'accessibilité). */
+  label?: string;
+  /** URL du profil (sinon Divi propose une URL par défaut). */
+  url?: string;
+}
+
+/** Couleurs de marque par défaut. */
+const NETWORK_COLORS: Record<string, string> = {
+  facebook: "#3b5998",
+  twitter: "#1da1f2",
+  instagram: "#e1306c",
+  linkedin: "#0077b5",
+  youtube: "#ff0000",
+  tiktok: "#000000",
+  pinterest: "#bd081c",
+  github: "#181717",
+};
+
+export function socialMediaFollowNetwork(options: SocialNetworkOptions): GutenbergBlock {
+  const bgColor = NETWORK_COLORS[options.network.toLowerCase()] ?? "#666666";
+  return makeBlock(DiviBlock.SocialMediaFollowNetwork, {
+    socialNetwork: {
+      innerContent: desktopValue({
+        title: options.network.toLowerCase(),
+        label: options.label ?? capitalize(options.network),
+        ...(options.url ? { url: options.url } : {}),
+      }),
+    },
+    module: {
+      decoration: {
+        background: desktopValue({ color: bgColor }),
+      },
+    },
+  });
+}
+
+/**
+ * Module Social Media Follow (contient des social-media-follow-network).
+ */
+export function socialMediaFollow(networks: SocialNetworkOptions[]): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.SocialMediaFollow,
+    {},
+    networks.map((n) => socialMediaFollowNetwork(n)),
+  );
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+/**
+ * Module Team Member — membre d'équipe.
+ */
+export interface TeamMemberOptions {
+  name: string;
+  position: string;
+  /** URL de la photo. */
+  imageUrl?: string;
+  /** Bio en HTML. */
+  bioHtml?: string;
+}
+
+export function teamMember(options: TeamMemberOptions): GutenbergBlock {
+  const attrs: Record<string, unknown> = {
+    name: { innerContent: desktopValue(options.name) },
+    position: { innerContent: desktopValue(options.position) },
+  };
+  if (options.imageUrl) {
+    attrs.image = { innerContent: desktopValue({ url: options.imageUrl }) };
+  }
+  if (options.bioHtml) {
+    attrs.content = { innerContent: desktopValue(options.bioHtml) };
+  }
+  return makeBlock(DiviBlock.TeamMember, attrs);
+}
+
+/**
+ * Module Signup — email opt-in (newsletter).
+ */
+export interface SignupOptions {
+  title: string;
+  contentHtml: string;
+}
+
+export function signup(options: SignupOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Signup, {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) },
+  });
+}
+
+/**
+ * Module Map — Google Maps.
+ *
+ * Options : adresse, zoom, marqueurs (à enrichir en fonction des besoins).
+ */
+export interface MapOptions {
+  /** Adresse (ex. "1 rue de la Paix, Paris"). */
+  address?: string;
+  /** Niveau de zoom (1-22). */
+  zoom?: number;
+}
+
+export function map(options: MapOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  if (options.address || options.zoom) {
+    attrs.map = {
+      innerContent: desktopValue({
+        ...(options.address ? { address: options.address } : {}),
+        ...(options.zoom !== undefined ? { zoom: String(options.zoom) } : {}),
+      }),
+    };
+  }
+  return makeBlock(DiviBlock.Map, attrs);
+}
+
+/**
+ * Module Circle Counter — pourcentage en cercle animé.
+ */
+export interface CircleCounterOptions {
+  title: string;
+  number: string;
+}
+
+export function circleCounter(options: CircleCounterOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.CircleCounter, {
+    title: { innerContent: desktopValue(options.title) },
+    number: { innerContent: desktopValue(options.number) },
+  });
+}
+
+/**
+ * Item d'un Counters (bar counters / skill bars).
+ */
+export interface CounterItemOptions {
+  title: string;
+  /** Pourcentage (0-100). */
+  progress: string;
+}
+
+export function counter(options: CounterItemOptions): GutenbergBlock {
+  return makeBlock(DiviBlock.Counter, {
+    title: { innerContent: desktopValue(options.title) },
+    barProgress: { innerContent: desktopValue(options.progress) },
+  });
+}
+
+/**
+ * Module Counters (barres animées de compétences/progression).
+ *
+ * Le blockName est `divi/counters` (et NON `divi/bar-counters`).
+ */
+export interface CountersOptions {
+  items: CounterItemOptions[];
+  /** Afficher le pourcentage à droite ? Défaut : true. */
+  showPercentages?: boolean;
+}
+
+export function counters(options: CountersOptions): GutenbergBlock {
+  return makeBlock(
+    DiviBlock.Counters,
+    {
+      barProgress: {
+        advanced: {
+          usePercentages: desktopValue(options.showPercentages !== false ? "on" : "off"),
+        },
+      },
+    },
+    options.items.map((i) => counter(i)),
+  );
+}
+
+/**
+ * Module Audio — lecteur audio HTML5.
+ */
+export interface AudioOptions {
+  title: string;
+  artistName?: string;
+  /** URL du fichier audio. */
+  audioUrl?: string;
+}
+
+export function audio(options: AudioOptions): GutenbergBlock {
+  const attrs: Record<string, unknown> = {
+    title: { innerContent: desktopValue(options.title) },
+  };
+  if (options.artistName) {
+    attrs.artistName = { innerContent: desktopValue(options.artistName) };
+  }
+  if (options.audioUrl) {
+    attrs.audio = { innerContent: desktopValue({ url: options.audioUrl }) };
+  }
+  return makeBlock(DiviBlock.Audio, attrs);
+}
