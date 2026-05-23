@@ -1,0 +1,31 @@
+{
+    "divi/layout": {
+        "name": "divi/layout",
+        "title": "",
+        "category": null,
+        "description": "",
+        "parent": null,
+        "attributes_keys": [
+            "layoutContent",
+            "lock",
+            "metadata",
+            "className",
+            "style"
+        ],
+        "supports": null
+    },
+    "divi/shortcode-module": {
+        "name": "divi/shortcode-module",
+        "title": "Shortcode Module",
+        "category": "unsupported",
+        "description": "",
+        "parent": null,
+        "attributes_keys": [
+            "lock",
+            "metadata",
+            "className",
+            "style"
+        ],
+        "supports": null
+    }
+}

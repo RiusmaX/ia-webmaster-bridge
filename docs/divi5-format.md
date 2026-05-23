@@ -1,8 +1,10 @@
 # Format Divi 5 — rétro-ingénierie
 
-> Source : page de référence n°19 (`IAWM Divi Reference`) sur le site local,
-> peuplée dans le Visual Builder Divi 5.5.2 puis lue via
-> `iawm_content_get`.
+> Source : pages de référence n°19 et n°29 sur le site local, peuplées
+> dans le Visual Builder Divi 5.5.2 puis lues via `iawm_content_get`.
+> **Catalogue complet des modules natifs** dans
+> [`divi5-modules-catalog.md`](divi5-modules-catalog.md) — ~99 modules
+> natifs inventoriés (21 implémentés côté builders TS).
 > Dernière mise à jour : 2026-05-23.
 
 Cette doc fixe ce qu'on a **observé directement**, pas ce que la doc
