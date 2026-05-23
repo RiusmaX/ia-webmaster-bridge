@@ -477,10 +477,13 @@ class IAWM_Divi_Theme_Builder {
 			return IAWM_Support::rest_error( 'no_template_id', 'Pas d\'id de template retourné.', 500, array( 'divi_response' => $create_res['data'] ) );
 		}
 
-		// 3. Lier les layouts via update-template. Pour les zones sans
-		// layout fourni, on désactive explicitement la zone (enabled=false,
-		// id=0) : Divi affichera alors la zone WP par défaut (pour body :
-		// le post_content de la page courante).
+		// 3. Lier les layouts via update-template.
+		// Logique Divi (theme-builder.php) :
+		//   override = (id != 0) OR (enabled === false)
+		// Donc pour qu'une zone RESTE en rendu natif WordPress (ex. body
+		// affichant le post_content de la page courante), il faut
+		// enabled = TRUE et id = 0. Si on met enabled = false, Divi prend
+		// le contrôle de la zone et ne rend rien sans layout custom.
 		$template_payload = array(
 			'id'      => $template_id,
 			'title'   => $title,
@@ -492,7 +495,9 @@ class IAWM_Divi_Theme_Builder {
 			$has = isset( $layouts[ $zone ] );
 			$template_payload['layouts'][ $zone ] = array(
 				'id'       => $has ? $layouts[ $zone ] : 0,
-				'enabled'  => $has,
+				// IMPORTANT : enabled=true même sans layout — sinon Divi
+				// override la zone et l'efface du rendu.
+				'enabled'  => true,
 				'override' => false,
 				'global'   => false,
 			);
@@ -514,13 +519,12 @@ class IAWM_Divi_Theme_Builder {
 			update_post_meta( $template_id, '_et_default', '1' );
 		}
 
-		// 5. Forcer la désactivation des zones non fournies au niveau post_meta
-		// (l'update-template peut laisser les flags activés malgré enabled=false
-		// dans le payload, ce qui empêche Divi de rendre le contenu natif WP
-		// pour ces zones).
+		// 5. Forcer en post_meta pour les zones sans layout fourni :
+		// id=0 + enabled=1 → la zone reste en rendu natif WordPress.
+		// (Voir la logique override dans Divi : id!=0 OR !enabled.)
 		foreach ( self::ZONES as $zone ) {
 			if ( ! isset( $layouts[ $zone ] ) ) {
-				update_post_meta( $template_id, "_et_{$zone}_layout_enabled", '0' );
+				update_post_meta( $template_id, "_et_{$zone}_layout_enabled", '1' );
 				update_post_meta( $template_id, "_et_{$zone}_layout_id", '0' );
 			}
 		}
