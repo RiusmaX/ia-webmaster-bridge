@@ -100,4 +100,14 @@ export const DiviBlock = {
   Counters: "divi/counters",
   Counter: "divi/counter",
   Audio: "divi/audio",
+  // Theme Builder & dynamic content (Phase 3.6).
+  Menu: "divi/menu",
+  FullwidthMenu: "divi/fullwidth-menu",
+  Search: "divi/search",
+  Breadcrumbs: "divi/breadcrumbs",
+  PostTitle: "divi/post-title",
+  PostContent: "divi/post-content",
+  PostNavigation: "divi/post-navigation",
+  Sidebar: "divi/sidebar",
+  Comments: "divi/comments",
 } as const;

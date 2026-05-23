@@ -982,3 +982,156 @@ export function audio(options: AudioOptions): GutenbergBlock {
   }
   return makeBlock(DiviBlock.Audio, attrs);
 }
+
+/* ------------------------------------------------------------------ */
+/* Theme Builder & contenu dynamique (Phase 3.6)                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Module Menu — barre de navigation (menu WP).
+ *
+ * Affiche un menu WordPress par son ID. Idéal dans un header.
+ */
+export interface MenuOptions {
+  /** ID du menu WP. Si omis, Divi affiche le menu par défaut. */
+  menuId?: number;
+  /** Logo à gauche du menu (URL). */
+  logoUrl?: string;
+  /** Direction des sous-menus desktop. "downwards" (défaut) | "upwards". */
+  dropdownDirection?: "downwards" | "upwards";
+}
+
+export function menu(options: MenuOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  const menuAttrs: Record<string, unknown> = {};
+  if (options.menuId !== undefined) {
+    menuAttrs.menuId = desktopValue(String(options.menuId));
+  }
+  if (options.dropdownDirection) {
+    menuAttrs.menuDropdownDirection = desktopValue(options.dropdownDirection);
+  }
+  if (Object.keys(menuAttrs).length > 0) {
+    attrs.menu = menuAttrs;
+  }
+  if (options.logoUrl) {
+    attrs.logo = { innerContent: desktopValue({ url: options.logoUrl }) };
+  }
+  return makeBlock(DiviBlock.Menu, attrs);
+}
+
+/**
+ * Module Fullwidth Menu — version pleine largeur du Menu.
+ */
+export function fullwidthMenu(options: MenuOptions = {}): GutenbergBlock {
+  // Mêmes attributs que Menu, juste le blockName diffère.
+  const block = menu(options);
+  block.blockName = DiviBlock.FullwidthMenu;
+  return block;
+}
+
+/**
+ * Module Search — barre de recherche WordPress.
+ */
+export interface SearchOptions {
+  placeholder?: string;
+  buttonText?: string;
+}
+
+export function search(options: SearchOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  const innerAttrs: Record<string, unknown> = {};
+  if (options.placeholder) innerAttrs.placeholder = options.placeholder;
+  if (options.buttonText) innerAttrs.buttonText = options.buttonText;
+  if (Object.keys(innerAttrs).length > 0) {
+    attrs.search = { innerContent: desktopValue(innerAttrs) };
+  }
+  return makeBlock(DiviBlock.Search, attrs);
+}
+
+/**
+ * Module Breadcrumbs — fil d'Ariane (utile SEO + nav).
+ */
+export interface BreadcrumbsOptions {
+  /** Texte du lien Accueil. Défaut : "Home". */
+  homeText?: string;
+  /** Séparateur entre items. Défaut : "/". */
+  separator?: string;
+  /** Balise HTML wrapper. Défaut : "nav". */
+  htmlTag?: string;
+}
+
+export function breadcrumbs(options: BreadcrumbsOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  const inner: Record<string, unknown> = {};
+  if (options.homeText) inner.homeText = options.homeText;
+  if (options.separator) inner.separator = options.separator;
+  if (options.htmlTag) inner.htmlTag = options.htmlTag;
+  if (Object.keys(inner).length > 0) {
+    attrs.breadcrumbs = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.Breadcrumbs, attrs);
+}
+
+/**
+ * Module Post Title — titre dynamique du post courant (Theme Builder).
+ *
+ * À utiliser dans les templates de single post / page pour afficher
+ * automatiquement le titre du post visité.
+ */
+export interface PostTitleOptions {
+  /** Inclut la meta (date, auteur). Défaut : false. */
+  includeMeta?: boolean;
+  /** Inclut l'image vedette en arrière-plan. Défaut : false. */
+  includeFeaturedImage?: boolean;
+}
+
+export function postTitle(options: PostTitleOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  const inner: Record<string, unknown> = {};
+  if (options.includeMeta !== undefined) {
+    inner.includeMeta = options.includeMeta ? "on" : "off";
+  }
+  if (options.includeFeaturedImage !== undefined) {
+    inner.includeFeaturedImage = options.includeFeaturedImage ? "on" : "off";
+  }
+  if (Object.keys(inner).length > 0) {
+    attrs.title = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.PostTitle, attrs);
+}
+
+/**
+ * Module Post Content — contenu dynamique du post courant (Theme Builder).
+ */
+export function postContent(): GutenbergBlock {
+  return makeBlock(DiviBlock.PostContent, {});
+}
+
+/**
+ * Module Post Navigation — liens précédent / suivant.
+ */
+export interface PostNavigationOptions {
+  prevText?: string;
+  nextText?: string;
+  /** Limiter aux articles de la même catégorie. */
+  sameTerm?: boolean;
+}
+
+export function postNavigation(options: PostNavigationOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  const inner: Record<string, unknown> = {};
+  if (options.prevText) inner.prevText = options.prevText;
+  if (options.nextText) inner.nextText = options.nextText;
+  if (options.sameTerm !== undefined) inner.inSameTerm = options.sameTerm ? "on" : "off";
+  if (Object.keys(inner).length > 0) {
+    attrs.navigation = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.PostNavigation, attrs);
+}
+
+/**
+ * Module Comments — commentaires WP.
+ */
+export function comments(): GutenbergBlock {
+  return makeBlock(DiviBlock.Comments, {});
+}

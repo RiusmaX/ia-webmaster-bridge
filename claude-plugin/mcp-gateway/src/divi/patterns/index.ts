@@ -64,3 +64,9 @@ export type { Pricing3ColOptions, PricingPlan } from "./pricing-3col.js";
 
 export { teamGrid } from "./team-grid.js";
 export type { TeamGridOptions } from "./team-grid.js";
+
+export { headerSimple } from "./header-simple.js";
+export type { HeaderSimpleOptions } from "./header-simple.js";
+
+export { footerStandard } from "./footer-standard.js";
+export type { FooterStandardOptions, FooterColumn } from "./footer-standard.js";

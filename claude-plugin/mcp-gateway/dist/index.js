@@ -31616,6 +31616,85 @@ function registerDivi(server, client) {
     async () => toToolResult("divi/global-data", await client.post("/divi/global-data", {}))
   );
   server.registerTool(
+    "iawm_divi_theme_builder_list",
+    {
+      title: "Lister les templates du Theme Builder",
+      description: "Liste les templates Theme Builder Divi (header/footer/body assign\xE9s \xE0 des conditions). Enrichi avec le titre des layouts physiques li\xE9s. live=true (d\xE9faut) = templates publi\xE9s.",
+      inputSchema: {
+        live: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("divi/theme-builder/list", await client.post("/divi/theme-builder/list", args))
+  );
+  server.registerTool(
+    "iawm_divi_theme_builder_layout_create",
+    {
+      title: "Cr\xE9er un layout Theme Builder (header/body/footer)",
+      description: "Cr\xE9e un layout physique (et_header_layout / et_body_layout / et_footer_layout) avec son contenu Divi 5. Accepte content (cha\xEEne s\xE9rialis\xE9e) OU blocks (tableau parse_blocks). Renvoie l'id, \xE0 utiliser ensuite dans theme_builder_template_update.",
+      inputSchema: {
+        zone: external_exports.enum(["header", "body", "footer"]).describe("Zone du layout"),
+        title: external_exports.string().optional(),
+        content: external_exports.string().optional().describe("post_content s\xE9rialis\xE9 (alternative \xE0 blocks)"),
+        blocks: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional().describe("Tableau de blocs parse_blocks")
+      }
+    },
+    async (args) => toToolResult("divi/theme-builder/layout/create", await client.post("/divi/theme-builder/layout/create", args))
+  );
+  server.registerTool(
+    "iawm_divi_theme_builder_layout_read",
+    {
+      title: "Lire un layout Theme Builder",
+      description: "Lit le contenu d'un layout Theme Builder (header/body/footer) en arbre Divi structur\xE9, identique \xE0 iawm_divi_page_read mais validant le post_type.",
+      inputSchema: {
+        post_id: external_exports.number().int(),
+        mode: external_exports.enum(["tree", "flat", "raw"]).optional()
+      }
+    },
+    async (args) => toToolResult("divi/theme-builder/layout/read", await client.post("/divi/theme-builder/layout/read", args))
+  );
+  server.registerTool(
+    "iawm_divi_theme_builder_setup_site_defaults",
+    {
+      title: "Configurer header/footer du site en une fois",
+      description: "Wrapper haut-niveau : cr\xE9e le conteneur Theme Builder + un template par d\xE9faut avec header/body/footer (selon ce qui est fourni) et l'assigne comme default du site (s'applique \xE0 tout post/page sans override). Refuse si un template default existe d\xE9j\xE0 sauf replace_existing=true. Chaque zone est un objet {title?, content? | blocks?}.",
+      inputSchema: {
+        title: external_exports.string().optional().describe("Titre du template (d\xE9faut : Default Site Template)"),
+        header: external_exports.record(external_exports.string(), external_exports.unknown()).optional().describe("{title?, content?, blocks?}"),
+        body: external_exports.record(external_exports.string(), external_exports.unknown()).optional(),
+        footer: external_exports.record(external_exports.string(), external_exports.unknown()).optional(),
+        assign_default: external_exports.boolean().optional().describe("Marquer comme default du site (d\xE9faut true)"),
+        replace_existing: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("divi/theme-builder/setup-site-defaults", await client.post("/divi/theme-builder/setup-site-defaults", args))
+  );
+  server.registerTool(
+    "iawm_divi_theme_builder_template_assign",
+    {
+      title: "Assigner un template Theme Builder \xE0 des conditions",
+      description: "Pose les conditions use_on (o\xF9 le template s'applique) et exclude_from (exceptions). Exemples : 'default', 'singular:page', 'singular:post', 'page:123', 'archive:category'.",
+      inputSchema: {
+        template_id: external_exports.number().int(),
+        use_on: external_exports.array(external_exports.string()).optional(),
+        exclude_from: external_exports.array(external_exports.string()).optional(),
+        live: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("divi/theme-builder/template/assign", await client.post("/divi/theme-builder/template/assign", args))
+  );
+  server.registerTool(
+    "iawm_divi_theme_builder_template_delete",
+    {
+      title: "Supprimer un template Theme Builder",
+      description: "Supprime un template (ne supprime PAS les layouts physiques associ\xE9s \u2014 utiliser content/get + delete sur les ids pour \xE7a).",
+      inputSchema: {
+        template_id: external_exports.number().int(),
+        live: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("divi/theme-builder/template/delete", await client.post("/divi/theme-builder/template/delete", args))
+  );
+  server.registerTool(
     "iawm_divi_page_write",
     {
       title: "\xC9crire un layout Divi 5",

@@ -688,6 +688,98 @@ function registerDivi(server: McpServer, client: IawmClient): void {
     async () => toToolResult("divi/global-data", await client.post("/divi/global-data", {})),
   );
 
+  // -------- Theme Builder --------
+
+  server.registerTool(
+    "iawm_divi_theme_builder_list",
+    {
+      title: "Lister les templates du Theme Builder",
+      description:
+        "Liste les templates Theme Builder Divi (header/footer/body assignés à des conditions). Enrichi avec le titre des layouts physiques liés. live=true (défaut) = templates publiés.",
+      inputSchema: {
+        live: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("divi/theme-builder/list", await client.post("/divi/theme-builder/list", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_builder_layout_create",
+    {
+      title: "Créer un layout Theme Builder (header/body/footer)",
+      description:
+        "Crée un layout physique (et_header_layout / et_body_layout / et_footer_layout) avec son contenu Divi 5. Accepte content (chaîne sérialisée) OU blocks (tableau parse_blocks). Renvoie l'id, à utiliser ensuite dans theme_builder_template_update.",
+      inputSchema: {
+        zone: z.enum(["header", "body", "footer"]).describe("Zone du layout"),
+        title: z.string().optional(),
+        content: z.string().optional().describe("post_content sérialisé (alternative à blocks)"),
+        blocks: z.array(z.record(z.string(), z.unknown())).optional().describe("Tableau de blocs parse_blocks"),
+      },
+    },
+    async (args) => toToolResult("divi/theme-builder/layout/create", await client.post("/divi/theme-builder/layout/create", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_builder_layout_read",
+    {
+      title: "Lire un layout Theme Builder",
+      description:
+        "Lit le contenu d'un layout Theme Builder (header/body/footer) en arbre Divi structuré, identique à iawm_divi_page_read mais validant le post_type.",
+      inputSchema: {
+        post_id: z.number().int(),
+        mode: z.enum(["tree", "flat", "raw"]).optional(),
+      },
+    },
+    async (args) => toToolResult("divi/theme-builder/layout/read", await client.post("/divi/theme-builder/layout/read", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_builder_setup_site_defaults",
+    {
+      title: "Configurer header/footer du site en une fois",
+      description:
+        "Wrapper haut-niveau : crée le conteneur Theme Builder + un template par défaut avec header/body/footer (selon ce qui est fourni) et l'assigne comme default du site (s'applique à tout post/page sans override). Refuse si un template default existe déjà sauf replace_existing=true. Chaque zone est un objet {title?, content? | blocks?}.",
+      inputSchema: {
+        title: z.string().optional().describe("Titre du template (défaut : Default Site Template)"),
+        header: z.record(z.string(), z.unknown()).optional().describe("{title?, content?, blocks?}"),
+        body: z.record(z.string(), z.unknown()).optional(),
+        footer: z.record(z.string(), z.unknown()).optional(),
+        assign_default: z.boolean().optional().describe("Marquer comme default du site (défaut true)"),
+        replace_existing: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("divi/theme-builder/setup-site-defaults", await client.post("/divi/theme-builder/setup-site-defaults", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_builder_template_assign",
+    {
+      title: "Assigner un template Theme Builder à des conditions",
+      description:
+        "Pose les conditions use_on (où le template s'applique) et exclude_from (exceptions). Exemples : 'default', 'singular:page', 'singular:post', 'page:123', 'archive:category'.",
+      inputSchema: {
+        template_id: z.number().int(),
+        use_on: z.array(z.string()).optional(),
+        exclude_from: z.array(z.string()).optional(),
+        live: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("divi/theme-builder/template/assign", await client.post("/divi/theme-builder/template/assign", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_builder_template_delete",
+    {
+      title: "Supprimer un template Theme Builder",
+      description: "Supprime un template (ne supprime PAS les layouts physiques associés — utiliser content/get + delete sur les ids pour ça).",
+      inputSchema: {
+        template_id: z.number().int(),
+        live: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("divi/theme-builder/template/delete", await client.post("/divi/theme-builder/template/delete", args)),
+  );
+
   server.registerTool(
     "iawm_divi_page_write",
     {
