@@ -1,0 +1,286 @@
+# Carte de l'API REST `divi/v1` (site local)
+
+> Généré automatiquement par `tools/summarize-divi-api.php`.
+> Source : `docs/divi5-api-map.json`.
+
+**Total** : 102 routes uniques, 29 groupes.
+
+## `_root/` (1 routes)
+
+- `[GET]` `/divi/v1`  
+  args : `namespace`, `context`
+
+## `ai_layout_save_defaults/` (1 routes)
+
+- `[POST]` `/divi/v1/ai_layout_save_defaults`  
+  args : `et_ai_layout_heading_font`, `et_ai_layout_body_font`, `et_ai_layout_heading_font_color`, `et_ai_layout_body_font_color`, `et_ai_layout_primary_color`, `et_ai_layout_secondary_color`, `et_ai_layout_site_description`
+
+## `breakpoints/` (1 routes)
+
+- `[POST]` `/divi/v1/breakpoints/update`  
+  args : `items`
+
+## `content-conversion/` (1 routes)
+
+- `[POST]` `/divi/v1/content-conversion`  
+  args : `content`, `post_id`
+
+## `content-migration/` (1 routes)
+
+- `[POST]` `/divi/v1/content-migration`  
+  args : `content`
+
+## `custom-font/` (2 routes)
+
+- `[POST]` `/divi/v1/custom-font/add`  
+  args : `et_pb_font_name`, `et_pb_font_settings`
+- `[POST]` `/divi/v1/custom-font/remove`  
+  args : `et_pb_font_name`
+
+## `divi-library/` (12 routes)
+
+- `[POST]` `/divi/v1/divi-library`  
+  args : `type`, `exclude`
+- `[POST]` `/divi/v1/divi-library/cloud-token`
+- `[POST]` `/divi/v1/divi-library/item`  
+  args : `id`, `libraryType`, `builtFor`, `contentType`
+- `[POST]` `/divi/v1/divi-library/update-terms`  
+  args : `data`
+- `[POST]` `/divi/v1/divi-library/update-item`  
+  args : `data`
+- `[POST]` `/divi/v1/divi-library/convert-item`  
+  args : `id`, `content`, `action`
+- `[POST]` `/divi/v1/divi-library/split-item`  
+  args : `id`, `itemName`, `cloud`, `updateType`, `actionOrigin`, `global`, `content`, `itemCategories`, `itemTags`, `newCategoryName`, `newTagName`
+- `[POST]` `/divi/v1/divi-library/load`  
+  args : `post_id`
+- `[POST]` `/divi/v1/divi-library/create-item`  
+  args : `layout_name`, `layout_type`, `post_type`, `layout_selected_cats`, `layout_selected_tags`, `layout_new_cat`, `layout_new_tag`, `columns_layout`, `module_type`, `module_width`, `layout_content`, `presets`, `global_colors`, `global_variables`, `post_date`
+- `[POST]` `/divi/v1/divi-library/save`  
+  args : `layout_id`, `content`
+- `[POST]` `/divi/v1/divi-library/upload-image`  
+  args : `postId`, `imageURL`
+- `[POST]` `/divi/v1/divi-library/item-location`  
+  args : `id`
+
+## `dynamic-content/` (1 routes)
+
+- `[GET]` `/divi/v1/dynamic-content/options`  
+  args : `postId`, `_locale`
+
+## `dynamic-data/` (1 routes)
+
+- `[POST]` `/divi/v1/dynamic-data`  
+  args : `data`
+
+## `email-service/` (3 routes)
+
+- `[POST]` `/divi/v1/email-service/create`  
+  args : `provider`, `account`, `data`
+- `[POST]` `/divi/v1/email-service/read`  
+  args : `provider`, `account`
+- `[POST]` `/divi/v1/email-service/delete`  
+  args : `provider`, `account`
+
+## `global-canvas/` (1 routes)
+
+- `[DELETE]` `/divi/v1/global-canvas/(?P<canvas_id>[a-zA-Z0-9-]+)`  
+  args : `canvas_id`
+
+## `global-data/` (4 routes)
+
+- `[POST]` `/divi/v1/global-data/global-colors`  
+  args : `global_colors`
+- `[POST]` `/divi/v1/global-data/global-fonts`  
+  args : `heading_font`, `body_font`
+- `[POST]` `/divi/v1/global-data/global-variables`  
+  args : `global_variables`
+- `[POST]` `/divi/v1/global-data/global-preset/sync`  
+  args : `presets`, `actionType`, `isChunked`, `chunkIndex`, `totalChunks`, `isLastChunk`, `requestId`
+
+## `loop/` (5 routes)
+
+- `[GET]` `/divi/v1/loop/query-types`
+- `[GET]` `/divi/v1/loop/query-results`  
+  args : `query_type`, `post_type`, `taxonomy`, `term_id`, `role`, `menu_id`, `search`, `current_page_url`, `current_page_main_loop_type`, `current_page_main_loop_settings_data`, `per_page`, `posts_per_page`, `terms_per_page`, `users_per_page`, `page`, `post_offset`, `term_offset`, `user_offset`, `menus_per_page`, `menu_offset`, `order_by`, `order`, `exclude_current_post`, `ignore_sticky_posts`, `current_post_id`, `post_id`, `repeater_name`, `repeater_per_page`, `repeater_offset`, `post__in`, `post__not_in`, `meta_query`, `thumbnail_size`
+- `[GET]` `/divi/v1/loop/query-order-by`  
+  args : `query_type`, `post_type`, `post_taxonomies`, `user_roles`
+- `[GET]` `/divi/v1/loop/query-taxonomies`  
+  args : `post_type`
+- `[GET]` `/divi/v1/loop/query-posts`  
+  args : `post_type`, `search`, `posts_per_page`, `page`, `thumbnail_size`
+
+## `menu-manager/` (8 routes)
+
+- `[POST]` `/divi/v1/menu-manager/create`  
+  args : `name`
+- `[POST]` `/divi/v1/menu-manager/delete`  
+  args : `id`
+- `[POST]` `/divi/v1/menu-manager/assign-location`  
+  args : `menu_id`, `location`
+- `[POST]` `/divi/v1/menu-manager/unassign-location`  
+  args : `location`
+- `[POST]` `/divi/v1/menu-manager/resolve`  
+  args : `name`, `location`
+- `[POST]` `/divi/v1/menu-manager/items/create`  
+  args : `menu_id`, `type`, `title`, `url`, `object`, `object_id`, `parent`, `menu_order`, `status`
+- `[POST]` `/divi/v1/menu-manager/items/delete`  
+  args : `id`
+- `[POST]` `/divi/v1/menu-manager/items/reorder`  
+  args : `menu_id`, `items`
+
+## `module-data/` (21 routes)
+
+- `[POST]` `/divi/v1/module-data/breadcrumbs/html`  
+  args : `homeText`, `homeUrl`, `separator`, `htmlTag`, `requestType`, `currentPage`
+- `[GET]` `/divi/v1/module-data/gallery/attachments`  
+  args : `galleryIds`, `galleryOrderby`, `galleryCaptions`, `fullwidth`, `orientation`, `showPagination`
+- `[GET]` `/divi/v1/module-data/video/html`  
+  args : `src`, `srcWebm`
+- `[GET]` `/divi/v1/module-data/video/thumbnail`  
+  args : `src`
+- `[GET]` `/divi/v1/module-data/video/cover`  
+  args : `src`
+- `[GET]` `/divi/v1/module-data/video-slide/thumbnail`  
+  args : `src`, `thumbnailSrc`
+- `[GET]` `/divi/v1/module-data/audio/html`  
+  args : `audio`
+- `[GET]` `/divi/v1/module-data/menu/html`  
+  args : `menuId`, `menuDropdownDirection`
+- `[GET]` `/divi/v1/module-data/menu/terms`
+- `[GET]` `/divi/v1/module-data/fullwidth-menu/html`  
+  args : `menuId`, `menuDropdownDirection`
+- `[GET]` `/divi/v1/module-data/fullwidth-menu/terms`
+- `[GET]` `/divi/v1/module-data/portfolio/posts`  
+  args : `postsPerPage`, `paged`, `categories`, `fullwidth`, `currentPageId`
+- `[GET]` `/divi/v1/module-data/filterable-portfolio/posts`  
+  args : `categories`, `fullwidth`, `postsPerPage`, `showPagination`
+- `[GET]` `/divi/v1/module-data/post-navigation/navigation`  
+  args : `postId`, `inSameTerm`, `taxonomyName`, `prevText`, `nextText`, `targetLoop`, `isVB`
+- `[GET]` `/divi/v1/module-data/fullwidth-portfolio/posts`  
+  args : `postsNumber`, `categories`, `postType`
+- `[GET]` `/divi/v1/module-data/shortcode-module/html`  
+  args : `content`, `postId`, `shortcodeName`, `shortcodeList`
+- `[POST]` `/divi/v1/module-data/shortcode-module/html/batch`  
+  args : `data`
+- `[GET]` `/divi/v1/module-data/sidebar/html`  
+  args : `area`
+- `[GET]` `/divi/v1/module-data/blog/posts`  
+  args : `postType`, `postsPerPage`, `paged`, `categories`, `currentPageId`, `layoutDisplay`, `dateFormat`, `excerptContent`, `excerptLength`, `showExcerpt`, `manualExcerpt`, `offset`, `orderby`, `current_post_id`, `useCurrentLoop`, `archiveTermId`, `mainLoopType`
+- `[GET]` `/divi/v1/module-data/blog/types`
+- `[POST]` `/divi/v1/module-data/image/server-rendering-attributes`  
+  args : `src`, `id`
+
+## `module-render/` (1 routes)
+
+- `[POST]` `/divi/v1/module-render`  
+  args : `content`
+
+## `off-canvas/` (1 routes)
+
+- `[GET]` `/divi/v1/off-canvas/(?P<post_id>\d+)`  
+  args : `post_id`
+
+## `option-data/` (8 routes)
+
+- `[POST]` `/divi/v1/option-data/conditions/status`  
+  args : `conditions`
+- `[GET]` `/divi/v1/option-data/conditions/posts`  
+  args : `postType`, `page`, `search`
+- `[GET]` `/divi/v1/option-data/conditions/post-meta-fields`  
+  args : `postId`
+- `[GET]` `/divi/v1/option-data/conditions/user-role`
+- `[GET]` `/divi/v1/option-data/conditions/author`  
+  args : `page`
+- `[GET]` `/divi/v1/option-data/conditions/post-type`
+- `[GET]` `/divi/v1/option-data/conditions/categories`
+- `[GET]` `/divi/v1/option-data/conditions/tags`
+
+## `outside-vb/` (9 routes)
+
+- `[POST]` `/divi/v1/outside-vb/theme-builder/list-templates`  
+  args : `live`
+- `[POST]` `/divi/v1/outside-vb/theme-builder/create-template`  
+  args : `live`, `title`
+- `[POST]` `/divi/v1/outside-vb/theme-builder/update-template`  
+  args : `live`, `template_id`, `template`
+- `[POST]` `/divi/v1/outside-vb/theme-builder/delete-template`  
+  args : `live`, `template_id`
+- `[POST]` `/divi/v1/outside-vb/theme-builder/assign-template`  
+  args : `live`, `template_id`, `use_on`, `exclude_from`
+- `[POST]` `/divi/v1/outside-vb/theme-options/get`  
+  args : `keys`
+- `[POST]` `/divi/v1/outside-vb/theme-options/update`  
+  args : `key`, `value`
+- `[POST]` `/divi/v1/outside-vb/export-layout`  
+  args : `post_id`
+- `[POST]` `/divi/v1/outside-vb/posts/set-layout`  
+  args : `post_id`, `source_layout_post_id`, `layout_content`
+
+## `page-manager/` (9 routes)
+
+- `[GET]` `/divi/v1/page-manager`
+- `[POST]` `/divi/v1/page-manager/create`  
+  args : `title`, `post_type`, `post_status`, `post_date`
+- `[POST]` `/divi/v1/page-manager/duplicate`  
+  args : `id`
+- `[POST]` `/divi/v1/page-manager/trash`  
+  args : `id`
+- `[POST]` `/divi/v1/page-manager/update-order`  
+  args : `post_type`, `post_ids`
+- `[POST]` `/divi/v1/page-manager/update`  
+  args : `id`, `title`, `post_name`, `post_content`
+- `[POST]` `/divi/v1/page-manager/update-status`  
+  args : `id`, `post_status`, `post_date`
+- `[GET]` `/divi/v1/page-manager/search`  
+  args : `id`, `search`, `post_status`, `slug`, `per_page`, `page`, `post_type`
+- `[GET]` `/divi/v1/page-manager/show`  
+  args : `id`
+
+## `portability/` (2 routes)
+
+- `[POST]` `/divi/v1/portability/export`  
+  args : `context`, `post`, `content`, `global_presets`, `global_colors`, `global_variables`, `include_all_global_canvases`, `portability_type`
+- `[POST]` `/divi/v1/portability/import`  
+  args : `context`, `post`, `replace`, `include_global_presets`
+
+## `preset-conversion/` (1 routes)
+
+- `[POST]` `/divi/v1/preset-conversion`  
+  args : `presets`
+
+## `recent-posts/` (1 routes)
+
+- `[GET]` `/divi/v1/recent-posts`
+
+## `settings-data/` (1 routes)
+
+- `[GET]` `/divi/v1/settings-data/after-app-load`
+
+## `spam-protection-service/` (2 routes)
+
+- `[POST]` `/divi/v1/spam-protection-service/create`  
+  args : `provider`, `account`, `data`
+- `[POST]` `/divi/v1/spam-protection-service/delete`  
+  args : `provider`, `account`
+
+## `sync-to-server/` (1 routes)
+
+- `[POST]` `/divi/v1/sync-to-server`  
+  args : `post_id`, `post_status`, `syncType`, `content`, `pageSettingsByLayout`, `off_canvas_data`, `layout_post_ids`, `mainLoopType`, `mainLoopSettingsData`
+
+## `update-account/` (1 routes)
+
+- `[POST]` `/divi/v1/update-account`  
+  args : `username`, `apiKey`, `status`
+
+## `update-default-colors/` (1 routes)
+
+- `[POST]` `/divi/v1/update-default-colors`  
+  args : `default_colors`
+
+## `woocommerce/` (1 routes)
+
+- `[GET]` `/divi/v1/woocommerce/search-products`  
+  args : `search`, `per_page`, `page`, `fields`, `id`, `include_current_post`, `include_latest_post`, `current_post_type`, `is_in_product_loop`
+

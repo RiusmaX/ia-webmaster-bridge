@@ -1,6 +1,6 @@
 # Roadmap
 
-> Statut : Vivant · Dernière mise à jour : 2026-05-21
+> Statut : Vivant · Dernière mise à jour : 2026-05-23
 
 Plan d'action par phases. Les cases reflètent l'avancement réel. La sécurité
 (`specs/02-securite.md`) est transversale : construite dès la Phase 1 et durcie
@@ -34,15 +34,19 @@ en continu, la Phase 5 étant la passe de durcissement formelle.
 
 ## Phase 3 — Plan Divi 5 *(prioritaire)*
 
-- [ ] Rétro-ingénierie du format de layout Divi 5 sur le site local
+- [x] Cartographie de l'API `divi/v1` (102 routes, voir `docs/divi5-api-index.md`)
+- [ ] Rétro-ingénierie du format de layout Divi 5 sur le site local (page de référence en cours)
 - [ ] Lecture d'un layout Divi 5 existant
 - [ ] Bibliothèque de génération de layouts (`lib/divi/`)
 - [ ] Création d'une page Divi 5 simple de bout en bout
 - [ ] Aller-retour fiable (générer → éditer dans le builder → relire)
+- [ ] Lecture/import depuis la bibliothèque Divi Cloud
 
 ## Phase 4 — Plan infrastructure
 
-- [ ] Capacités extensions/thèmes (install, activation, mise à jour)
+- [x] Capacités extensions (install, activation, désactivation) — avancée Phase 3 pour intégrer Rank Math
+- [ ] Capacités thèmes (install, activation, mise à jour)
+- [ ] Mise à jour des extensions
 - [ ] Capacités base de données (export, requête, search-replace) contrôlées
 - [ ] Sauvegardes et restauration
 - [ ] Canal SSH/WP-CLI de secours documenté
@@ -57,8 +61,13 @@ en continu, la Phase 5 étant la passe de durcissement formelle.
 
 ## Phase 6 — Couche webmaster
 
-- [ ] Skills Claude Code (créer une landing page, audit SEO, debug, etc.)
-- [ ] Empaquetage en plugin Claude Code (pont MCP + skills)
+- [x] Skills Claude Code (créer une landing page, audit SEO, debug, etc.)
+- [x] Empaquetage en plugin Claude Code + diffusion open source (GitHub, GPL-3.0)
+- [x] Skill `design-frontend-wordpress` (hiérarchie, typo, couleurs, espacement, mobile-first)
+- [x] Skill `marketing-conversion-wordpress` (AIDA/PAS/FAB, preuve sociale, hiérarchie des CTA)
+- [x] Skill `seo-wordpress` (audit SEO, Rank Math, structure sémantique)
+- [ ] API SEO normalisée avec backend Rank Math (implémentée, à enrichir)
+- [ ] Backend Yoast SEO en alternative
 - [ ] Fichier de contexte par site
 - [ ] Workflows webmaster documentés
 - [ ] Éventuelles routines planifiées

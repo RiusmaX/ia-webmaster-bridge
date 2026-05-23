@@ -1,9 +1,9 @@
 # Spec 04 — Plan Divi 5 (prioritaire)
 
-- **Statut** : Ébauche
+- **Statut** : En cours (Phase 3.1 — rétro-ingénierie)
 - **Phase** : 3
 - **Priorité** : Prioritaire
-- **Dernière mise à jour** : 2026-05-21
+- **Dernière mise à jour** : 2026-05-23
 
 ## Objectif
 
@@ -27,18 +27,57 @@ générer un layout Divi 5 complet par programme. Les ressources disponibles :
 - une documentation communautaire non officielle (à vérifier, jamais à supposer
   exacte).
 
-**Découverte sur le site local (2026-05-21)** : Divi 5 expose en réalité un
-namespace REST complet `divi/v1` (~110 routes), dont `portability/import` et
-`portability/export` (layouts JSON), `outside-vb/posts/set-layout` (appliquer un
-layout à une page hors Visual Builder), `divi-library/*`, `outside-vb/theme-builder/*`
-et `page-manager/*`. Ces routes sont conçues pour le Visual Builder ; leur usage
-en server-to-server (authentification, nonces) reste à qualifier en Phase 3, mais
-elles constituent une voie programmatique sérieuse — à privilégier sur la
-rétro-ingénierie pure.
+**Cartographie complète de `divi/v1` (2026-05-23)** — 102 routes uniques, 29
+groupes. Carte détaillée dans `docs/divi5-api-index.md` (source brute :
+`docs/divi5-api-map.json`). Routes les plus structurantes pour notre usage :
 
-Conséquence : la première brique de cette phase est une **rétro-ingénierie du
-format réel** sur le site local, en s'appuyant sur ce que `divi/v1` permet
-déjà.
+- **`page-manager/`** (9 routes) — create, update, duplicate, trash, search, show.
+  Voie haut niveau pour gérer les pages Divi sans passer par le VB.
+- **`sync-to-server`** — POST que le VB utilise pour persister le contenu :
+  `post_id`, `content`, `pageSettingsByLayout`, `off_canvas_data`,
+  `layout_post_ids`, `mainLoopType`, `mainLoopSettingsData`. **C'est le canal
+  d'écriture canonique de Divi 5.**
+- **`outside-vb/posts/set-layout`** — applique un layout (par contenu ou par
+  post source) à un post cible, sans VB.
+- **`outside-vb/export-layout`** — exporte le layout d'un post (lecture).
+- **`portability/export`** et **`portability/import`** — format JSON officiel,
+  utilisé pour la migration de layouts.
+- **`divi-library/`** (12 routes) — bibliothèque Divi : list, item, load,
+  create-item, save, split-item, convert-item, upload-image, item-location ;
+  **`cloud-token`** pour Divi Cloud.
+- **`global-data/`** (4 routes) — couleurs globales, fontes, variables,
+  presets (système design). **Critique** pour piloter le style site-wide.
+- **`module-render`** — rendu HTML d'un module à partir de son JSON
+  (preview programmatique).
+- **`dynamic-content/options`** — options de contenu dynamique disponibles
+  pour un post (titre, extrait, custom fields…).
+- **`breakpoints/update`** — paramètres responsive (mobile, tablette,
+  desktop, custom).
+- **`outside-vb/theme-builder/*`** (5 routes) — templates header/footer,
+  templates personnalisés.
+- **`menu-manager/`** (8 routes) — gestionnaire de menus Divi (distinct du
+  système menu WP standard).
+- **`module-data/`** (21 routes) — endpoints utilitaires par module
+  (gallery, video, audio, blog/posts, breadcrumbs, sidebar, shortcode…).
+- **`loop/`** (5 routes) — types de requête pour les boucles dynamiques.
+- **`ai_layout_save_defaults`** — Divi a déjà ses propres "AI layout
+  defaults" (fontes, couleurs primaire/secondaire, description site).
+
+Toutes ces routes sont **protégées par le nonce du Visual Builder** : un
+appel en pur server-to-server (sans cookie admin) reçoit 401/403. Trois
+voies pour les exploiter :
+1. **Appel interne en PHP** depuis notre plugin (`rest_do_request` après
+   `act_as_agent`) : on hérite des droits admin et on évite le nonce.
+2. **Appel direct aux fonctions PHP de Divi** : certaines routes ne sont
+   qu'un wrapper léger autour d'une fonction réutilisable (à confirmer cas
+   par cas).
+3. **Travail au niveau stockage** (`post_content`, post meta) sans passer
+   par les routes Divi — plus brut mais plus stable. À privilégier pour la
+   lecture ; à éviter pour l'écriture (déclencheurs/cache).
+
+Conséquence : la première brique reste une **rétro-ingénierie du format
+réel** sur le site local (création d'une page de référence dans le VB,
+extraction du `post_content` et des meta), pour ancrer toute la suite.
 
 ## Périmètre
 
