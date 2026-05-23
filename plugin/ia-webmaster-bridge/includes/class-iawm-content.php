@@ -193,10 +193,12 @@ class IAWM_Content {
 		// Normalisation du contenu (balisage de blocs Gutenberg canonique).
 		$norm = self::normalize_content( $content, ! empty( $params['raw_content'] ) );
 
+		// wp_insert_post applique wp_unslash() en interne : on slashe nous-mêmes
+		// pour préserver les backslashes (essentiel pour les attributs Divi 5).
 		$postarr = array(
 			'post_type'    => $type,
-			'post_title'   => $title,
-			'post_content' => $norm['content'],
+			'post_title'   => wp_slash( $title ),
+			'post_content' => wp_slash( $norm['content'] ),
 			'post_status'  => $status,
 			'post_author'  => IAWM_Support::acting_user_id(),
 		);
@@ -277,15 +279,18 @@ class IAWM_Content {
 		$changes = array();
 		$norm    = null;
 
+		// wp_update_post applique wp_unslash() en interne : on slashe les
+		// champs texte pour préserver les backslashes (Divi 5 stocke des
+		// échappements Unicode ", <, … dans ses attributs).
 		if ( isset( $params['title'] ) ) {
-			$changes['post_title'] = (string) $params['title'];
+			$changes['post_title'] = wp_slash( (string) $params['title'] );
 		}
 		if ( isset( $params['content'] ) ) {
 			$norm                    = self::normalize_content( (string) $params['content'], ! empty( $params['raw_content'] ) );
-			$changes['post_content'] = $norm['content'];
+			$changes['post_content'] = wp_slash( $norm['content'] );
 		}
 		if ( isset( $params['excerpt'] ) ) {
-			$changes['post_excerpt'] = (string) $params['excerpt'];
+			$changes['post_excerpt'] = wp_slash( (string) $params['excerpt'] );
 		}
 		if ( isset( $params['slug'] ) ) {
 			$changes['post_name'] = (string) $params['slug'];

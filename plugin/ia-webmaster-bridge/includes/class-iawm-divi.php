@@ -53,8 +53,9 @@ class IAWM_Divi {
 	 */
 	public static function register_routes() {
 		$routes = array(
-			'/divi/page/read' => array( 'handle_page_read', 'guard_read' ),
-			'/divi/status'    => array( 'handle_status', 'guard_read' ),
+			'/divi/page/read'  => array( 'handle_page_read', 'guard_read' ),
+			'/divi/page/write' => array( 'handle_page_write', 'guard_write' ),
+			'/divi/status'     => array( 'handle_status', 'guard_read' ),
 		);
 
 		foreach ( $routes as $path => $config ) {
@@ -180,6 +181,156 @@ class IAWM_Divi {
 					'section_count'  => isset( $counts['divi/section'] ) ? $counts['divi/section'] : 0,
 				),
 				'layout'  => $output,
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /divi/page/write — écrit un layout Divi 5 dans un post.
+	 *
+	 * Deux formats d'entrée acceptés :
+	 *  - "content" (string) : post_content déjà sérialisé (chaîne avec
+	 *    `<!-- wp:divi/... -->`). Passe par parse_blocks+serialize_blocks
+	 *    pour normalisation et validation.
+	 *  - "blocks" (array) : tableau de blocs au format parse_blocks
+	 *    (`{ blockName, attrs, innerBlocks, innerHTML, innerContent }`).
+	 *    Sérialisé via serialize_blocks().
+	 *
+	 * Garantit :
+	 *  - le wrapper wp:divi/placeholder racine (ajouté automatiquement
+	 *    s'il manque) ;
+	 *  - la meta _et_pb_use_builder=on (posée si absente) ;
+	 *  - la meta _et_pb_built_for_post_type alignée sur le type du post.
+	 *
+	 * dry_run=true : valide et décrit ce qui serait écrit sans toucher
+	 * au post.
+	 *
+	 * @param WP_REST_Request $request Requête.
+	 * @return WP_REST_Response
+	 */
+	public static function handle_page_write( $request ) {
+		$params  = IAWM_Support::json_params( $request );
+		$post_id = isset( $params['post_id'] ) ? (int) $params['post_id'] : 0;
+		$dry_run = ! empty( $params['dry_run'] );
+
+		if ( $post_id <= 0 ) {
+			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id requis.', 400 );
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} introuvable.", 404 );
+		}
+
+		// Récupération du contenu à écrire selon le format fourni.
+		$blocks = null;
+		if ( isset( $params['blocks'] ) && is_array( $params['blocks'] ) ) {
+			$blocks = $params['blocks'];
+		} elseif ( isset( $params['content'] ) && is_string( $params['content'] ) ) {
+			$blocks = parse_blocks( $params['content'] );
+		} else {
+			return IAWM_Support::rest_error(
+				'missing_payload',
+				'Fournir "content" (chaîne sérialisée) OU "blocks" (tableau de blocs).',
+				400
+			);
+		}
+
+		// Filtrer les blocs vides issus du parsing (whitespace).
+		$real_blocks = array_values( array_filter( $blocks, function( $b ) {
+			return ! empty( $b['blockName'] );
+		} ) );
+
+		if ( empty( $real_blocks ) ) {
+			return IAWM_Support::rest_error( 'empty_layout', 'Aucun bloc Divi détecté dans le payload.', 400 );
+		}
+
+		// Vérifier qu'on a soit un placeholder racine, soit uniquement des
+		// blocs divi/. Si non, refuser.
+		$has_placeholder = count( $real_blocks ) === 1 && $real_blocks[0]['blockName'] === self::ROOT_BLOCK;
+		$all_divi        = true;
+		foreach ( $real_blocks as $b ) {
+			if ( 0 !== strpos( $b['blockName'], self::BLOCK_PREFIX ) ) {
+				$all_divi = false;
+				break;
+			}
+		}
+		if ( ! $all_divi ) {
+			return IAWM_Support::rest_error(
+				'non_divi_blocks',
+				'Le layout contient des blocs hors namespace divi/.',
+				400,
+				array( 'detected' => array_map( function( $b ) { return $b['blockName']; }, $real_blocks ) )
+			);
+		}
+
+		// Auto-wrap : si on n'a pas le placeholder racine, on l'ajoute.
+		if ( ! $has_placeholder ) {
+			$real_blocks = array(
+				array(
+					'blockName'    => self::ROOT_BLOCK,
+					'attrs'        => new stdClass(),
+					'innerBlocks'  => $real_blocks,
+					'innerHTML'    => '',
+					'innerContent' => array( null ),
+				),
+			);
+			$wrapped = true;
+		} else {
+			$wrapped = false;
+		}
+
+		$content      = serialize_blocks( $real_blocks );
+		$block_count  = self::count_block_types( $real_blocks );
+		$total        = array_sum( $block_count );
+
+		$preview = array(
+			'wrapped_with_placeholder' => $wrapped,
+			'block_count'              => $block_count,
+			'total_blocks'             => $total,
+			'content_length'           => strlen( $content ),
+		);
+
+		if ( $dry_run ) {
+			return new WP_REST_Response(
+				array( 'ok' => true, 'dry_run' => true, 'preview' => $preview ),
+				200
+			);
+		}
+
+		IAWM_Support::act_as_agent();
+
+		// wp_update_post applique wp_unslash() en interne (suppose que les
+		// données viennent d'un $_POST déjà slashed). On doit donc slasher
+		// nous-mêmes pour préserver les backslashes du JSON Divi
+		// (", <, etc.) — sans ça, les attributs des blocs sont
+		// corrompus à l'écriture.
+		$result = wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => wp_slash( $content ),
+			),
+			true
+		);
+		if ( is_wp_error( $result ) ) {
+			return IAWM_Support::rest_error( 'write_failed', $result->get_error_message(), 500 );
+		}
+
+		// Garantir les meta Divi.
+		if ( 'on' !== get_post_meta( $post_id, '_et_pb_use_builder', true ) ) {
+			update_post_meta( $post_id, '_et_pb_use_builder', 'on' );
+		}
+		if ( get_post_meta( $post_id, '_et_pb_built_for_post_type', true ) !== $post->post_type ) {
+			update_post_meta( $post_id, '_et_pb_built_for_post_type', $post->post_type );
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'      => true,
+				'written' => true,
+				'post_id' => $post_id,
+				'preview' => $preview,
 			),
 			200
 		);

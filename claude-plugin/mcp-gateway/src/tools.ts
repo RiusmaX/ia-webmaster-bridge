@@ -618,6 +618,28 @@ function registerDivi(server: McpServer, client: IawmClient): void {
     },
     async (args) => toToolResult("divi/page/read", await client.post("/divi/page/read", args)),
   );
+
+  server.registerTool(
+    "iawm_divi_page_write",
+    {
+      title: "Écrire un layout Divi 5",
+      description:
+        "Écrit un layout Divi 5 dans un post. Deux formats acceptés : content (chaîne post_content déjà sérialisée avec les commentaires wp:divi/*) OU blocks (tableau de blocs au format parse_blocks). Si le wrapper racine wp:divi/placeholder manque, il est ajouté automatiquement. La meta _et_pb_use_builder est posée si absente. dry_run=true prévisualise sans écrire.",
+      inputSchema: {
+        post_id: z.number().int().describe("Identifiant du post/page cible"),
+        content: z
+          .string()
+          .optional()
+          .describe("Post_content déjà sérialisé (chaîne avec commentaires wp:divi/*)"),
+        blocks: z
+          .array(z.record(z.string(), z.unknown()))
+          .optional()
+          .describe("Tableau de blocs au format parse_blocks (alternatif à content)"),
+        dry_run: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("divi/page/write", await client.post("/divi/page/write", args)),
+  );
 }
 
 /**

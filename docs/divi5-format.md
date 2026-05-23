@@ -405,6 +405,18 @@ structure `innerContent.desktop.value.{text, linkUrl}`.
    WP normalisent l'output. Un round-trip Divi → parse → serialize peut
    **réordonner les clés** du JSON d'attributs (ce n'est pas un bug, c'est
    un artefact de `json_encode`). Le builder accepte les deux ordres.
+   En pratique observée sur la page de référence : **round-trip identique
+   au bit près** (11438 octets, 24 blocs).
+
+8. **Piège `wp_unslash` (critique).** `wp_insert_post` et `wp_update_post`
+   appliquent `wp_unslash()` en interne sur les champs texte — ils
+   supposent que les données viennent slashed depuis `$_POST`. Si on leur
+   passe directement un `post_content` Divi déjà propre, **tous les
+   backslashes disparaissent silencieusement**. Or Divi 5 stocke ses
+   attributs avec des échappements Unicode `"`, `<`, `>`,
+   etc. — chaque backslash perdu corrompt un attribut. **Toujours appeler
+   `wp_slash()` sur le contenu avant `wp_insert_post` / `wp_update_post`.**
+   C'est le fix qui rend le round-trip fidèle au bit près.
 
 ## Plan d'attaque (Phase 3.2)
 

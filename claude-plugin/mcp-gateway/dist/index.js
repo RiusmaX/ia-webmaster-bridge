@@ -31559,6 +31559,20 @@ function registerDivi(server, client) {
     },
     async (args) => toToolResult("divi/page/read", await client.post("/divi/page/read", args))
   );
+  server.registerTool(
+    "iawm_divi_page_write",
+    {
+      title: "\xC9crire un layout Divi 5",
+      description: "\xC9crit un layout Divi 5 dans un post. Deux formats accept\xE9s : content (cha\xEEne post_content d\xE9j\xE0 s\xE9rialis\xE9e avec les commentaires wp:divi/*) OU blocks (tableau de blocs au format parse_blocks). Si le wrapper racine wp:divi/placeholder manque, il est ajout\xE9 automatiquement. La meta _et_pb_use_builder est pos\xE9e si absente. dry_run=true pr\xE9visualise sans \xE9crire.",
+      inputSchema: {
+        post_id: external_exports.number().int().describe("Identifiant du post/page cible"),
+        content: external_exports.string().optional().describe("Post_content d\xE9j\xE0 s\xE9rialis\xE9 (cha\xEEne avec commentaires wp:divi/*)"),
+        blocks: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional().describe("Tableau de blocs au format parse_blocks (alternatif \xE0 content)"),
+        dry_run: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("divi/page/write", await client.post("/divi/page/write", args))
+  );
 }
 function registerTools(server, client) {
   registerSystem(server, client);
