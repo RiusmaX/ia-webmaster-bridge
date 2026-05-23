@@ -477,6 +477,90 @@ class IAWM_Divi_Theme_Builder {
 			return IAWM_Support::rest_error( 'no_template_id', 'Pas d\'id de template retourné.', 500, array( 'divi_response' => $create_res['data'] ) );
 		}
 
+		// 2.5. Si pas de body fourni, créer un body minimal avec un module
+		// post-content qui rendra le contenu de la page courante. Sinon,
+		// Divi affiche un blanc entre header et footer (il attend qu'on lui
+		// dise comment composer le body).
+		if ( ! isset( $layouts['body'] ) ) {
+			// Construit un layout body minimal à partir des blocs structurés
+			// pour éviter les pièges d'échappement dans les chaînes longues.
+			$body_blocks = array(
+				array(
+					'blockName'    => 'divi/placeholder',
+					'attrs'        => array( 'builderVersion' => '5.5.2' ),
+					'innerBlocks'  => array(
+						array(
+							'blockName'    => 'divi/section',
+							'attrs'        => array( 'builderVersion' => '5.5.2' ),
+							'innerBlocks'  => array(
+								array(
+									'blockName'    => 'divi/row',
+									'attrs'        => array(
+										'module' => array(
+											'advanced' => array(
+												'columnStructure'     => array( 'desktop' => array( 'value' => '4_4' ) ),
+												'flexColumnStructure' => array( 'desktop' => array( 'value' => 'equal-columns_1' ) ),
+											),
+											'decoration' => array(
+												'layout' => array( 'desktop' => array( 'value' => array( 'flexWrap' => 'nowrap' ) ) ),
+											),
+										),
+										'builderVersion' => '5.5.2',
+									),
+									'innerBlocks'  => array(
+										array(
+											'blockName'    => 'divi/column',
+											'attrs'        => array(
+												'module' => array(
+													'advanced'   => array( 'type' => array( 'desktop' => array( 'value' => '4_4' ) ) ),
+													'decoration' => array( 'sizing' => array( 'desktop' => array( 'value' => array( 'flexType' => '24_24' ) ) ) ),
+												),
+												'builderVersion' => '5.5.2',
+											),
+											'innerBlocks'  => array(
+												array(
+													'blockName'    => 'divi/post-content',
+													'attrs'        => array( 'builderVersion' => '5.5.2' ),
+													'innerBlocks'  => array(),
+													'innerHTML'    => '',
+													'innerContent' => array( null ),
+												),
+											),
+											'innerHTML'    => '',
+											'innerContent' => array( null, null ),
+										),
+									),
+									'innerHTML'    => '',
+									'innerContent' => array( null, null ),
+								),
+							),
+							'innerHTML'    => '',
+							'innerContent' => array( null, null ),
+						),
+					),
+					'innerHTML'    => '',
+					'innerContent' => array( null, null ),
+				),
+			);
+			$post_content_block = serialize_blocks( $body_blocks );
+
+			$body_id = wp_insert_post(
+				array(
+					'post_type'    => self::ZONE_POST_TYPE['body'],
+					'post_title'   => 'Body (Default) — ' . $title,
+					'post_content' => wp_slash( $post_content_block ),
+					'post_status'  => 'publish',
+					'post_author'  => IAWM_Support::acting_user_id(),
+				),
+				true
+			);
+			if ( ! is_wp_error( $body_id ) ) {
+				update_post_meta( $body_id, '_et_pb_use_builder', 'on' );
+				update_post_meta( $body_id, '_et_pb_built_for_post_type', self::ZONE_POST_TYPE['body'] );
+				$layouts['body'] = $body_id;
+			}
+		}
+
 		// 3. Lier les layouts via update-template.
 		$template_payload = array(
 			'id'      => $template_id,
