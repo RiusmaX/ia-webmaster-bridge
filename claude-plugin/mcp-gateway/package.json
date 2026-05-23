@@ -1,6 +1,6 @@
 {
   "name": "iawm-mcp-gateway",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Pont MCP local reliant Claude Code au plugin IA Webmaster Bridge.",
   "private": true,
   "type": "module",

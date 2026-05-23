@@ -58,6 +58,7 @@ class IAWM_Divi {
 			'/divi/status'         => array( 'handle_status', 'guard_read' ),
 			'/divi/library/list'   => array( 'handle_library_list', 'guard_read' ),
 			'/divi/library/item'   => array( 'handle_library_item', 'guard_read' ),
+			'/divi/library/local'  => array( 'handle_library_local', 'guard_read' ),
 			'/divi/cloud/status'   => array( 'handle_cloud_status', 'guard_read' ),
 			'/divi/global-data'    => array( 'handle_global_data', 'guard_read' ),
 		);
@@ -318,6 +319,94 @@ class IAWM_Divi {
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
+	}
+
+	/**
+	 * POST /divi/library/local — liste les layouts sauvegardés dans la
+	 * bibliothèque Divi locale (post_type et_pb_layout).
+	 *
+	 * Workflow hybride : quand l'utilisateur trouve un layout intéressant dans
+	 * Divi Cloud (depuis le Visual Builder de son navigateur), il clique
+	 * "Save to Library" — ça crée un post et_pb_layout que cette route
+	 * expose à notre API. On peut ensuite lire son contenu via
+	 * iawm_content_get (le post_content contient les blocs Divi 5) ou via
+	 * iawm_divi_page_read si on adapte la garde-fou.
+	 *
+	 * @param WP_REST_Request $request Requête.
+	 * @return WP_REST_Response
+	 */
+	public static function handle_library_local( $request ) {
+		$params   = IAWM_Support::json_params( $request );
+		$per_page = isset( $params['per_page'] ) ? max( 1, min( 100, (int) $params['per_page'] ) ) : 50;
+		$page     = isset( $params['page'] ) ? max( 1, (int) $params['page'] ) : 1;
+		$search   = isset( $params['search'] ) ? sanitize_text_field( (string) $params['search'] ) : '';
+		$category = isset( $params['category'] ) ? sanitize_text_field( (string) $params['category'] ) : '';
+
+		$args = array(
+			'post_type'      => 'et_pb_layout',
+			'post_status'    => 'any',
+			'posts_per_page' => $per_page,
+			'paged'          => $page,
+			'orderby'        => 'modified',
+			'order'          => 'DESC',
+		);
+		if ( '' !== $search ) {
+			$args['s'] = $search;
+		}
+		if ( '' !== $category ) {
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'layout_category',
+					'field'    => 'slug',
+					'terms'    => $category,
+				),
+			);
+		}
+
+		$query = new WP_Query( $args );
+		$items = array();
+		foreach ( $query->posts as $post ) {
+			$layout_type = get_post_meta( $post->ID, '_et_pb_built_for_post_type', true );
+			$cats        = wp_get_post_terms( $post->ID, 'layout_category', array( 'fields' => 'names' ) );
+			$tags        = wp_get_post_terms( $post->ID, 'layout_tag', array( 'fields' => 'names' ) );
+			$pack        = wp_get_post_terms( $post->ID, 'layout_pack', array( 'fields' => 'names' ) );
+
+			// Détecter si c'est du Divi 5 (blocs) ou du Divi 4 (shortcodes).
+			$is_d5 = false !== strpos( $post->post_content, '<!-- wp:divi/' );
+
+			$items[] = array(
+				'id'           => (int) $post->ID,
+				'title'        => $post->post_title,
+				'slug'         => $post->post_name,
+				'status'       => $post->post_status,
+				'date_gmt'     => $post->post_date_gmt,
+				'modified_gmt' => $post->post_modified_gmt,
+				'is_divi_5'    => $is_d5,
+				'layout_type'  => is_string( $layout_type ) && '' !== $layout_type ? $layout_type : null,
+				'categories'   => is_array( $cats ) ? $cats : array(),
+				'tags'         => is_array( $tags ) ? $tags : array(),
+				'pack'         => is_array( $pack ) && ! empty( $pack ) ? $pack[0] : null,
+				'content_length' => strlen( $post->post_content ),
+			);
+		}
+
+		// Lister aussi les catégories/tags pour aider à filtrer.
+		$all_categories = get_terms( array( 'taxonomy' => 'layout_category', 'hide_empty' => false, 'fields' => 'names' ) );
+		$all_tags       = get_terms( array( 'taxonomy' => 'layout_tag', 'hide_empty' => false, 'fields' => 'names' ) );
+
+		return new WP_REST_Response(
+			array(
+				'ok'             => true,
+				'total'          => (int) $query->found_posts,
+				'page'           => $page,
+				'per_page'       => $per_page,
+				'total_pages'    => (int) $query->max_num_pages,
+				'items'          => $items,
+				'all_categories' => is_array( $all_categories ) ? $all_categories : array(),
+				'all_tags'       => is_array( $all_tags ) ? $all_tags : array(),
+			),
+			200
+		);
 	}
 
 	/**

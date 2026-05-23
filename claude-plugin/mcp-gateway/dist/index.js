@@ -31572,6 +31572,20 @@ function registerDivi(server, client) {
     async (args) => toToolResult("divi/library/list", await client.post("/divi/library/list", args))
   );
   server.registerTool(
+    "iawm_divi_library_local",
+    {
+      title: "Lister les layouts Divi sauvegard\xE9s localement",
+      description: "Liste les layouts Divi 5 sauvegard\xE9s dans la biblioth\xE8que locale (post_type et_pb_layout). Workflow hybride : quand l'utilisateur trouve un layout Divi Cloud int\xE9ressant dans le builder visuel, il clique 'Save to Library' \u2014 le layout devient accessible \xE0 l'API. Filtrage par cat\xE9gorie/recherche, indique si chaque layout est au format Divi 5.",
+      inputSchema: {
+        search: external_exports.string().optional().describe("Recherche dans le titre"),
+        category: external_exports.string().optional().describe("Slug de cat\xE9gorie layout"),
+        per_page: external_exports.number().int().min(1).max(100).optional(),
+        page: external_exports.number().int().min(1).optional()
+      }
+    },
+    async (args) => toToolResult("divi/library/local", await client.post("/divi/library/local", args))
+  );
+  server.registerTool(
     "iawm_divi_library_item",
     {
       title: "R\xE9cup\xE9rer un item de la biblioth\xE8que Divi",
