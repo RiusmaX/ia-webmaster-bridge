@@ -19,6 +19,11 @@ tools/*-client.mjs
 tools/*-client.php
 tools/clients/
 
+# Préférences personnelles du mainteneur courant (langue, style, env de dev).
+# Le CLAUDE.md versionné reste générique pour le public ; CLAUDE.local.md
+# contient les préférences propres au poste de travail.
+CLAUDE.local.md
+
 # Divers
 *.log
 .DS_Store

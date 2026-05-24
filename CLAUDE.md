@@ -1,69 +1,84 @@
-# IA Webmaster — Contexte projet
+# IA Webmaster Bridge — Contexte projet
+
+> Fichier de contexte chargé automatiquement par Claude Code à chaque session
+> ouverte dans ce dépôt. Indique le but du projet, sa structure et les règles
+> à suivre lors de toute modification.
 
 ## En une phrase
 
-Système permettant à Claude d'agir comme **webmaster WordPress full-compétence**
-sur des sites WordPress 7.0 : gestion de contenu, configuration, génération de
-pages **Divi 5**, et opérations d'infrastructure.
-
-## Porteur du projet
-
-Marius Sergent — professionnel WordPress, francophone. **Répondre en français.**
-Méthode : co-conception étape par étape, on teste et on itère, on construit
-solide au fur et à mesure. Environnement : Windows 11, shell PowerShell.
+Système permettant à un agent Claude (Claude Code ou Claude Desktop) d'agir
+comme **webmaster WordPress full-compétence** sur des sites **WordPress 7.0 +
+Divi 5** : contenu, configuration, génération de pages et de templates de
+thème, SEO, opérations d'infrastructure — chaque action authentifiée,
+journalisée et encadrée par des garde-fous.
 
 ## Décisions structurantes
 
-Voir `docs/decisions.md` pour le détail et le contexte. En résumé :
+Voir [`docs/decisions.md`](docs/decisions.md). En résumé :
 
-- **Adaptateur 100 % maison.** On construit notre propre plugin WordPress + pont
-  MCP. On n'utilise PAS le `WordPress/mcp-adapter` externe (pré-1.0, dépendance).
-- **Builder prioritaire : Divi 5** (majorité des sites cibles). Elementor plus
-  tard, éventuellement.
-- **Développement local d'abord** via LocalWP. Jamais d'itération sur une prod.
-- **Sécurité = exigence de premier ordre**, transversale (voir `specs/02-securite.md`).
-- **Infra via le plugin** : opérations serveur exposées par endpoints contrôlés
-  plutôt que par SSH brut quand c'est possible.
+- **Adaptateur 100 % maison.** Plugin WordPress + pont MCP propres. Pas de
+  dépendance à un adaptateur externe pré-1.0.
+- **Builder prioritaire : Divi 5.** Elementor reporté.
+- **Développement local d'abord** (LocalWP recommandé). Jamais d'itération
+  directe sur une production.
+- **Sécurité de premier ordre** (voir [`specs/02-securite.md`](specs/02-securite.md)) :
+  HMAC, audit, garde-fous, kill switch.
+- **Opérations d'infra via le plugin** plutôt que par SSH brut quand c'est
+  possible.
 
 ## Structure du dépôt
 
-- `CLAUDE.md` — ce fichier (contexte chargé à chaque session)
-- `README.md` — présentation publique du projet
-- `LICENSE` — licence GPL-3.0-or-later
-- `docs/` — `architecture.md`, `roadmap.md`, `decisions.md`, `glossaire.md`
-- `specs/` — une spec par fonctionnalité (`01` à `07`)
-- `plugin/ia-webmaster-bridge/` — le plugin WordPress (API REST `ia-webmaster/v1`)
-- `claude-plugin/` — le plugin Claude Code (outils MCP + skills + pont `mcp-gateway/`)
-- `.claude-plugin/marketplace.json` — catalogue marketplace
+| Chemin | Rôle |
+|--------|------|
+| `CLAUDE.md` | Ce fichier (contexte projet partagé, chargé à chaque session) |
+| `README.md` | Présentation publique du projet et installation |
+| `LICENSE` | GPL-3.0-or-later |
+| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossaire.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md` |
+| `specs/` | Une spec par fonctionnalité (`01` à `07`) |
+| `plugin/ia-webmaster-bridge/` | Plugin WordPress (API REST `ia-webmaster/v1`) |
+| `claude-plugin/` | Plugin Claude Code (outils MCP + skills + pont MCP) |
+| `claude-plugin/mcp-gateway/` | Pont MCP (TypeScript bundled) |
+| `.claude-plugin/marketplace.json` | Catalogue marketplace Claude Code |
+| `tools/` | Outils de développement (voir `tools/README.md`) |
 
-## État courant
+## État du projet
 
-**Phases 0 à 3 terminées** — système complet capable de **générer un site
-WordPress + Divi 5 depuis un prompt** (header, footer, page d'accueil,
-contenu, SEO).
+Phases 0 à 3 complètes — voir [`docs/roadmap.md`](docs/roadmap.md) pour le
+détail des sous-jalons atteints et restants.
 
-- **Plugin WordPress** : v0.18.3, ~12 modules, ~56 endpoints REST.
-- **Pont MCP gateway** : v0.12.0, bundle 1.1 Mo, 38+ outils MCP.
-- **Plugin Claude Code** : v0.2.0, 7 skills (méthodes webmaster + design
-  + marketing + SEO + créer page + créer page Divi + audit).
-- **Couverture Divi 5** : 41 modules natifs implémentés (sur ~99
-  inventoriés), 13 patterns paramétrables (hero, features3col, pricing,
-  testimonials, team, FAQ, headerSimple, footerStandard…), Theme Builder
-  complet (header / footer / templates dynamiques), round-trip fidèle au
-  bit.
-- **SEO Rank Math** intégré (API normalisée, prête pour Yoast).
-- **Test E2E réussi** : page d'accueil complète + header + footer + SEO
-  générés en draft en une commande, à partir d'un brief client.
+Capacités actuelles (haut niveau) :
 
-Reste : Phase 4 (infrastructure : thèmes, BDD, sauvegardes), Phase 5
-(durcissement sécurité), modules WooCommerce, backend SEO Yoast. Voir
-`docs/roadmap.md`.
+- Gestion WordPress complète (contenu, médias, taxonomies, menus,
+  configuration, diagnostic, plugins).
+- Divi 5 : 41 modules natifs, 13 patterns paramétrables, Theme Builder
+  complet, round-trip fidèle au bit, composeur unifié déclaratif
+  (`iawm_divi_page_compose`).
+- SEO Rank Math (Yoast prévu).
+- 7 skills Claude Code de méthode et de workflow.
 
-## Règles de collaboration
+## Règles de collaboration (à suivre par l'agent)
 
-- Répondre en français.
-- Avancer étape par étape ; valider les engagements importants avec l'utilisateur.
-- Jamais d'opération destructrice sur une prod sans confirmation explicite ET
-  sauvegarde préalable.
-- Tenir `docs/decisions.md` et `docs/roadmap.md` à jour à chaque décision.
-- Toute spec modifiée : mettre à jour son champ « Statut » et la date.
+- **Co-conception étape par étape.** Avancer par incréments testables ;
+  valider les engagements importants avec l'utilisateur avant de coder.
+- **Jamais d'opération destructrice sur une production sans confirmation
+  explicite ET sauvegarde préalable.**
+- **Brouillon par défaut.** Toute création de contenu commence en `draft` ;
+  la publication doit être explicite.
+- **Pas de scripts intermédiaires pour générer du contenu Divi.** Utiliser
+  directement les outils MCP `iawm_divi_page_compose` et
+  `iawm_divi_theme_builder_compose` (voir `docs/divi5-compose-dsl.md`).
+  Les scripts par projet (clients) vont dans un dossier **hors du dépôt**.
+- **Tenir `docs/decisions.md` et `docs/roadmap.md` à jour** à chaque décision
+  ou jalon franchi.
+- **Toute spec modifiée** : actualiser son champ « Statut » et sa date.
+- **Aucune fuite de données privées** dans le dépôt : pas de secrets, pas de
+  paths personnels, pas de contenu spécifique à un site client. Toute
+  configuration sensible reste dans `~/.iawm/config.json` (gitignoré).
+
+## Préférences personnelles
+
+Les préférences propres au mainteneur courant (langue, style de
+communication, environnement de dev) sont dans `CLAUDE.local.md` —
+gitignoré — quand ce fichier existe. Si tu débutes sur ce dépôt, tu peux
+en créer un pour y consigner tes propres préférences sans polluer le
+dépôt public.
