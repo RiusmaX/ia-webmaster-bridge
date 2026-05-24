@@ -57,9 +57,9 @@ var require_code = __commonJS({
     };
     exports.Name = Name;
     var _Code = class extends _CodeOrName {
-      constructor(code) {
+      constructor(code2) {
         super();
-        this._items = typeof code === "string" ? [code] : code;
+        this._items = typeof code2 === "string" ? [code2] : code2;
       }
       toString() {
         return this.str;
@@ -86,13 +86,13 @@ var require_code = __commonJS({
     exports._Code = _Code;
     exports.nil = new _Code("");
     function _(strs, ...args) {
-      const code = [strs[0]];
+      const code2 = [strs[0]];
       let i = 0;
       while (i < args.length) {
-        addCodeArg(code, args[i]);
-        code.push(strs[++i]);
+        addCodeArg(code2, args[i]);
+        code2.push(strs[++i]);
       }
-      return new _Code(code);
+      return new _Code(code2);
     }
     exports._ = _;
     var plus = new _Code("+");
@@ -108,13 +108,13 @@ var require_code = __commonJS({
       return new _Code(expr);
     }
     exports.str = str;
-    function addCodeArg(code, arg) {
+    function addCodeArg(code2, arg) {
       if (arg instanceof _Code)
-        code.push(...arg._items);
+        code2.push(...arg._items);
       else if (arg instanceof Name)
-        code.push(arg);
+        code2.push(arg);
       else
-        code.push(interpolate(arg));
+        code2.push(interpolate(arg));
     }
     exports.addCodeArg = addCodeArg;
     function optimize(expr) {
@@ -298,7 +298,7 @@ var require_scope = __commonJS({
         }, usedValues, getCode);
       }
       _reduceValues(values, valueCode, usedValues = {}, getCode) {
-        let code = code_1.nil;
+        let code2 = code_1.nil;
         for (const prefix in values) {
           const vs = values[prefix];
           if (!vs)
@@ -311,16 +311,16 @@ var require_scope = __commonJS({
             let c = valueCode(name);
             if (c) {
               const def = this.opts.es5 ? exports.varKinds.var : exports.varKinds.const;
-              code = (0, code_1._)`${code}${def} ${name} = ${c};${this.opts._n}`;
+              code2 = (0, code_1._)`${code2}${def} ${name} = ${c};${this.opts._n}`;
             } else if (c = getCode === null || getCode === void 0 ? void 0 : getCode(name)) {
-              code = (0, code_1._)`${code}${c}${this.opts._n}`;
+              code2 = (0, code_1._)`${code2}${c}${this.opts._n}`;
             } else {
               throw new ValueError(name);
             }
             nameSet.set(name, UsedValueState.Completed);
           });
         }
-        return code;
+        return code2;
       }
     };
     exports.ValueScope = ValueScope;
@@ -480,9 +480,9 @@ var require_codegen = __commonJS({
       }
     };
     var AnyCode = class extends Node {
-      constructor(code) {
+      constructor(code2) {
         super();
-        this.code = code;
+        this.code = code2;
       }
       render({ _n }) {
         return `${this.code};` + _n;
@@ -504,7 +504,7 @@ var require_codegen = __commonJS({
         this.nodes = nodes;
       }
       render(opts) {
-        return this.nodes.reduce((code, n) => code + n.render(opts), "");
+        return this.nodes.reduce((code2, n) => code2 + n.render(opts), "");
       }
       optimizeNodes() {
         const { nodes } = this;
@@ -552,10 +552,10 @@ var require_codegen = __commonJS({
         this.condition = condition;
       }
       render(opts) {
-        let code = `if(${this.condition})` + super.render(opts);
+        let code2 = `if(${this.condition})` + super.render(opts);
         if (this.else)
-          code += "else " + this.else.render(opts);
-        return code;
+          code2 += "else " + this.else.render(opts);
+        return code2;
       }
       optimizeNodes() {
         super.optimizeNodes();
@@ -676,12 +676,12 @@ var require_codegen = __commonJS({
     Return.kind = "return";
     var Try = class extends BlockNode {
       render(opts) {
-        let code = "try" + super.render(opts);
+        let code2 = "try" + super.render(opts);
         if (this.catch)
-          code += this.catch.render(opts);
+          code2 += this.catch.render(opts);
         if (this.finally)
-          code += this.finally.render(opts);
-        return code;
+          code2 += this.finally.render(opts);
+        return code2;
       }
       optimizeNodes() {
         var _a3, _b;
@@ -798,18 +798,18 @@ var require_codegen = __commonJS({
       }
       // returns code for object literal for the passed argument list of key-value pairs
       object(...keyValues) {
-        const code = ["{"];
+        const code2 = ["{"];
         for (const [key, value] of keyValues) {
-          if (code.length > 1)
-            code.push(",");
-          code.push(key);
+          if (code2.length > 1)
+            code2.push(",");
+          code2.push(key);
           if (key !== value || this.opts.es5) {
-            code.push(":");
-            (0, code_1.addCodeArg)(code, value);
+            code2.push(":");
+            (0, code_1.addCodeArg)(code2, value);
           }
         }
-        code.push("}");
-        return new code_1._Code(code);
+        code2.push("}");
+        return new code_1._Code(code2);
       }
       // `if` clause (or statement if `thenBody` and, optionally, `elseBody` are passed)
       if(condition, thenBody, elseBody) {
@@ -3109,22 +3109,22 @@ var require_utils = __commonJS({
     var isPathCharacter = RegExp.prototype.test.bind(/^[\da-z\-._~!$&'()*+,;=:@/]$/iu);
     function stringArrayToHexStripped(input) {
       let acc = "";
-      let code = 0;
+      let code2 = 0;
       let i = 0;
       for (i = 0; i < input.length; i++) {
-        code = input[i].charCodeAt(0);
-        if (code === 48) {
+        code2 = input[i].charCodeAt(0);
+        if (code2 === 48) {
           continue;
         }
-        if (!(code >= 48 && code <= 57 || code >= 65 && code <= 70 || code >= 97 && code <= 102)) {
+        if (!(code2 >= 48 && code2 <= 57 || code2 >= 65 && code2 <= 70 || code2 >= 97 && code2 <= 102)) {
           return "";
         }
         acc += input[i];
         break;
       }
       for (i += 1; i < input.length; i++) {
-        code = input[i].charCodeAt(0);
-        if (!(code >= 48 && code <= 57 || code >= 65 && code <= 70 || code >= 97 && code <= 102)) {
+        code2 = input[i].charCodeAt(0);
+        if (!(code2 >= 48 && code2 <= 57 || code2 >= 65 && code2 <= 70 || code2 >= 97 && code2 <= 102)) {
           return "";
         }
         acc += input[i];
@@ -4310,7 +4310,7 @@ var require_core = __commonJS({
       errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
         if (!errors || errors.length === 0)
           return "No errors";
-        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text, msg) => text + separator + msg);
+        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text2, msg) => text2 + separator + msg);
       }
       $dataMetaSchema(metaSchema, keywordsJsonPointers) {
         const rules = this.RULES.all;
@@ -6143,8 +6143,8 @@ var require_format = __commonJS({
             }
           }
           function getFormat(fmtDef) {
-            const code = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
-            const fmt = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
+            const code2 = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
+            const fmt = gen.scopeValue("formats", { key: schema, ref: fmtDef, code: code2 });
             if (typeof fmtDef == "object" && !(fmtDef instanceof RegExp)) {
               return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt}.validate`];
             }
@@ -7258,8 +7258,8 @@ var makeIssue = (params) => {
   }
   let errorMessage = "";
   const maps = errorMaps.filter((m) => !!m).slice().reverse();
-  for (const map2 of maps) {
-    errorMessage = map2(fullIssue, { data, defaultError: errorMessage }).message;
+  for (const map3 of maps) {
+    errorMessage = map3(fullIssue, { data, defaultError: errorMessage }).message;
   }
   return {
     ...issueData,
@@ -13603,9 +13603,9 @@ var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) =>
     };
     doc.write(`const input = payload.value;`);
     const ids = /* @__PURE__ */ Object.create(null);
-    let counter = 0;
+    let counter2 = 0;
     for (const key of normalized.keys) {
-      ids[key] = `key_${counter++}`;
+      ids[key] = `key_${counter2++}`;
     }
     doc.write(`const newResult = {};`);
     for (const key of normalized.keys) {
@@ -13857,19 +13857,19 @@ var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnio
   });
   const disc = cached(() => {
     const opts = def.options;
-    const map2 = /* @__PURE__ */ new Map();
+    const map3 = /* @__PURE__ */ new Map();
     for (const o of opts) {
       const values = o._zod.propValues?.[def.discriminator];
       if (!values || values.size === 0)
         throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(o)}"`);
       for (const v of values) {
-        if (map2.has(v)) {
+        if (map3.has(v)) {
           throw new Error(`Duplicate discriminator value "${String(v)}"`);
         }
-        map2.set(v, o);
+        map3.set(v, o);
       }
     }
-    return map2;
+    return map3;
   });
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
@@ -18155,8 +18155,8 @@ function ko_default() {
 }
 
 // node_modules/zod/v4/locales/lt.js
-var capitalizeFirstCharacter = (text) => {
-  return text.charAt(0).toUpperCase() + text.slice(1);
+var capitalizeFirstCharacter = (text2) => {
+  return text2.charAt(0).toUpperCase() + text2.slice(1);
 };
 function getUnitTypeFromNumber(number4) {
   const abs = Math.abs(number4);
@@ -24944,9 +24944,9 @@ var ZodIssueCode2 = {
   invalid_value: "invalid_value",
   custom: "custom"
 };
-function setErrorMap(map2) {
+function setErrorMap(map3) {
   config({
-    customError: map2
+    customError: map3
   });
 }
 function getErrorMap2() {
@@ -26965,23 +26965,23 @@ var ServerResultSchema = union([
   CreateTaskResultSchema
 ]);
 var McpError = class _McpError extends Error {
-  constructor(code, message, data) {
-    super(`MCP error ${code}: ${message}`);
-    this.code = code;
+  constructor(code2, message, data) {
+    super(`MCP error ${code2}: ${message}`);
+    this.code = code2;
     this.data = data;
     this.name = "McpError";
   }
   /**
    * Factory method to create the appropriate error type based on the error code and data
    */
-  static fromError(code, message, data) {
-    if (code === ErrorCode.UrlElicitationRequired && data) {
+  static fromError(code2, message, data) {
+    if (code2 === ErrorCode.UrlElicitationRequired && data) {
       const errorData = data;
       if (errorData.elicitations) {
         return new UrlElicitationRequiredError(errorData.elicitations, message);
       }
     }
-    return new _McpError(code, message, data);
+    return new _McpError(code2, message, data);
   }
 };
 var UrlElicitationRequiredError = class extends McpError {
@@ -31053,15 +31053,1414 @@ var IawmClient = class {
         `\xC9chec de la connexion \xE0 ${url2} : ${err.message}`
       );
     }
-    const text = await response.text();
-    let data = text;
+    const text2 = await response.text();
+    let data = text2;
     try {
-      data = JSON.parse(text);
+      data = JSON.parse(text2);
     } catch {
     }
     return { ok: response.ok, status: response.status, data };
   }
 };
+
+// src/divi/types.ts
+var BUILDER_VERSION = "5.5.2";
+var DiviBlock = {
+  Placeholder: "divi/placeholder",
+  Section: "divi/section",
+  Row: "divi/row",
+  Column: "divi/column",
+  Text: "divi/text",
+  Blurb: "divi/blurb",
+  Cta: "divi/cta",
+  Image: "divi/image",
+  Button: "divi/button",
+  Heading: "divi/heading",
+  NumberCounter: "divi/number-counter",
+  Testimonial: "divi/testimonial",
+  Gallery: "divi/gallery",
+  Video: "divi/video",
+  Code: "divi/code",
+  Accordion: "divi/accordion",
+  AccordionItem: "divi/accordion-item",
+  Tabs: "divi/tabs",
+  Tab: "divi/tab",
+  Slider: "divi/slider",
+  Slide: "divi/slide",
+  ContactForm: "divi/contact-form",
+  ContactField: "divi/contact-field",
+  // Modules prioritaires Phase 3.5 (page de référence n°53).
+  Divider: "divi/divider",
+  Icon: "divi/icon",
+  Toggle: "divi/toggle",
+  // ⚠️ Convention : tables (pluriel) + table (singulier).
+  PricingTables: "divi/pricing-tables",
+  PricingTable: "divi/pricing-table",
+  IconList: "divi/icon-list",
+  IconListItem: "divi/icon-list-item",
+  // ⚠️ Convention : -network et pas -item.
+  SocialMediaFollow: "divi/social-media-follow",
+  SocialMediaFollowNetwork: "divi/social-media-follow-network",
+  TeamMember: "divi/team-member",
+  Signup: "divi/signup",
+  Map: "divi/map",
+  CircleCounter: "divi/circle-counter",
+  // ⚠️ blockName = divi/counters (pas divi/bar-counters).
+  Counters: "divi/counters",
+  Counter: "divi/counter",
+  Audio: "divi/audio",
+  // Theme Builder & dynamic content (Phase 3.6).
+  Menu: "divi/menu",
+  FullwidthMenu: "divi/fullwidth-menu",
+  Search: "divi/search",
+  Breadcrumbs: "divi/breadcrumbs",
+  PostTitle: "divi/post-title",
+  PostContent: "divi/post-content",
+  PostNavigation: "divi/post-navigation",
+  Sidebar: "divi/sidebar",
+  Comments: "divi/comments"
+};
+
+// src/divi/globals.ts
+function colorToString(color) {
+  if (typeof color === "string") {
+    return color;
+  }
+  const json2 = JSON.stringify({
+    type: "color",
+    value: { name: color.gcid, settings: {} }
+  });
+  return `$variable(${json2})$`;
+}
+function gcid(name) {
+  return { gcid: name };
+}
+var colors = {
+  primary: gcid("gcid-primary-color"),
+  secondary: gcid("gcid-secondary-color"),
+  heading: gcid("gcid-heading-color"),
+  body: gcid("gcid-body-color"),
+  link: gcid("gcid-link-color")
+};
+
+// src/divi/builders.ts
+function makeBlock(name, attrs, innerBlocks = []) {
+  return {
+    blockName: name,
+    attrs: { ...attrs, builderVersion: BUILDER_VERSION },
+    innerBlocks,
+    innerHTML: "",
+    innerContent: innerBlocks.length === 0 ? [null] : new Array(innerBlocks.length + 1).fill(null)
+  };
+}
+function desktopValue(value) {
+  return { desktop: { value } };
+}
+function placeholder(children) {
+  return makeBlock(DiviBlock.Placeholder, {}, children);
+}
+function section(options, rows) {
+  const decoration = {};
+  if (options.backgroundColor || options.backgroundImageUrl) {
+    const bgValue = {};
+    if (options.backgroundColor) {
+      bgValue.color = colorToString(options.backgroundColor);
+    }
+    if (options.backgroundImageUrl) {
+      bgValue.image = { url: options.backgroundImageUrl };
+    }
+    decoration.background = desktopValue(bgValue);
+  }
+  if (options.spacing) {
+    decoration.spacing = desktopValue(options.spacing);
+  }
+  const attrs = {};
+  if (Object.keys(decoration).length > 0) {
+    attrs.module = { decoration };
+  }
+  return makeBlock(DiviBlock.Section, attrs, rows);
+}
+function row(options, columns) {
+  const colCount = columns.length;
+  const flexColumnStructure = `equal-columns_${colCount === 1 ? 1 : colCount}`;
+  const moduleAttrs = {
+    advanced: {
+      columnStructure: desktopValue(options.columnStructure),
+      flexColumnStructure: desktopValue(flexColumnStructure)
+    },
+    decoration: {
+      layout: {
+        ...desktopValue({ flexWrap: "nowrap" }),
+        ...options.flexWrapMobile === "wrap" ? {
+          phone: { value: { flexWrap: "wrap" } },
+          phoneWide: { value: { flexWrap: "wrap" } }
+        } : {}
+      }
+    }
+  };
+  if (options.spacing) {
+    moduleAttrs.decoration.spacing = desktopValue(options.spacing);
+  }
+  return makeBlock(DiviBlock.Row, { module: moduleAttrs }, columns);
+}
+function typeToFlexType(type) {
+  const [num, denom] = type.split("_").map(Number);
+  if (!num || !denom) return "24_24";
+  const scaled = Math.round(num / denom * 24);
+  return `${scaled}_24`;
+}
+function column(options, modules) {
+  const fullWidthOnMobile = options.fullWidthOnMobile !== false;
+  const flexType = typeToFlexType(options.type);
+  const sizingValue = {
+    desktop: { value: { flexType } }
+  };
+  if (fullWidthOnMobile && options.type !== "4_4") {
+    sizingValue.phone = { value: { flexType: "24_24" } };
+    sizingValue.phoneWide = { value: { flexType: "24_24" } };
+  }
+  return makeBlock(
+    DiviBlock.Column,
+    {
+      module: {
+        advanced: { type: desktopValue(options.type) },
+        decoration: { sizing: sizingValue }
+      }
+    },
+    modules
+  );
+}
+function text(options) {
+  const contentAttrs = {
+    innerContent: desktopValue(options.html)
+  };
+  if (options.headingFont) {
+    const fontDecoration = {};
+    for (const [tag, settings] of Object.entries(options.headingFont)) {
+      const value = { ...settings };
+      if (settings.color) {
+        value.color = colorToString(settings.color);
+        delete value.color;
+        value.color = colorToString(settings.color);
+      }
+      fontDecoration[tag] = { font: desktopValue(value) };
+    }
+    contentAttrs.decoration = { headingFont: fontDecoration };
+  }
+  return makeBlock(DiviBlock.Text, { content: contentAttrs });
+}
+function blurb(options) {
+  const imageIcon = {
+    innerContent: desktopValue({
+      ...options.imageUrl ? { src: options.imageUrl } : {},
+      ...options.iconUnicode ? {
+        useIcon: "on",
+        icon: { unicode: options.iconUnicode, type: "divi", weight: "400" }
+      } : {}
+    })
+  };
+  return makeBlock(DiviBlock.Blurb, {
+    imageIcon,
+    title: { innerContent: desktopValue({ text: options.title }) },
+    content: { innerContent: desktopValue(options.contentHtml) }
+  });
+}
+function cta(options) {
+  return makeBlock(DiviBlock.Cta, {
+    module: {
+      advanced: {
+        link: desktopValue({ url: "" })
+      }
+    },
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) },
+    button: {
+      innerContent: desktopValue({
+        text: options.buttonText,
+        linkUrl: options.buttonUrl
+      })
+    }
+  });
+}
+function image(options) {
+  return makeBlock(DiviBlock.Image, {
+    image: {
+      innerContent: desktopValue({
+        src: options.src,
+        ...options.alt ? { alt: options.alt } : {}
+      })
+    }
+  });
+}
+function heading(options) {
+  return makeBlock(DiviBlock.Heading, {
+    title: { innerContent: desktopValue(options.text) }
+  });
+}
+function button(options) {
+  return makeBlock(DiviBlock.Button, {
+    button: {
+      innerContent: desktopValue({
+        text: options.text,
+        linkUrl: options.linkUrl
+      })
+    }
+  });
+}
+function numberCounter(options) {
+  return makeBlock(DiviBlock.NumberCounter, {
+    title: { innerContent: desktopValue(options.title) },
+    number: {
+      innerContent: desktopValue(options.number),
+      advanced: {
+        enablePercentSign: desktopValue(options.percent ? "on" : "off")
+      }
+    }
+  });
+}
+function testimonial(options) {
+  return makeBlock(DiviBlock.Testimonial, {
+    content: { innerContent: desktopValue(options.quoteHtml) },
+    author: { innerContent: desktopValue(options.author) },
+    ...options.portraitUrl ? {
+      portrait: {
+        innerContent: desktopValue({ url: options.portraitUrl })
+      }
+    } : {}
+  });
+}
+function gallery(options) {
+  return makeBlock(DiviBlock.Gallery, {
+    image: {
+      advanced: {
+        galleryIds: desktopValue(options.ids.join(","))
+      }
+    },
+    galleryGrid: {
+      decoration: {
+        layout: {
+          desktop: { value: { gridColumnCount: String(options.columns ?? 4) } },
+          tablet: { value: { gridColumnCount: "3" } },
+          phone: { value: { gridColumnCount: "1" } }
+        }
+      }
+    }
+  });
+}
+function video(options) {
+  return makeBlock(DiviBlock.Video, {
+    video: {
+      innerContent: desktopValue({ src: options.src })
+    }
+  });
+}
+function code(options) {
+  return makeBlock(DiviBlock.Code, {
+    content: { innerContent: desktopValue(options.html) }
+  });
+}
+function accordionItem(options) {
+  const attrs = {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) }
+  };
+  if (options.open) {
+    attrs.module = { advanced: { open: desktopValue("on") } };
+  }
+  return makeBlock(DiviBlock.AccordionItem, attrs);
+}
+function accordion(items) {
+  return makeBlock(
+    DiviBlock.Accordion,
+    {},
+    items.map((item) => accordionItem(item))
+  );
+}
+function tab(options) {
+  return makeBlock(DiviBlock.Tab, {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) }
+  });
+}
+function tabs(items) {
+  return makeBlock(
+    DiviBlock.Tabs,
+    {},
+    items.map((item) => tab(item))
+  );
+}
+function slide(options) {
+  const attrs = {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) }
+  };
+  if (options.buttonText) {
+    attrs.button = {
+      innerContent: desktopValue({
+        text: options.buttonText,
+        linkUrl: options.buttonUrl ?? "#"
+      })
+    };
+  }
+  return makeBlock(DiviBlock.Slide, attrs);
+}
+function slider(items) {
+  return makeBlock(
+    DiviBlock.Slider,
+    {},
+    items.map((item) => slide(item))
+  );
+}
+function contactField(options) {
+  const type = options.type ?? "input";
+  const fullwidth = options.fullwidth ?? type === "text";
+  return makeBlock(DiviBlock.ContactField, {
+    fieldItem: {
+      advanced: {
+        fullwidth: desktopValue(fullwidth ? "on" : "off"),
+        id: desktopValue(options.id),
+        type: desktopValue(type)
+      },
+      innerContent: desktopValue(options.label)
+    },
+    module: {
+      decoration: {
+        sizing: desktopValue({ flexType: fullwidth ? "24_24" : "12_24" })
+      }
+    }
+  });
+}
+function generateUniqueId() {
+  const hex3 = () => Math.floor((1 + Math.random()) * 65536).toString(16).slice(1);
+  return `${hex3()}${hex3()}-${hex3()}-${hex3()}-${hex3()}-${hex3()}${hex3()}${hex3()}`;
+}
+function contactForm(options) {
+  return makeBlock(
+    DiviBlock.ContactForm,
+    {
+      module: {
+        advanced: {
+          uniqueId: desktopValue(options.uniqueId ?? generateUniqueId())
+        }
+      }
+    },
+    options.fields.map((f) => contactField(f))
+  );
+}
+function divider(options = {}) {
+  const attrs = {};
+  if (options.color || options.height) {
+    const dividerValue = {};
+    if (options.color) dividerValue.color = colorToString(options.color);
+    if (options.height) dividerValue.height = options.height;
+    attrs.module = {
+      decoration: {
+        divider: desktopValue(dividerValue)
+      }
+    };
+  }
+  return makeBlock(DiviBlock.Divider, attrs);
+}
+function icon(options) {
+  const value = {
+    unicode: options.unicode,
+    type: "divi",
+    weight: "400"
+  };
+  if (options.color) value.color = colorToString(options.color);
+  const attrs = {
+    icon: { innerContent: desktopValue(value) }
+  };
+  if (options.size) {
+    attrs.module = {
+      decoration: {
+        font: desktopValue({ size: options.size })
+      }
+    };
+  }
+  return makeBlock(DiviBlock.Icon, attrs);
+}
+function toggle(options) {
+  return makeBlock(DiviBlock.Toggle, {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) }
+  });
+}
+function pricingTable(options) {
+  const contentValue = options.features.map((f) => `${f.included !== false ? "+" : "-"} ${f.text}`).join("\n");
+  const currencyFreqValue = {
+    currency: options.currency ?? "$"
+  };
+  if (options.frequency) currencyFreqValue.frequency = options.frequency;
+  const attrs = {
+    title: { innerContent: desktopValue(options.title) },
+    price: { innerContent: desktopValue(options.price) },
+    currencyFrequency: { innerContent: desktopValue(currencyFreqValue) },
+    content: { innerContent: desktopValue(contentValue) }
+  };
+  if (options.subtitle) {
+    attrs.subtitle = { innerContent: desktopValue(options.subtitle) };
+  }
+  if (options.buttonText) {
+    attrs.button = {
+      innerContent: desktopValue({
+        text: options.buttonText,
+        linkUrl: options.buttonUrl ?? "#"
+      })
+    };
+  }
+  return makeBlock(DiviBlock.PricingTable, attrs);
+}
+function pricingTables(items) {
+  return makeBlock(
+    DiviBlock.PricingTables,
+    {},
+    items.map((i) => pricingTable(i))
+  );
+}
+function iconListItem(options) {
+  return makeBlock(DiviBlock.IconListItem, {
+    content: { innerContent: desktopValue(options.text) },
+    icon: {
+      innerContent: desktopValue({
+        unicode: options.iconUnicode ?? "&#x21;",
+        type: "divi",
+        weight: "400",
+        target: options.newTab ? "on" : "off",
+        ...options.url ? { url: options.url } : {}
+      })
+    }
+  });
+}
+function iconList(items) {
+  return makeBlock(
+    DiviBlock.IconList,
+    {},
+    items.map((i) => iconListItem(i))
+  );
+}
+var NETWORK_COLORS = {
+  facebook: "#3b5998",
+  twitter: "#1da1f2",
+  instagram: "#e1306c",
+  linkedin: "#0077b5",
+  youtube: "#ff0000",
+  tiktok: "#000000",
+  pinterest: "#bd081c",
+  github: "#181717"
+};
+function socialMediaFollowNetwork(options) {
+  const bgColor = NETWORK_COLORS[options.network.toLowerCase()] ?? "#666666";
+  return makeBlock(DiviBlock.SocialMediaFollowNetwork, {
+    socialNetwork: {
+      innerContent: desktopValue({
+        title: options.network.toLowerCase(),
+        label: options.label ?? capitalize(options.network),
+        ...options.url ? { url: options.url } : {}
+      })
+    },
+    module: {
+      decoration: {
+        background: desktopValue({ color: bgColor })
+      }
+    }
+  });
+}
+function socialMediaFollow(networks) {
+  return makeBlock(
+    DiviBlock.SocialMediaFollow,
+    {},
+    networks.map((n) => socialMediaFollowNetwork(n))
+  );
+}
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+function teamMember(options) {
+  const attrs = {
+    name: { innerContent: desktopValue(options.name) },
+    position: { innerContent: desktopValue(options.position) }
+  };
+  if (options.imageUrl) {
+    attrs.image = { innerContent: desktopValue({ url: options.imageUrl }) };
+  }
+  if (options.bioHtml) {
+    attrs.content = { innerContent: desktopValue(options.bioHtml) };
+  }
+  return makeBlock(DiviBlock.TeamMember, attrs);
+}
+function signup(options) {
+  return makeBlock(DiviBlock.Signup, {
+    title: { innerContent: desktopValue(options.title) },
+    content: { innerContent: desktopValue(options.contentHtml) }
+  });
+}
+function map2(options = {}) {
+  const attrs = {};
+  if (options.address || options.zoom) {
+    attrs.map = {
+      innerContent: desktopValue({
+        ...options.address ? { address: options.address } : {},
+        ...options.zoom !== void 0 ? { zoom: String(options.zoom) } : {}
+      })
+    };
+  }
+  return makeBlock(DiviBlock.Map, attrs);
+}
+function circleCounter(options) {
+  return makeBlock(DiviBlock.CircleCounter, {
+    title: { innerContent: desktopValue(options.title) },
+    number: { innerContent: desktopValue(options.number) }
+  });
+}
+function counter(options) {
+  return makeBlock(DiviBlock.Counter, {
+    title: { innerContent: desktopValue(options.title) },
+    barProgress: { innerContent: desktopValue(options.progress) }
+  });
+}
+function counters(options) {
+  return makeBlock(
+    DiviBlock.Counters,
+    {
+      barProgress: {
+        advanced: {
+          usePercentages: desktopValue(options.showPercentages !== false ? "on" : "off")
+        }
+      }
+    },
+    options.items.map((i) => counter(i))
+  );
+}
+function audio(options) {
+  const attrs = {
+    title: { innerContent: desktopValue(options.title) }
+  };
+  if (options.artistName) {
+    attrs.artistName = { innerContent: desktopValue(options.artistName) };
+  }
+  if (options.audioUrl) {
+    attrs.audio = { innerContent: desktopValue({ url: options.audioUrl }) };
+  }
+  return makeBlock(DiviBlock.Audio, attrs);
+}
+function menu(options = {}) {
+  const attrs = {};
+  const menuAttrs = {};
+  if (options.menuId !== void 0) {
+    menuAttrs.menuId = desktopValue(String(options.menuId));
+  }
+  if (options.dropdownDirection) {
+    menuAttrs.menuDropdownDirection = desktopValue(options.dropdownDirection);
+  }
+  if (Object.keys(menuAttrs).length > 0) {
+    attrs.menu = menuAttrs;
+  }
+  if (options.logoUrl) {
+    attrs.logo = { innerContent: desktopValue({ url: options.logoUrl }) };
+  }
+  return makeBlock(DiviBlock.Menu, attrs);
+}
+function fullwidthMenu(options = {}) {
+  const block = menu(options);
+  block.blockName = DiviBlock.FullwidthMenu;
+  return block;
+}
+function search(options = {}) {
+  const attrs = {};
+  const innerAttrs = {};
+  if (options.placeholder) innerAttrs.placeholder = options.placeholder;
+  if (options.buttonText) innerAttrs.buttonText = options.buttonText;
+  if (Object.keys(innerAttrs).length > 0) {
+    attrs.search = { innerContent: desktopValue(innerAttrs) };
+  }
+  return makeBlock(DiviBlock.Search, attrs);
+}
+function breadcrumbs(options = {}) {
+  const attrs = {};
+  const inner = {};
+  if (options.homeText) inner.homeText = options.homeText;
+  if (options.separator) inner.separator = options.separator;
+  if (options.htmlTag) inner.htmlTag = options.htmlTag;
+  if (Object.keys(inner).length > 0) {
+    attrs.breadcrumbs = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.Breadcrumbs, attrs);
+}
+function postTitle(options = {}) {
+  const attrs = {};
+  const inner = {};
+  if (options.includeMeta !== void 0) {
+    inner.includeMeta = options.includeMeta ? "on" : "off";
+  }
+  if (options.includeFeaturedImage !== void 0) {
+    inner.includeFeaturedImage = options.includeFeaturedImage ? "on" : "off";
+  }
+  if (Object.keys(inner).length > 0) {
+    attrs.title = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.PostTitle, attrs);
+}
+function postContent() {
+  return makeBlock(DiviBlock.PostContent, {});
+}
+function postNavigation(options = {}) {
+  const attrs = {};
+  const inner = {};
+  if (options.prevText) inner.prevText = options.prevText;
+  if (options.nextText) inner.nextText = options.nextText;
+  if (options.sameTerm !== void 0) inner.inSameTerm = options.sameTerm ? "on" : "off";
+  if (Object.keys(inner).length > 0) {
+    attrs.navigation = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.PostNavigation, attrs);
+}
+function comments() {
+  return makeBlock(DiviBlock.Comments, {});
+}
+
+// src/divi/patterns/hero.ts
+function hero(options) {
+  const heroText = text({
+    html: `<h1>${escapeHtml(options.title)}</h1><p>${escapeHtml(options.subtitle)}</p>`,
+    headingFont: {
+      h1: { textAlign: "center", size: "48px", weight: "800" }
+    }
+  });
+  const heroCta = cta({
+    title: "",
+    contentHtml: "",
+    buttonText: options.ctaText,
+    buttonUrl: options.ctaUrl
+  });
+  return section(
+    {
+      backgroundColor: options.backgroundColor ?? colors.body,
+      backgroundImageUrl: options.backgroundImageUrl,
+      spacing: {
+        padding: { top: "120px", bottom: "120px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    [
+      row(
+        { columnStructure: "4_4" },
+        [column({ type: "4_4" }, [heroText, heroCta])]
+      )
+    ]
+  );
+}
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/features-3col.ts
+function features3col(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    const titleHtml = (options.sectionTitle ? `<h2>${escapeHtml2(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml2(options.sectionSubtitle)}</p>` : "");
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              text({
+                html: titleHtml,
+                headingFont: {
+                  h2: { textAlign: "center", size: "36px", weight: "700" }
+                }
+              })
+            ]
+          )
+        ]
+      )
+    );
+  }
+  const columns = options.items.map(
+    (item) => column({ type: "1_3" }, [
+      blurb({
+        title: item.title,
+        contentHtml: item.contentHtml,
+        iconUnicode: item.iconUnicode,
+        imageUrl: item.imageUrl
+      })
+    ])
+  );
+  rows.push(
+    row({ columnStructure: "1_3,1_3,1_3", flexWrapMobile: "wrap" }, columns)
+  );
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml2(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/cta-banner.ts
+function ctaBanner(options) {
+  return section(
+    {
+      backgroundColor: options.backgroundColor ?? colors.primary,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    [
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              cta({
+                title: options.title,
+                contentHtml: options.contentHtml,
+                buttonText: options.buttonText,
+                buttonUrl: options.buttonUrl
+              })
+            ]
+          )
+        ]
+      )
+    ]
+  );
+}
+
+// src/divi/patterns/image-text-split.ts
+function imageTextSplit(options) {
+  const imageOnLeft = options.imageOnLeft !== false;
+  const imageCol = column({ type: "1_2" }, [
+    image({ src: options.imageUrl, alt: options.imageAlt })
+  ]);
+  const textCol = column({ type: "1_2" }, [
+    text({
+      html: `<h2>${escapeHtml3(options.title)}</h2>${options.contentHtml}`,
+      headingFont: {
+        h2: { textAlign: "left", size: "32px", weight: "700" }
+      }
+    })
+  ]);
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    [
+      row(
+        { columnStructure: "1_2,1_2", flexWrapMobile: "wrap" },
+        imageOnLeft ? [imageCol, textCol] : [textCol, imageCol]
+      )
+    ]
+  );
+}
+function escapeHtml3(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/testimonials.ts
+function testimonials(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              text({
+                html: (options.sectionTitle ? `<h2>${escapeHtml4(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml4(options.sectionSubtitle)}</p>` : ""),
+                headingFont: {
+                  h2: { textAlign: "center", size: "36px", weight: "700" }
+                }
+              })
+            ]
+          )
+        ]
+      )
+    );
+  }
+  const count = options.items.length;
+  const structure = count === 1 ? "4_4" : count === 2 ? "1_2,1_2" : "1_3,1_3,1_3";
+  const colType = count === 1 ? "4_4" : count === 2 ? "1_2" : "1_3";
+  const groups = [];
+  if (count <= 3) {
+    groups.push(options.items);
+  } else {
+    for (let i = 0; i < count; i += 3) {
+      groups.push(options.items.slice(i, i + 3));
+    }
+  }
+  for (const group of groups) {
+    rows.push(
+      row(
+        { columnStructure: structure, flexWrapMobile: "wrap" },
+        group.map((item) => column({ type: colType }, [testimonial(item)]))
+      )
+    );
+  }
+  return section(
+    {
+      backgroundColor: options.backgroundColor ?? colors.body,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml4(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/faq-accordion.ts
+function faqAccordion(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              text({
+                html: (options.sectionTitle ? `<h2>${escapeHtml5(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml5(options.sectionSubtitle)}</p>` : ""),
+                headingFont: {
+                  h2: { textAlign: "center", size: "36px", weight: "700" }
+                }
+              })
+            ]
+          )
+        ]
+      )
+    );
+  }
+  const openFirst = options.openFirst !== false;
+  const accordionItems = options.items.map((it, i) => ({
+    title: it.question,
+    contentHtml: it.answerHtml,
+    open: i === 0 && openFirst
+  }));
+  rows.push(
+    row(
+      { columnStructure: "4_4" },
+      [column({ type: "4_4" }, [accordion(accordionItems)])]
+    )
+  );
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml5(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/numbers-bar.ts
+function numbersBar(options) {
+  const count = options.items.length;
+  let structure;
+  let colType;
+  if (count === 2) {
+    structure = "1_2,1_2";
+    colType = "1_2";
+  } else if (count === 4) {
+    structure = "1_4,1_4,1_4,1_4";
+    colType = "1_4";
+  } else {
+    structure = "1_3,1_3,1_3";
+    colType = "1_3";
+  }
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "60px", bottom: "60px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    [
+      row(
+        { columnStructure: structure, flexWrapMobile: "wrap" },
+        options.items.map(
+          (item) => column(
+            { type: colType },
+            [
+              numberCounter({
+                title: item.label,
+                number: item.number,
+                percent: item.percent
+              })
+            ]
+          )
+        )
+      )
+    ]
+  );
+}
+
+// src/divi/patterns/video-section.ts
+function videoSection(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              text({
+                html: (options.sectionTitle ? `<h2>${escapeHtml6(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml6(options.sectionSubtitle)}</p>` : ""),
+                headingFont: {
+                  h2: { textAlign: "center", size: "36px", weight: "700" }
+                }
+              })
+            ]
+          )
+        ]
+      )
+    );
+  }
+  rows.push(
+    row(
+      { columnStructure: "4_4" },
+      [column({ type: "4_4" }, [video({ src: options.videoUrl })])]
+    )
+  );
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml6(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/contact-section.ts
+var DEFAULT_FIELDS = [
+  { id: "Name", label: "Nom", type: "input", fullwidth: false },
+  { id: "Email", label: "Adresse email", type: "email", fullwidth: false },
+  { id: "Message", label: "Votre message", type: "text", fullwidth: true }
+];
+function contactSection(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              text({
+                html: (options.sectionTitle ? `<h2>${escapeHtml7(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml7(options.sectionSubtitle)}</p>` : ""),
+                headingFont: {
+                  h2: { textAlign: "center", size: "36px", weight: "700" }
+                }
+              })
+            ]
+          )
+        ]
+      )
+    );
+  }
+  rows.push(
+    row(
+      { columnStructure: "4_4" },
+      [
+        column(
+          { type: "4_4" },
+          [contactForm({ fields: options.fields ?? DEFAULT_FIELDS })]
+        )
+      ]
+    )
+  );
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml7(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/pricing-3col.ts
+function pricing3col(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              text({
+                html: (options.sectionTitle ? `<h2>${escapeHtml8(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml8(options.sectionSubtitle)}</p>` : ""),
+                headingFont: {
+                  h2: { textAlign: "center", size: "36px", weight: "700" }
+                }
+              })
+            ]
+          )
+        ]
+      )
+    );
+  }
+  rows.push(
+    row(
+      { columnStructure: "4_4" },
+      [column({ type: "4_4" }, [pricingTables(options.plans)])]
+    )
+  );
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml8(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/team-grid.ts
+var COLUMN_STRUCTURES = {
+  1: { structure: "4_4", colType: "4_4" },
+  2: { structure: "1_2,1_2", colType: "1_2" },
+  3: { structure: "1_3,1_3,1_3", colType: "1_3" },
+  4: { structure: "1_4,1_4,1_4,1_4", colType: "1_4" }
+};
+function teamGrid(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [
+          column(
+            { type: "4_4" },
+            [
+              text({
+                html: (options.sectionTitle ? `<h2>${escapeHtml9(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml9(options.sectionSubtitle)}</p>` : ""),
+                headingFont: {
+                  h2: { textAlign: "center", size: "36px", weight: "700" }
+                }
+              })
+            ]
+          )
+        ]
+      )
+    );
+  }
+  const explicitCount = options.columnsCount;
+  const count = explicitCount ?? Math.min(4, Math.max(1, options.members.length));
+  const { structure, colType } = COLUMN_STRUCTURES[count];
+  for (let i = 0; i < options.members.length; i += count) {
+    const group = options.members.slice(i, i + count);
+    rows.push(
+      row(
+        { columnStructure: structure, flexWrapMobile: "wrap" },
+        group.map((m) => column({ type: colType }, [teamMember(m)]))
+      )
+    );
+  }
+  return section(
+    {
+      backgroundColor: options.backgroundColor,
+      spacing: {
+        padding: { top: "80px", bottom: "80px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml9(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/header-simple.ts
+function headerSimple(options = {}) {
+  const paddingY = options.paddingY ?? "20px";
+  const logoModule = options.logoUrl ? image({ src: options.logoUrl, alt: options.siteName ?? "Logo" }) : text({
+    html: `<h1>${escapeHtml10(options.siteName ?? "Site")}</h1>`,
+    headingFont: { h1: { size: "28px", weight: "700" } }
+  });
+  const menuModule = menu({ menuId: options.menuId });
+  return section(
+    {
+      backgroundColor: options.backgroundColor ?? colors.body,
+      spacing: {
+        padding: { top: paddingY, bottom: paddingY, syncVertical: "on", syncHorizontal: "off" }
+      }
+    },
+    [
+      row(
+        { columnStructure: "1_2,1_2", flexWrapMobile: "wrap" },
+        [
+          column({ type: "1_2" }, [logoModule]),
+          column({ type: "1_2" }, [menuModule])
+        ]
+      )
+    ]
+  );
+}
+function escapeHtml10(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/patterns/footer-standard.ts
+function footerStandard(options = {}) {
+  const rows = [];
+  const columns = options.columns ?? [];
+  const colCount = columns.length;
+  if (colCount > 0) {
+    let structure;
+    let colType;
+    if (colCount === 2) {
+      structure = "1_2,1_2";
+      colType = "1_2";
+    } else if (colCount === 3) {
+      structure = "1_3,1_3,1_3";
+      colType = "1_3";
+    } else {
+      structure = "1_4,1_4,1_4,1_4";
+      colType = "1_4";
+    }
+    const cols = columns.map((col) => {
+      const modules = [];
+      modules.push(
+        text({
+          html: `<h4>${escapeHtml11(col.title)}</h4>`,
+          headingFont: { h4: { size: "18px", weight: "700" } }
+        })
+      );
+      if (col.listItems && col.listItems.length > 0) {
+        modules.push(iconList(col.listItems));
+      } else if (col.menuId !== void 0) {
+        modules.push(menu({ menuId: col.menuId }));
+      } else if (col.contentHtml) {
+        modules.push(text({ html: col.contentHtml }));
+      }
+      return column({ type: colType }, modules);
+    });
+    rows.push(row({ columnStructure: structure, flexWrapMobile: "wrap" }, cols));
+  }
+  const bottomModules = [];
+  if (options.socialNetworks && options.socialNetworks.length > 0) {
+    bottomModules.push(socialMediaFollow(options.socialNetworks));
+  }
+  if (options.copyright) {
+    bottomModules.push(
+      text({
+        html: `<p style="text-align:center;">${escapeHtml11(options.copyright)}</p>`
+      })
+    );
+  }
+  if (bottomModules.length > 0) {
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [column({ type: "4_4" }, bottomModules)]
+      )
+    );
+  }
+  return section(
+    {
+      backgroundColor: options.backgroundColor ?? colors.heading,
+      spacing: {
+        padding: { top: "60px", bottom: "30px", syncVertical: "off", syncHorizontal: "off" }
+      }
+    },
+    rows
+  );
+}
+function escapeHtml11(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/divi/compose.ts
+function composeModule(input) {
+  switch (input.module) {
+    case "text":
+      return text(input);
+    case "blurb":
+      return blurb(input);
+    case "cta":
+      return cta(input);
+    case "image":
+      return image(input);
+    case "button":
+      return button(input);
+    case "heading":
+      return heading(input);
+    case "number-counter":
+      return numberCounter(input);
+    case "circle-counter":
+      return circleCounter(input);
+    case "testimonial":
+      return testimonial(input);
+    case "team-member":
+      return teamMember(input);
+    case "gallery":
+      return gallery(input);
+    case "video":
+      return video(input);
+    case "audio":
+      return audio(input);
+    case "code":
+      return code(input);
+    case "divider":
+      return divider(input);
+    case "icon":
+      return icon(input);
+    case "toggle":
+      return toggle(input);
+    case "signup":
+      return signup(input);
+    case "map":
+      return map2(input);
+    case "menu":
+      return menu(input);
+    case "fullwidth-menu":
+      return fullwidthMenu(input);
+    case "search":
+      return search(input);
+    case "breadcrumbs":
+      return breadcrumbs(input);
+    case "post-title":
+      return postTitle(input);
+    case "post-content":
+      return postContent();
+    case "post-navigation":
+      return postNavigation(input);
+    case "comments":
+      return comments();
+    case "accordion":
+      return accordion(input.items);
+    case "tabs":
+      return tabs(input.items);
+    case "slider":
+      return slider(input.items);
+    case "contact-form":
+      return contactForm(input);
+    case "pricing-tables":
+      return pricingTables(input.items);
+    case "icon-list":
+      return iconList(input.items);
+    case "social-media-follow":
+      return socialMediaFollow(input.networks);
+    case "counters":
+      return counters(input);
+    case "block":
+      return input.block;
+    default: {
+      const _exhaust = input;
+      throw new Error(`Module inconnu : ${JSON.stringify(_exhaust)}`);
+    }
+  }
+}
+function composeFreeFormSection(input) {
+  const sectionOpts = {};
+  if (input.background?.color) sectionOpts.backgroundColor = input.background.color;
+  if (input.background?.imageUrl) sectionOpts.backgroundImageUrl = input.background.imageUrl;
+  if (input.spacing) sectionOpts.spacing = input.spacing;
+  const rows = input.rows.map((rowInput) => {
+    const colTypes = rowInput.structure.split(",");
+    const cols = rowInput.columns.map((colInput, i) => {
+      const norm = Array.isArray(colInput) ? { modules: colInput } : colInput;
+      const colType = norm.type ?? colTypes[i] ?? "4_4";
+      const modules = norm.modules.map((m) => composeModule(m));
+      return column(
+        { type: colType, fullWidthOnMobile: norm.fullWidthOnMobile },
+        modules
+      );
+    });
+    const rowOpts = {
+      columnStructure: rowInput.structure,
+      flexWrapMobile: rowInput.wrapMobile === false ? "nowrap" : "wrap"
+    };
+    if (rowInput.spacing) rowOpts.spacing = rowInput.spacing;
+    return row(rowOpts, cols);
+  });
+  return section(sectionOpts, rows);
+}
+function composeSection(input) {
+  if ("block" in input) {
+    return input.block;
+  }
+  if ("section" in input) {
+    return composeFreeFormSection(input.section);
+  }
+  switch (input.pattern) {
+    case "hero":
+      return hero(input.options);
+    case "features3col":
+      return features3col(input.options);
+    case "ctaBanner":
+      return ctaBanner(input.options);
+    case "imageTextSplit":
+      return imageTextSplit(input.options);
+    case "testimonials":
+      return testimonials(input.options);
+    case "faqAccordion":
+      return faqAccordion(input.options);
+    case "numbersBar":
+      return numbersBar(input.options);
+    case "videoSection":
+      return videoSection(input.options);
+    case "contactSection":
+      return contactSection(input.options);
+    case "pricing3col":
+      return pricing3col(input.options);
+    case "teamGrid":
+      return teamGrid(input.options);
+    case "headerSimple":
+      return headerSimple(input.options);
+    case "footerStandard":
+      return footerStandard(input.options);
+    default: {
+      const _exhaust = input;
+      throw new Error(`Pattern inconnu : ${JSON.stringify(_exhaust)}`);
+    }
+  }
+}
+function composePage(sections) {
+  const sectionBlocks = sections.map((s) => composeSection(s));
+  return placeholder(sectionBlocks);
+}
+function composeThemeZone(sections) {
+  return composePage(sections);
+}
 
 // src/tools.ts
 function toToolResult(label, result) {
@@ -31693,6 +33092,74 @@ function registerDivi(server, client) {
       }
     },
     async (args) => toToolResult("divi/theme-builder/template/delete", await client.post("/divi/theme-builder/template/delete", args))
+  );
+  server.registerTool(
+    "iawm_divi_page_compose",
+    {
+      title: "Composer et \xE9crire une page Divi 5 (recommand\xE9)",
+      description: "VOIE PRINCIPALE pour g\xE9n\xE9rer une page Divi 5 : prend un tableau `sections` o\xF9 chaque section peut \xEAtre (1) un PATTERN param\xE9tr\xE9 { pattern: 'hero' | 'features3col' | 'ctaBanner' | 'imageTextSplit' | 'testimonials' | 'faqAccordion' | 'numbersBar' | 'videoSection' | 'contactSection' | 'pricing3col' | 'teamGrid' | 'headerSimple' | 'footerStandard', options: {...} }, OU (2) une SECTION FREE-FORM { section: { background?, spacing?, rows: [{ structure: '1_2,1_2', wrapMobile?: true, columns: [[{module:'text', html:'...'}, ...], ...] }] } }, OU (3) un BLOC BRUT { block: <GutenbergBlock JSON> }. Modules support\xE9s en free-form : text, blurb, cta, image, button, heading, number-counter, circle-counter, testimonial, team-member, gallery, video, audio, code, divider, icon, toggle, signup, map, menu, fullwidth-menu, search, breadcrumbs, post-title, post-content, post-navigation, comments, accordion, tabs, slider, contact-form, pricing-tables, icon-list, social-media-follow, counters. Le composeur assemble tout et \xE9crit via divi/page/write. JAMAIS utiliser de script interm\xE9diaire \u2014 appeler cet outil directement.",
+      inputSchema: {
+        post_id: external_exports.number().int().describe("Identifiant de la page cible"),
+        sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).describe("Tableau de sections (mix patterns / free-form / blocks)"),
+        dry_run: external_exports.boolean().optional()
+      }
+    },
+    async (args) => {
+      const sections = args.sections ?? [];
+      try {
+        const root = composePage(sections);
+        const payload = { post_id: args.post_id, blocks: [root] };
+        if (args.dry_run) payload.dry_run = true;
+        return toToolResult(
+          "divi/page/compose",
+          await client.post("/divi/page/write", payload)
+        );
+      } catch (err) {
+        return {
+          content: [{ type: "text", text: `Composition error: ${err.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
+  server.registerTool(
+    "iawm_divi_theme_builder_compose",
+    {
+      title: "Composer et appliquer un Theme Builder (recommand\xE9)",
+      description: "VOIE PRINCIPALE pour g\xE9n\xE9rer un Theme Builder : prend `header_sections`, `body_sections` et/ou `footer_sections` (tableau de SectionInput, m\xEAme grammaire que iawm_divi_page_compose : patterns, free-form ou blocks). Compose chaque zone et appelle theme-builder/setup-site-defaults. assign_default=true par d\xE9faut (template global). replace_existing=true pour \xE9craser un template default existant.",
+      inputSchema: {
+        title: external_exports.string().optional().describe("Titre du template (d\xE9faut : Default Site Template)"),
+        header_sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional(),
+        body_sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional(),
+        footer_sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional(),
+        assign_default: external_exports.boolean().optional(),
+        replace_existing: external_exports.boolean().optional()
+      }
+    },
+    async (args) => {
+      try {
+        const payload = {};
+        if (args.title) payload.title = args.title;
+        if (args.assign_default !== void 0) payload.assign_default = args.assign_default;
+        if (args.replace_existing !== void 0) payload.replace_existing = args.replace_existing;
+        for (const zone of ["header", "body", "footer"]) {
+          const sections = args[`${zone}_sections`];
+          if (sections && sections.length > 0) {
+            const root = composeThemeZone(sections);
+            payload[zone] = { blocks: [root] };
+          }
+        }
+        return toToolResult(
+          "divi/theme-builder/compose",
+          await client.post("/divi/theme-builder/setup-site-defaults", payload)
+        );
+      } catch (err) {
+        return {
+          content: [{ type: "text", text: `Composition error: ${err.message}` }],
+          isError: true
+        };
+      }
+    }
   );
   server.registerTool(
     "iawm_divi_page_write",

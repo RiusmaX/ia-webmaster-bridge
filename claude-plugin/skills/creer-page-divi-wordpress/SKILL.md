@@ -114,59 +114,148 @@ Récupérer l'ID renvoyé. **Toujours commencer en draft.**
 
 ## Étape 5 — Générer et écrire le layout Divi 5
 
-### Format de blocs (rappel)
+### 🚨 Règle d'or : `iawm_divi_page_compose` direct, JAMAIS de script
 
-Chaque page Divi 5 = un `wp:divi/placeholder` racine contenant des
-sections. Voir `docs/divi5-format.md` (rétro-ingénierie complète) pour
-les attributs précis.
+**INTERDIT** : créer un fichier `.mjs`/`.ts` intermédiaire qui construit
+puis envoie la page. C'est verbeux, non-réutilisable, et ça pollue les
+projets clients dans le repo public.
 
-### Comment générer
+**OBLIGATOIRE** : appeler directement `iawm_divi_page_compose` depuis
+la conversation, en passant les sections en argument. Le composeur
+côté gateway gère l'assemblage, le wrapping `placeholder`, et l'écriture.
 
-**Option A — Patterns paramétrables (recommandé quand dispo)**
+### Trois modes de composition disponibles dans le même appel
 
-Utiliser la bibliothèque `lib/divi/patterns/` quand elle existe (Phase
-3.4 en cours). Chaque pattern accepte des paramètres (textes, images,
-couleurs gcid) et produit l'arbre de blocs prêt :
+**Mode 1 — PATTERN** (1-3 lignes, idéal pour les cas standards) :
 
-```ts
-import { hero, features3col, testimonial, ctaBanner } from "lib/divi/patterns";
-
-const sections = [
-  hero({ title, subtitle, cta_text, cta_url, image_url, gcid_color: "primary" }),
-  features3col({ items: [...], gcid_bg: "body" }),
-  testimonial({ quote, author, fonction, photo }),
-  ctaBanner({ title, cta_text, cta_url }),
-];
-const blocks = wrapInPlaceholder(sections);
+```js
+iawm_divi_page_compose({
+  post_id: <id>,
+  sections: [
+    { pattern: "hero", options: { title, subtitle, ctaText, ctaUrl, backgroundColor } },
+    { pattern: "features3col", options: { items: [...] } },
+    { pattern: "pricing3col", options: { plans: [...] } },
+    { pattern: "ctaBanner", options: { title, contentHtml, buttonText, buttonUrl } },
+  ],
+})
 ```
 
-**Option B — Construire à la main (si patterns absents)**
+13 patterns disponibles : `hero`, `features3col`, `ctaBanner`,
+`imageTextSplit`, `testimonials`, `faqAccordion`, `numbersBar`,
+`videoSection`, `contactSection`, `pricing3col`, `teamGrid`,
+`headerSimple`, `footerStandard`.
 
-Écrire l'arbre `parse_blocks`-compatible. **Toujours wrapper avec
-`wp:divi/placeholder`**. Référencer le format documenté.
+**Mode 2 — FREE-FORM** (improvisation à partir des 41 modules de base) :
+
+```js
+{
+  section: {
+    background: { color: "#003366" },     // ou { color: { gcid: "gcid-primary-color" } }
+    spacing: { padding: { top: "120px", bottom: "120px", syncVertical: "on", syncHorizontal: "off" } },
+    rows: [
+      {
+        structure: "1_2,1_2",
+        wrapMobile: true,
+        columns: [
+          [
+            { module: "text", html: "<h2>Notre approche</h2><p>...</p>" },
+            { module: "button", text: "Découvrir", linkUrl: "/services" },
+          ],
+          [
+            { module: "image", src: "https://...", alt: "Description" },
+          ],
+        ],
+      },
+    ],
+  },
+}
+```
+
+Modules supportés : `text`, `blurb`, `cta`, `image`, `button`,
+`heading`, `number-counter`, `circle-counter`, `testimonial`,
+`team-member`, `gallery`, `video`, `audio`, `code`, `divider`, `icon`,
+`toggle`, `signup`, `map`, `menu`, `fullwidth-menu`, `search`,
+`breadcrumbs`, `post-title`, `post-content`, `post-navigation`,
+`comments`, `accordion`, `tabs`, `slider`, `contact-form`,
+`pricing-tables`, `icon-list`, `social-media-follow`, `counters`.
+
+**Mode 3 — BLOCK BRUT** (escape hatch ultime) :
+
+```js
+{ block: { blockName: "divi/xxx", attrs: {...}, innerBlocks: [...] } }
+```
+
+Pour cas exotiques où aucun module / pattern ne suffit. Très rare.
+
+### Mix des 3 modes dans la même page
+
+```js
+iawm_divi_page_compose({
+  post_id: <id>,
+  sections: [
+    { pattern: "hero", options: {...} },              // pattern
+    { section: { rows: [...] } },                      // free-form
+    { pattern: "pricing3col", options: {...} },        // pattern
+    { section: { background: {...}, rows: [...] } },   // free-form
+    { pattern: "ctaBanner", options: {...} },          // pattern
+  ],
+})
+```
+
+### Pour le Theme Builder (header / footer)
+
+```js
+iawm_divi_theme_builder_compose({
+  title: "Default Site Template",
+  header_sections: [
+    { pattern: "headerSimple", options: { logoUrl, siteName, menuId } },
+  ],
+  footer_sections: [
+    { pattern: "footerStandard", options: { columns: [...], copyright, socialNetworks: [...] } },
+  ],
+  // body_sections optionnel — si omis, Divi affiche le post_content natif.
+  replace_existing: true,
+})
+```
+
+### Anti-patterns FORMELLEMENT INTERDITS
+
+- ❌ Écrire un script `.mjs` qui appelle l'API HTTP signée à la main
+- ❌ Construire le JSON Divi en string concatenation
+- ❌ Dupliquer la logique de `placeholder()`, `section()`, etc. côté
+  Claude (c'est le boulot du gateway)
+- ❌ Sauvegarder du contenu spécifique à un client dans le repo public
+
+### Référence : variables globales
+
+Pour référencer les couleurs du design system du site :
+
+```js
+{ module: "section", background: { color: { gcid: "gcid-primary-color" } } }
+```
+
+Le composeur traduit en `$variable({...})$` automatiquement.
 
 ### Inspiration depuis Divi Cloud (workflow hybride)
 
 Si l'utilisateur a sauvegardé un layout Cloud dans sa library locale
-(via "Save to Library" dans le builder) :
+(via "Save to Library" dans le builder), tu peux t'en inspirer :
 
-```
-layouts = iawm_divi_library_local()
-inspiration = iawm_divi_library_item({ id: <id> })
-// inspection de la structure, on s'inspire mais on REMPLIT avec le contenu
-// du brief, pas le contenu Divi placeholder.
+```js
+iawm_divi_library_local()             // liste les layouts sauvegardés
+iawm_divi_library_item({ id: <id> })  // inspecte la structure
 ```
 
-### Écriture
+→ S'inspirer des sections / colonnes / modules vus, puis **reconstruire**
+avec ton propre contenu via `iawm_divi_page_compose` (pas de copier-coller
+du contenu placeholder).
 
-```
-iawm_divi_page_write({
-  post_id: <id_créé>,
-  blocks: <arbre>,    // ou content: <chaîne>
-})
-```
+### Bas-niveau (cas avancé)
 
-Vérifier `written: true` + `total_blocks` cohérent.
+`iawm_divi_page_write({ post_id, blocks })` reste disponible si tu as
+déjà un arbre Divi tout fait (ex. round-trip depuis une autre page via
+`iawm_divi_page_read` mode raw). Pour générer une page **from scratch**,
+utilise toujours `iawm_divi_page_compose`.
 
 ## Étape 6 — Lecture de validation
 

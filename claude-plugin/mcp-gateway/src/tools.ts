@@ -12,6 +12,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { IawmClient, type ApiResult } from "./client.js";
+import { composePage, composeThemeZone, type SectionInput } from "./divi/compose.js";
 
 /** Met en forme un résultat d'API en réponse d'outil MCP. */
 function toToolResult(label: string, result: ApiResult) {
@@ -778,6 +779,86 @@ function registerDivi(server: McpServer, client: IawmClient): void {
       },
     },
     async (args) => toToolResult("divi/theme-builder/template/delete", await client.post("/divi/theme-builder/template/delete", args)),
+  );
+
+  // -------- Composeurs (recommandés pour générer des pages) --------
+
+  server.registerTool(
+    "iawm_divi_page_compose",
+    {
+      title: "Composer et écrire une page Divi 5 (recommandé)",
+      description:
+        "VOIE PRINCIPALE pour générer une page Divi 5 : prend un tableau `sections` où chaque section peut être (1) un PATTERN paramétré { pattern: 'hero' | 'features3col' | 'ctaBanner' | 'imageTextSplit' | 'testimonials' | 'faqAccordion' | 'numbersBar' | 'videoSection' | 'contactSection' | 'pricing3col' | 'teamGrid' | 'headerSimple' | 'footerStandard', options: {...} }, OU (2) une SECTION FREE-FORM { section: { background?, spacing?, rows: [{ structure: '1_2,1_2', wrapMobile?: true, columns: [[{module:'text', html:'...'}, ...], ...] }] } }, OU (3) un BLOC BRUT { block: <GutenbergBlock JSON> }. Modules supportés en free-form : text, blurb, cta, image, button, heading, number-counter, circle-counter, testimonial, team-member, gallery, video, audio, code, divider, icon, toggle, signup, map, menu, fullwidth-menu, search, breadcrumbs, post-title, post-content, post-navigation, comments, accordion, tabs, slider, contact-form, pricing-tables, icon-list, social-media-follow, counters. Le composeur assemble tout et écrit via divi/page/write. JAMAIS utiliser de script intermédiaire — appeler cet outil directement.",
+      inputSchema: {
+        post_id: z.number().int().describe("Identifiant de la page cible"),
+        sections: z
+          .array(z.record(z.string(), z.unknown()))
+          .describe("Tableau de sections (mix patterns / free-form / blocks)"),
+        dry_run: z.boolean().optional(),
+      },
+    },
+    async (args) => {
+      const sections = (args.sections ?? []) as unknown as SectionInput[];
+      try {
+        const root = composePage(sections);
+        const payload: Record<string, unknown> = { post_id: args.post_id, blocks: [root] };
+        if (args.dry_run) payload.dry_run = true;
+        return toToolResult(
+          "divi/page/compose",
+          await client.post("/divi/page/write", payload),
+        );
+      } catch (err) {
+        return {
+          content: [{ type: "text" as const, text: `Composition error: ${(err as Error).message}` }],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_builder_compose",
+    {
+      title: "Composer et appliquer un Theme Builder (recommandé)",
+      description:
+        "VOIE PRINCIPALE pour générer un Theme Builder : prend `header_sections`, `body_sections` et/ou `footer_sections` (tableau de SectionInput, même grammaire que iawm_divi_page_compose : patterns, free-form ou blocks). Compose chaque zone et appelle theme-builder/setup-site-defaults. assign_default=true par défaut (template global). replace_existing=true pour écraser un template default existant.",
+      inputSchema: {
+        title: z.string().optional().describe("Titre du template (défaut : Default Site Template)"),
+        header_sections: z.array(z.record(z.string(), z.unknown())).optional(),
+        body_sections: z.array(z.record(z.string(), z.unknown())).optional(),
+        footer_sections: z.array(z.record(z.string(), z.unknown())).optional(),
+        assign_default: z.boolean().optional(),
+        replace_existing: z.boolean().optional(),
+      },
+    },
+    async (args) => {
+      try {
+        const payload: Record<string, unknown> = {};
+        if (args.title) payload.title = args.title;
+        if (args.assign_default !== undefined) payload.assign_default = args.assign_default;
+        if (args.replace_existing !== undefined) payload.replace_existing = args.replace_existing;
+
+        for (const zone of ["header", "body", "footer"] as const) {
+          const sections = args[`${zone}_sections` as const] as
+            | undefined
+            | unknown[];
+          if (sections && sections.length > 0) {
+            const root = composeThemeZone(sections as unknown as SectionInput[]);
+            payload[zone] = { blocks: [root] };
+          }
+        }
+
+        return toToolResult(
+          "divi/theme-builder/compose",
+          await client.post("/divi/theme-builder/setup-site-defaults", payload),
+        );
+      } catch (err) {
+        return {
+          content: [{ type: "text" as const, text: `Composition error: ${(err as Error).message}` }],
+          isError: true,
+        };
+      }
+    },
   );
 
   server.registerTool(
