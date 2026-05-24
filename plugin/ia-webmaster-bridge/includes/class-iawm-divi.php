@@ -325,9 +325,9 @@ class IAWM_Divi {
 	 * POST /divi/library/local — liste les layouts sauvegardés dans la
 	 * bibliothèque Divi locale (post_type et_pb_layout).
 	 *
-	 * Workflow hybride : quand l'utilisateur trouve un layout intéressant dans
-	 * Divi Cloud (depuis le Visual Builder de son navigateur), il clique
-	 * "Save to Library" — ça crée un post et_pb_layout que cette route
+	 * Workflow hybride : quand l'utilisateur trouve un layout intéressant
+	 * dans Divi Cloud (depuis le Visual Builder de son navigateur), il
+	 * clique "Save to Library" — ça crée un post et_pb_layout que cette route
 	 * expose à notre API. On peut ensuite lire son contenu via
 	 * iawm_content_get (le post_content contient les blocs Divi 5) ou via
 	 * iawm_divi_page_read si on adapte la garde-fou.

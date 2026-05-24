@@ -33,9 +33,9 @@ mises à jour.
   plupart de ces opérations (installation d'extensions, options, cron). Pour ce
   qui dépasse PHP, le plugin pourra encapsuler des appels WP-CLI précis et
   validés (jamais une commande arbitraire).
-- **Canal SSH/WP-CLI de secours** : réservé à l'opérateur humain, ou aux situations où le
-  plugin est indisponible (ex. plugin lui-même cassé). Documenté, non exposé à
-  l'agent par défaut.
+- **Canal SSH/WP-CLI de secours** : réservé à l'opérateur humain, ou aux
+  situations où le plugin est indisponible (ex. plugin lui-même cassé).
+  Documenté, non exposé à l'agent par défaut.
 - **Toutes ces opérations sont classées « à risque »** : sauvegarde préalable,
   confirmation explicite, dry-run quand c'est possible (spec 02).
 - Sources d'extensions/thèmes : restreindre aux sources de confiance (dépôt
@@ -46,7 +46,7 @@ mises à jour.
 - Mécanisme de sauvegarde : s'appuyer sur une extension de sauvegarde existante,
   ou implémenter une sauvegarde minimale dans le plugin ?
 - Quelles commandes WP-CLI encapsuler, et lesquelles laisser strictement à
-  Marius ?
+  l'opérateur humain ?
 - `search-replace` est puissant et dangereux (sérialisation) → garde-fous
   spécifiques, dry-run obligatoire.
 - Mises à jour : faut-il un environnement de pré-production pour tester une mise

@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 export interface GatewayConfig {
-  /** Racine du site WordPress, ex. http://site-local.example */
+  /** Racine du site WordPress, ex. https://votre-site.example */
   baseUrl: string;
   /** Identifiant de clé d'API (en-tête X-IAWM-Key). */
   keyId: string;

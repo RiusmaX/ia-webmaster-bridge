@@ -20,9 +20,9 @@ dépendre comme d'un composant externe.
 Abilities en serveur MCP. Externe, pré-1.0 (v0.5.0). **Non utilisé** dans ce
 projet (voir décision D-002).
 
-**Pont MCP local** (MCP Gateway) — Notre composant Node.js, sur la machine de
-Marius. Présente un serveur MCP à Claude Code et le traduit en appels HTTPS vers
-le plugin. Dossier `mcp-gateway/`.
+**Pont MCP local** (MCP Gateway) — Notre composant Node.js, exécuté sur la
+machine de l'utilisateur. Présente un serveur MCP à Claude Code et le
+traduit en appels HTTPS vers le plugin. Dossier `mcp-gateway/`.
 
 **Plugin « IA Webmaster Bridge »** — Notre plugin WordPress (PHP), installé sur
 le site cible. Expose l'API REST custom `ia-webmaster/v1`. Dossier `plugin/`.

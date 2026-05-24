@@ -394,10 +394,10 @@ structure `innerContent.desktop.value.{text, linkUrl}`.
    directement dans une row sans column ; pas de column directement
    dans une section sans row. Le builder refuse le chargement sinon.
 
-5. **Variables globales > valeurs en dur.** Sur un site de l'utilisateur, il
-   faut systématiquement référencer `gcid-heading-color`, `gcid-body-color`,
-   etc. au lieu de `#000`. Sinon, le changement de palette ne se propage
-   pas.
+5. **Variables globales > valeurs en dur.** Référencer systématiquement
+   les couleurs globales (`gcid-heading-color`, `gcid-body-color`, etc.)
+   plutôt que des valeurs en dur (`#000`). Sinon, le changement de
+   palette du site ne se propage pas.
 
 6. **Versionning.** Chaque bloc porte un `builderVersion`. À chaque
    évolution majeure de Divi 5, vérifier la compatibilité du format.
@@ -439,7 +439,7 @@ structure `innerContent.desktop.value.{text, linkUrl}`.
 
 ## Modules avancés (page de référence n°29)
 
-Documentés à partir de la 2e page de référence peuplée dans le builder dans
+Documentés à partir d'une 2e page de référence peuplée dans
 le builder Divi 5.5.2.
 
 ### `wp:divi/heading`
@@ -676,7 +676,7 @@ email reçues par le destinataire). À donner sans espaces.
 
 ## Modules natifs prioritaires (page de référence n°53)
 
-Documentés à partir de la 3e page de référence peuplée dans le builder.
+Documentés à partir d'une 3e page de référence peuplée dans le builder.
 
 ### `wp:divi/divider`
 

@@ -22,7 +22,7 @@ et les garde-fous contre les opérations dangereuses (décision D-005).
 
 ### Exclu (pour l'instant)
 - La sécurité générale du serveur WordPress (durcissement hébergement) — du
-  ressort de l'hébergeur / de l'utilisateur, hors périmètre logiciel du projet.
+  ressort de l'hébergeur et de l'opérateur, hors périmètre logiciel du projet.
 
 ## Approche technique
 

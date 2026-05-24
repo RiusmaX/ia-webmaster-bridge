@@ -23,7 +23,7 @@ en ajoute une nouvelle.
 ## D-002 — Adaptateur 100 % maison
 
 - Date : 2026-05-21 · Statut : Validée
-- **Contexte** : Nous voulons garantir la compatibilité et ne pas dépendre d'un
+- **Contexte** : nous voulons garantir la compatibilité et ne pas dépendre d'un
   composant externe.
 - **Décision** : on construit notre propre plugin WordPress (API REST custom) et
   notre propre pont MCP local (Node.js). Le plugin reste du WordPress REST
@@ -34,8 +34,8 @@ en ajoute une nouvelle.
 ## D-003 — Builder prioritaire : Divi 5
 
 - Date : 2026-05-21 · Statut : Validée
-- **Contexte** : la majorité des sites cibles sont sous Divi 5. Divi 5 est
-  moins documenté qu'Elementor pour la génération programmatique.
+- **Contexte** : la majorité des sites visés sont sous Divi 5, qui est moins
+  documenté qu'Elementor pour la génération programmatique.
 - **Décision** : Divi 5 est la cible prioritaire. Elementor est reporté.
 - **Conséquences** : la Phase 3 inclut une rétro-ingénierie du format Divi 5 sur
   le site local. Approche assumée : tester et itérer.
@@ -62,8 +62,8 @@ en ajoute une nouvelle.
 ## D-006 — Opérations d'infrastructure via le plugin
 
 - Date : 2026-05-21 · Statut : Validée
-- **Contexte** : L'opérateur a un accès SSH aux serveurs, mais préfère ne pas exposer
-  un shell à l'agent.
+- **Contexte** : nous avons un accès SSH aux serveurs, mais préférons ne pas
+  exposer un shell à l'agent.
 - **Décision** : les opérations d'infrastructure passent par des endpoints
   contrôlés et journalisés du plugin. Le SSH/WP-CLI reste un canal de secours
   (réservé à l'opérateur humain ou aux cas où le plugin est indisponible).
@@ -82,7 +82,7 @@ en ajoute une nouvelle.
 ## D-008 — Intégration livrée comme plugin Claude Code
 
 - Date : 2026-05-22 · Statut : Validée
-- **Contexte** : Nous voulons une intégration propre dans Claude (plugin,
+- **Contexte** : nous voulons une intégration propre dans Claude (plugin,
   connecteur ou extension — au choix du plus adapté).
 - **Décision** : livrer un **plugin Claude Code** empaquetant le pont MCP et les
   skills. C'est le format natif de Claude Code pour regrouper un serveur MCP,
@@ -94,7 +94,7 @@ en ajoute une nouvelle.
 ## D-009 — Accès aux logs et au diagnostic
 
 - Date : 2026-05-22 · Statut : Validée
-- **Contexte** : Nous voulons pouvoir diagnostiquer et déboguer le site via
+- **Contexte** : nous voulons pouvoir diagnostiquer et déboguer le site via
   l'agent.
 - **Décision** : ajouter un module de diagnostic en **lecture seule** : debug.log
   de WordPress, Site Health, état et versions des extensions/thèmes, versions de
@@ -105,7 +105,7 @@ en ajoute une nouvelle.
 ## D-010 — Diffusion open source publique
 
 - Date : 2026-05-22 · Statut : Validée
-- **Contexte** : Nous souhaitons diffuser le projet en open source.
+- **Contexte** : nous souhaitons diffuser le projet en open source.
 - **Décision** : publication publique sur GitHub (`RiusmaX/ia-webmaster-bridge`)
   sous licence **GPL-3.0-or-later**. Le dépôt sert aussi de marketplace Claude
   Code : le plugin `ia-webmaster` s'installe via `/plugin marketplace add` puis

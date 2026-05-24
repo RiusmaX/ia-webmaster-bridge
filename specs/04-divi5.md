@@ -8,8 +8,8 @@
 ## Objectif
 
 Permettre à Claude de **lire, créer et modifier des layouts Divi 5** : le cœur
-de la valeur du projet, puisque la majorité des sites cibles sont sous
-Divi 5 (décision D-003).
+de la valeur du projet, puisque la majorité des sites visés sont sous Divi 5
+(décision D-003).
 
 ## Contexte
 

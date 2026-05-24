@@ -5,11 +5,11 @@
 ## Vue d'ensemble
 
 Le système relie **Claude Code** (le cerveau et le runtime de l'agent, sur la
-machine de l'utilisateur) à un **site WordPress 7.0** (la cible). Claude Code n'a pas
-besoin d'un orchestrateur séparé : il EST l'agent.
+machine de l'utilisateur) à un **site WordPress 7.0** (la cible). Claude Code
+n'a pas besoin d'un orchestrateur séparé : il EST l'agent.
 
 ```
-   Claude Code  (F:\Dev\wordpress\ia)
+   Claude Code
         |
         |  protocole MCP (stdio)
         v
