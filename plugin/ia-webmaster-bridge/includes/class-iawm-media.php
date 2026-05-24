@@ -1,9 +1,9 @@
 <?php
 /**
- * Plan contenu : gestion de la médiathèque.
+ * Content plane: media library management.
  *
- * Routes POST avec corps JSON. Lecture (list, get) en guard_read ; import et
- * mise à jour (sideload, update) en guard_write — donc soumis au kill switch.
+ * POST routes with JSON body. Reads (list, get) use guard_read; import and
+ * update (sideload, update) use guard_write — therefore subject to the kill switch.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -13,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes de la médiathèque.
+ * Media library routes.
  */
 class IAWM_Media {
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -27,7 +27,7 @@ class IAWM_Media {
 	}
 
 	/**
-	 * Enregistre les routes médias.
+	 * Registers media routes.
 	 *
 	 * @return void
 	 */
@@ -53,11 +53,11 @@ class IAWM_Media {
 	}
 
 	/**
-	 * POST /media/list — liste paginée de la médiathèque.
+	 * POST /media/list — paginated media library listing.
 	 *
-	 * Corps JSON : { search?, mime_type?, per_page?, page? }
+	 * JSON body: { search?, mime_type?, per_page?, page? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_list( $request ) {
@@ -104,11 +104,11 @@ class IAWM_Media {
 	}
 
 	/**
-	 * POST /media/get — détail d'un média.
+	 * POST /media/get — detail of a media item.
 	 *
-	 * Corps JSON : { id }
+	 * JSON body: { id }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_get( $request ) {
@@ -116,12 +116,12 @@ class IAWM_Media {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "Le paramètre 'id' est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || 'attachment' !== $post->post_type ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Média introuvable : {$id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "Media not found: {$id}.", 404 );
 		}
 
 		return new WP_REST_Response(
@@ -134,11 +134,11 @@ class IAWM_Media {
 	}
 
 	/**
-	 * POST /media/sideload — importe un média depuis une URL.
+	 * POST /media/sideload — imports a media item from a URL.
 	 *
-	 * Corps JSON : { url, title?, alt?, caption?, description?, attached_to?, dry_run? }
+	 * JSON body: { url, title?, alt?, caption?, description?, attached_to?, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_sideload( $request ) {
@@ -146,7 +146,7 @@ class IAWM_Media {
 
 		$url = isset( $params['url'] ) ? esc_url_raw( (string) $params['url'] ) : '';
 		if ( '' === $url ) {
-			return IAWM_Support::rest_error( 'iawm_missing_url', "Le paramètre 'url' est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_url', "The 'url' parameter is required.", 400 );
 		}
 
 		$title       = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : '';
@@ -179,7 +179,7 @@ class IAWM_Media {
 
 		$tmp = download_url( $url );
 		if ( is_wp_error( $tmp ) ) {
-			return IAWM_Support::rest_error( 'iawm_download_failed', 'Téléchargement impossible : ' . $tmp->get_error_message(), 502 );
+			return IAWM_Support::rest_error( 'iawm_download_failed', 'Download failed: ' . $tmp->get_error_message(), 502 );
 		}
 
 		$name = basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
@@ -187,7 +187,7 @@ class IAWM_Media {
 			if ( file_exists( $tmp ) ) {
 				wp_delete_file( $tmp );
 			}
-			return IAWM_Support::rest_error( 'iawm_invalid_url', "L'URL ne pointe pas vers un fichier nommé avec une extension.", 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_url', 'The URL does not point to a file with a named extension.', 400 );
 		}
 
 		$post_data = array();
@@ -230,11 +230,11 @@ class IAWM_Media {
 	}
 
 	/**
-	 * POST /media/update — met à jour les métadonnées d'un média.
+	 * POST /media/update — updates a media item's metadata.
 	 *
-	 * Corps JSON : { id, title?, alt?, caption?, description?, dry_run? }
+	 * JSON body: { id, title?, alt?, caption?, description?, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_update( $request ) {
@@ -242,12 +242,12 @@ class IAWM_Media {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "Le paramètre 'id' est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || 'attachment' !== $post->post_type ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Média introuvable : {$id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "Media not found: {$id}.", 404 );
 		}
 
 		$changes = array();
@@ -264,7 +264,7 @@ class IAWM_Media {
 		$alt = isset( $params['alt'] ) ? sanitize_text_field( (string) $params['alt'] ) : null;
 
 		if ( empty( $changes ) && null === $alt ) {
-			return IAWM_Support::rest_error( 'iawm_no_change', 'Aucune modification fournie.', 400 );
+			return IAWM_Support::rest_error( 'iawm_no_change', 'No changes provided.', 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -307,9 +307,9 @@ class IAWM_Media {
 	}
 
 	/**
-	 * Représentation résumée d'un média.
+	 * Summary representation of a media item.
 	 *
-	 * @param WP_Post $post Objet attachment.
+	 * @param WP_Post $post Attachment object.
 	 * @return array
 	 */
 	private static function summary( $post ) {
@@ -325,9 +325,9 @@ class IAWM_Media {
 	}
 
 	/**
-	 * Représentation détaillée d'un média.
+	 * Detailed representation of a media item.
 	 *
-	 * @param WP_Post $post Objet attachment.
+	 * @param WP_Post $post Attachment object.
 	 * @return array
 	 */
 	private static function full( $post ) {

@@ -1,12 +1,12 @@
 /**
- * Pattern Numbers Bar — barre de chiffres-clés (KPIs).
+ * Numbers Bar pattern — key-figures bar (KPIs).
  *
- * Idéal pour montrer rapidement : nombre de clients, taux de
- * satisfaction, années d'expertise, etc. Forte preuve sociale.
+ * Ideal for quickly showing: number of customers, satisfaction rate, years of
+ * expertise, etc. Strong social proof.
  *
- * Structure :
- *   Section (bg primary ou alterné)
- *     Row 1_3,1_3,1_3 ou 1_4,1_4,1_4,1_4
+ * Structure:
+ *   Section (bg primary or alternated)
+ *     Row 1_3,1_3,1_3 or 1_4,1_4,1_4,1_4
  *       Column × N
  *         Number Counter
  */
@@ -16,9 +16,9 @@ import type { DiviColor, GutenbergBlock } from "../types.js";
 
 export interface NumberItem {
   label: string;
-  /** Valeur (string pour supporter "1.5k", "10M+", etc.). */
+  /** Value (string to support "1.5k", "10M+", etc.). */
   number: string;
-  /** Ajouter "%" auto ? */
+  /** Auto-appends "%"? */
   percent?: boolean;
 }
 
@@ -39,7 +39,7 @@ export function numbersBar(options: NumbersBarOptions): GutenbergBlock {
     structure = "1_4,1_4,1_4,1_4";
     colType = "1_4";
   } else {
-    // Défaut : 3 colonnes (idéal pour 3 KPIs).
+    // Default: 3 columns (ideal for 3 KPIs).
     structure = "1_3,1_3,1_3";
     colType = "1_3";
   }

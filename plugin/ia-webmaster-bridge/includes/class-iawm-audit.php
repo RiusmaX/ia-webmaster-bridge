@@ -1,10 +1,10 @@
 <?php
 /**
- * Journal d'audit : trace chaque appel de l'API de l'adaptateur.
+ * Audit log: traces every call to the adapter's API.
  *
- * Chaque requête vers le namespace ia-webmaster/v1 (hors /ping) est enregistrée
- * dans une table dédiée — succès comme refus — afin de garder une trace
- * complète de l'activité de l'agent et des tentatives d'accès.
+ * Every request to the ia-webmaster/v1 namespace (except /ping) is recorded
+ * in a dedicated table — both successes and denials — in order to keep a full
+ * trace of the agent's activity and access attempts.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -14,18 +14,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Enregistrement et consultation du journal d'audit.
+ * Recording and reading of the audit log.
  */
 class IAWM_Audit {
 
-	/** Version du schéma de la base ; à incrémenter à chaque changement. */
+	/** Database schema version; to be incremented on every change. */
 	const DB_VERSION = 1;
 
-	/** Option stockant la version de schéma installée. */
+	/** Option storing the installed schema version. */
 	const OPTION_DB_VERSION = 'iawm_db_version';
 
 	/**
-	 * Branche les hooks du journal d'audit.
+	 * Hooks up the audit log.
 	 *
 	 * @return void
 	 */
@@ -35,7 +35,7 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Nom complet de la table du journal.
+	 * Full table name for the log.
 	 *
 	 * @return string
 	 */
@@ -46,7 +46,7 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Crée ou met à jour le schéma de la base si nécessaire.
+	 * Creates or updates the database schema if needed.
 	 *
 	 * @return void
 	 */
@@ -60,7 +60,7 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Crée la table du journal d'audit.
+	 * Creates the audit log table.
 	 *
 	 * @return void
 	 */
@@ -91,18 +91,18 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Filtre rest_post_dispatch : enregistre la requête si elle vise l'adaptateur.
+	 * rest_post_dispatch filter: records the request if it targets the adapter.
 	 *
-	 * @param WP_HTTP_Response $response Réponse REST.
-	 * @param WP_REST_Server   $server   Serveur REST.
-	 * @param WP_REST_Request  $request  Requête entrante.
-	 * @return WP_HTTP_Response La réponse, inchangée.
+	 * @param WP_HTTP_Response $response REST response.
+	 * @param WP_REST_Server   $server   REST server.
+	 * @param WP_REST_Request  $request  Incoming request.
+	 * @return WP_HTTP_Response The response, unchanged.
 	 */
 	public static function record( $response, $server, $request ) {
 		$route  = (string) $request->get_route();
 		$prefix = '/' . IAWM_REST_NAMESPACE . '/';
 
-		// Ne tracer que notre namespace, et ignorer le diagnostic public /ping.
+		// Only trace our namespace, and ignore the public /ping diagnostic.
 		if ( 0 !== strpos( $route, $prefix ) || ( $prefix . 'ping' ) === $route ) {
 			return $response;
 		}
@@ -116,7 +116,7 @@ class IAWM_Audit {
 			'body_bytes' => strlen( (string) $request->get_body() ),
 		);
 
-		// En cas de réponse d'erreur, conserver le code applicatif.
+		// In case of an error response, keep the application code.
 		if ( is_object( $response ) && method_exists( $response, 'get_data' ) ) {
 			$data = $response->get_data();
 			if ( is_array( $data ) && isset( $data['code'] ) ) {
@@ -140,9 +140,9 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Insère une entrée dans le journal.
+	 * Inserts an entry into the log.
 	 *
-	 * @param array $entry Données de l'entrée.
+	 * @param array $entry Entry data.
 	 * @return void
 	 */
 	public static function log( $entry ) {
@@ -165,9 +165,9 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Retourne les dernières entrées du journal, de la plus récente à la plus ancienne.
+	 * Returns the most recent log entries, newest first.
 	 *
-	 * @param int $limit Nombre d'entrées (borné entre 1 et 200).
+	 * @param int $limit Number of entries (clamped between 1 and 200).
 	 * @return array
 	 */
 	public static function get_recent( $limit = 20 ) {
@@ -176,7 +176,7 @@ class IAWM_Audit {
 		$limit = max( 1, min( 200, (int) $limit ) );
 		$table = self::table_name();
 
-		// $table est construit en interne (préfixe wpdb + littéral), non issu d'une entrée utilisateur.
+		// $table is built internally (wpdb prefix + literal), not from user input.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare( "SELECT * FROM `$table` ORDER BY id DESC LIMIT %d", $limit ),
 			ARRAY_A
@@ -196,9 +196,9 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Classe un code HTTP en catégorie de résultat.
+	 * Classifies an HTTP status code into an outcome category.
 	 *
-	 * @param int $status Code HTTP.
+	 * @param int $status HTTP code.
 	 * @return string
 	 */
 	private static function outcome_from_status( $status ) {
@@ -216,7 +216,7 @@ class IAWM_Audit {
 	}
 
 	/**
-	 * Adresse IP de l'appelant (tronquée à la taille de la colonne).
+	 * Caller's IP address (truncated to the column size).
 	 *
 	 * @return string
 	 */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Fonctions utilitaires partagées entre les modules de capacités.
+ * Utility functions shared between capability modules.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -10,14 +10,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Helpers communs aux modules (contenu, médias, etc.).
+ * Helpers common to modules (content, media, etc.).
  */
 class IAWM_Support {
 
 	/**
-	 * Extrait les paramètres JSON du corps d'une requête.
+	 * Extracts JSON parameters from a request body.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return array
 	 */
 	public static function json_params( $request ) {
@@ -27,10 +27,10 @@ class IAWM_Support {
 	}
 
 	/**
-	 * Identifiant de l'utilisateur sous lequel les écritures sont effectuées.
+	 * ID of the user under whom writes are performed.
 	 *
-	 * Pour l'instant : le plus ancien administrateur du site. À remplacer en
-	 * Phase 5 par un utilisateur dédié à rôle restreint.
+	 * For now: the oldest administrator on the site. To be replaced in
+	 * Phase 5 by a dedicated user with a restricted role.
 	 *
 	 * @return int
 	 */
@@ -49,7 +49,7 @@ class IAWM_Support {
 	}
 
 	/**
-	 * Bascule le contexte courant sur l'utilisateur sous lequel l'agent agit.
+	 * Switches the current context to the user the agent acts as.
 	 *
 	 * @return void
 	 */
@@ -58,12 +58,12 @@ class IAWM_Support {
 	}
 
 	/**
-	 * Construit une erreur REST.
+	 * Builds a REST error.
 	 *
-	 * @param string $code    Code d'erreur.
-	 * @param string $message Message lisible.
-	 * @param int    $status  Code HTTP.
-	 * @param array  $extra   Données additionnelles à joindre (optionnel).
+	 * @param string $code    Error code.
+	 * @param string $message Human-readable message.
+	 * @param int    $status  HTTP code.
+	 * @param array  $extra   Additional data to attach (optional).
 	 * @return WP_Error
 	 */
 	public static function rest_error( $code, $message, $status, $extra = array() ) {

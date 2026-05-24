@@ -1,22 +1,22 @@
 <?php
 /**
- * Plan contenu : lecture et écriture des pages et articles.
+ * Content plane: reading and writing of pages and posts.
  *
- * Les routes de contenu utilisent la méthode POST avec un corps JSON — y
- * compris pour les lectures. Ce choix garde la signature HMAC simple (seul le
- * corps est haché, aucune query à canoniser). La distinction lecture / écriture
- * est portée par le permission_callback (guard_read vs guard_write), pas par
- * la méthode HTTP : le kill switch ne bloque donc que les véritables écritures.
+ * The content routes use the POST method with a JSON body — including for
+ * reads. This keeps the HMAC signature simple (only the body is hashed, no
+ * query to canonicalise). The read / write distinction is carried by the
+ * permission_callback (guard_read vs guard_write), not by the HTTP method:
+ * the kill switch therefore only blocks actual writes.
  *
- * Contenu Gutenberg : quand un contenu contient du balisage de blocs, il est
- * normalisé (parse_blocks + serialize_blocks) pour garantir un balisage
- * canonique et valide. Le paramètre raw_content=true désactive ce traitement.
+ * Gutenberg content: when content contains block markup, it is normalised
+ * (parse_blocks + serialize_blocks) to ensure canonical, valid markup.
+ * The raw_content=true parameter disables this processing.
  *
- * Garde-fous d'écriture :
- *  - création en brouillon par défaut (la publication doit être explicite) ;
- *  - mode dry-run : { "dry_run": true } valide et décrit l'opération sans rien
- *    modifier ;
- *  - kill switch : appliqué en amont par IAWM_Auth::guard_write.
+ * Write safeguards:
+ *  - creation as draft by default (publishing must be explicit);
+ *  - dry-run mode: { "dry_run": true } validates and describes the operation
+ *    without modifying anything;
+ *  - kill switch: applied upstream by IAWM_Auth::guard_write.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -26,21 +26,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes de lecture et d'écriture du contenu.
+ * Content read and write routes.
  */
 class IAWM_Content {
 
-	/** Types de contenu pris en charge. */
+	/** Supported content types. */
 	const ALLOWED_TYPES = array( 'post', 'page' );
 
-	/** Statuts acceptés pour le filtrage en lecture. */
+	/** Statuses accepted for read filtering. */
 	const ALLOWED_STATUSES = array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' );
 
-	/** Statuts acceptés pour l'écriture. */
+	/** Statuses accepted for writes. */
 	const WRITABLE_STATUSES = array( 'draft', 'publish', 'pending', 'private', 'future' );
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -49,7 +49,7 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Enregistre les routes du plan contenu.
+	 * Registers content plane routes.
 	 *
 	 * @return void
 	 */
@@ -75,11 +75,11 @@ class IAWM_Content {
 	}
 
 	/**
-	 * POST /content/list — liste paginée de pages ou d'articles.
+	 * POST /content/list — paginated list of pages or posts.
 	 *
-	 * Corps JSON : { type?, status?, search?, per_page?, page? }
+	 * JSON body: { type?, status?, search?, per_page?, page? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_list( $request ) {
@@ -87,7 +87,7 @@ class IAWM_Content {
 
 		$type = isset( $params['type'] ) ? sanitize_key( (string) $params['type'] ) : 'post';
 		if ( ! in_array( $type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_type', "Type de contenu non pris en charge : {$type}.", 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_type', "Unsupported content type: {$type}.", 400 );
 		}
 
 		$per_page = isset( $params['per_page'] ) ? (int) $params['per_page'] : 20;
@@ -132,11 +132,11 @@ class IAWM_Content {
 	}
 
 	/**
-	 * POST /content/get — contenu détaillé d'une page ou d'un article.
+	 * POST /content/get — detailed content of a page or post.
 	 *
-	 * Corps JSON : { id }
+	 * JSON body: { id }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_get( $request ) {
@@ -144,12 +144,12 @@ class IAWM_Content {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "Le paramètre 'id' est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || ! in_array( $post->post_type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Contenu introuvable : {$id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$id}.", 404 );
 		}
 
 		return new WP_REST_Response(
@@ -162,12 +162,12 @@ class IAWM_Content {
 	}
 
 	/**
-	 * POST /content/create — crée une page ou un article.
+	 * POST /content/create — creates a page or a post.
 	 *
-	 * Corps JSON : { type, title?, content?, status?, slug?, excerpt?,
-	 *                parent?, menu_order?, template?, raw_content?, dry_run? }
+	 * JSON body: { type, title?, content?, status?, slug?, excerpt?,
+	 *              parent?, menu_order?, template?, raw_content?, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_create( $request ) {
@@ -175,26 +175,26 @@ class IAWM_Content {
 
 		$type = isset( $params['type'] ) ? sanitize_key( (string) $params['type'] ) : '';
 		if ( ! in_array( $type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_type', 'Un type valide est requis (post|page).', 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_type', 'A valid type is required (post|page).', 400 );
 		}
 
 		$title   = isset( $params['title'] ) ? (string) $params['title'] : '';
 		$content = isset( $params['content'] ) ? (string) $params['content'] : '';
 		if ( '' === trim( $title ) && '' === trim( $content ) ) {
-			return IAWM_Support::rest_error( 'iawm_empty', 'Un titre ou un contenu est requis.', 400 );
+			return IAWM_Support::rest_error( 'iawm_empty', 'A title or content is required.', 400 );
 		}
 
-		// Garde-fou : brouillon par défaut, publication explicite.
+		// Safeguard: draft by default, explicit publish.
 		$status = isset( $params['status'] ) ? self::sanitize_write_status( $params['status'] ) : 'draft';
 		if ( null === $status ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_status', "Statut non pris en charge pour l'écriture.", 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_status', 'Unsupported status for writing.', 400 );
 		}
 
-		// Normalisation du contenu (balisage de blocs Gutenberg canonique).
+		// Content normalisation (canonical Gutenberg block markup).
 		$norm = self::normalize_content( $content, ! empty( $params['raw_content'] ) );
 
-		// wp_insert_post applique wp_unslash() en interne : on slashe nous-mêmes
-		// pour préserver les backslashes (essentiel pour les attributs Divi 5).
+		// wp_insert_post applies wp_unslash() internally: we slash ourselves
+		// to preserve backslashes (essential for Divi 5 attributes).
 		$postarr = array(
 			'post_type'    => $type,
 			'post_title'   => wp_slash( $title ),
@@ -255,12 +255,12 @@ class IAWM_Content {
 	}
 
 	/**
-	 * POST /content/update — modifie une page ou un article existant.
+	 * POST /content/update — modifies an existing page or post.
 	 *
-	 * Corps JSON : { id, title?, content?, status?, slug?, excerpt?,
-	 *                parent?, menu_order?, template?, raw_content?, dry_run? }
+	 * JSON body: { id, title?, content?, status?, slug?, excerpt?,
+	 *              parent?, menu_order?, template?, raw_content?, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_update( $request ) {
@@ -268,20 +268,20 @@ class IAWM_Content {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "Le paramètre 'id' est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || ! in_array( $post->post_type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Contenu introuvable : {$id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$id}.", 404 );
 		}
 
 		$changes = array();
 		$norm    = null;
 
-		// wp_update_post applique wp_unslash() en interne : on slashe les
-		// champs texte pour préserver les backslashes (Divi 5 stocke des
-		// échappements Unicode ", <, … dans ses attributs).
+		// wp_update_post applies wp_unslash() internally: we slash the
+		// text fields to preserve backslashes (Divi 5 stores Unicode
+		// escapes ", <, ... in its attributes).
 		if ( isset( $params['title'] ) ) {
 			$changes['post_title'] = wp_slash( (string) $params['title'] );
 		}
@@ -304,7 +304,7 @@ class IAWM_Content {
 		if ( isset( $params['status'] ) ) {
 			$status = self::sanitize_write_status( $params['status'] );
 			if ( null === $status ) {
-				return IAWM_Support::rest_error( 'iawm_invalid_status', "Statut non pris en charge pour l'écriture.", 400 );
+				return IAWM_Support::rest_error( 'iawm_invalid_status', 'Unsupported status for writing.', 400 );
 			}
 			$changes['post_status'] = $status;
 		}
@@ -314,7 +314,7 @@ class IAWM_Content {
 			: null;
 
 		if ( empty( $changes ) && null === $template ) {
-			return IAWM_Support::rest_error( 'iawm_no_change', 'Aucune modification fournie.', 400 );
+			return IAWM_Support::rest_error( 'iawm_no_change', 'No changes provided.', 400 );
 		}
 
 		$content_info = ( null !== $norm ) ? self::content_info( $norm ) : null;
@@ -360,15 +360,15 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Normalise un contenu.
+	 * Normalises a content string.
 	 *
-	 * Si du balisage de blocs Gutenberg est détecté, le contenu est passé par
-	 * parse_blocks + serialize_blocks pour produire un balisage canonique et
-	 * valide. Le HTML simple et le texte brut sont laissés intacts. Le mode
-	 * raw_content désactive tout traitement.
+	 * If Gutenberg block markup is detected, the content is passed through
+	 * parse_blocks + serialize_blocks to produce canonical, valid markup.
+	 * Plain HTML and raw text are left untouched. Raw mode disables any
+	 * processing.
 	 *
-	 * @param string $content Contenu d'entrée.
-	 * @param bool   $raw     True pour ne pas toucher au contenu.
+	 * @param string $content Input content.
+	 * @param bool   $raw     True to leave the content untouched.
 	 * @return array { content, blocks, block_count, normalized }
 	 */
 	private static function normalize_content( $content, $raw ) {
@@ -400,9 +400,9 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Réduit le résultat de normalize_content à l'information renvoyée au client.
+	 * Reduces the result of normalize_content to the info returned to the client.
 	 *
-	 * @param array $norm Résultat de normalize_content().
+	 * @param array $norm Result of normalize_content().
 	 * @return array
 	 */
 	private static function content_info( $norm ) {
@@ -414,9 +414,9 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Représentation résumée d'un contenu (pour les listes).
+	 * Summary representation of a content item (for lists).
 	 *
-	 * @param WP_Post $post Objet post.
+	 * @param WP_Post $post Post object.
 	 * @return array
 	 */
 	private static function summary( $post ) {
@@ -434,9 +434,9 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Représentation détaillée d'un contenu (corps complet inclus).
+	 * Detailed representation of a content item (full body included).
 	 *
-	 * @param WP_Post $post Objet post.
+	 * @param WP_Post $post Post object.
 	 * @return array
 	 */
 	private static function full( $post ) {
@@ -455,11 +455,11 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Détecte (de façon indicative) avec quel outil le contenu a été construit.
+	 * Detects (indicatively) with which tool the content was built.
 	 *
-	 * La détection Divi est sommaire à ce stade et sera affinée en Phase 3.
+	 * Divi detection is rudimentary at this stage and will be refined in Phase 3.
 	 *
-	 * @param WP_Post $post Objet post.
+	 * @param WP_Post $post Post object.
 	 * @return string 'divi' | 'gutenberg' | 'classic'
 	 */
 	private static function detect_builder( $post ) {
@@ -474,10 +474,10 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Normalise une liste de statuts (chaîne « a,b » ou tableau) pour la lecture.
+	 * Normalises a list of statuses (string "a,b" or array) for reads.
 	 *
-	 * @param mixed $status Statut(s) demandé(s).
-	 * @return array Liste de statuts valides (au moins « publish »).
+	 * @param mixed $status Requested status(es).
+	 * @return array List of valid statuses (at least "publish").
 	 */
 	private static function sanitize_status_list( $status ) {
 		if ( is_string( $status ) ) {
@@ -499,10 +499,10 @@ class IAWM_Content {
 	}
 
 	/**
-	 * Valide un statut demandé pour une écriture.
+	 * Validates a status requested for a write.
 	 *
-	 * @param mixed $status Statut demandé.
-	 * @return string|null Statut valide, ou null si non pris en charge.
+	 * @param mixed $status Requested status.
+	 * @return string|null Valid status, or null if unsupported.
 	 */
 	private static function sanitize_write_status( $status ) {
 		$status = sanitize_key( (string) $status );

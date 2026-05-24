@@ -1,5 +1,5 @@
 {
-  "baseUrl": "https://votre-site-wordpress.example",
+  "baseUrl": "https://your-wordpress-site.example",
   "keyId": "iawm_xxxxxxxxxxxx",
-  "secret": "REMPLACER_PAR_LE_SECRET_DE_LA_PAGE_ADMIN"
+  "secret": "REPLACE_WITH_THE_SECRET_FROM_THE_ADMIN_PAGE"
 }

@@ -1,12 +1,12 @@
 <?php
 /**
- * Plan configuration : réglages du site et gestion des utilisateurs.
+ * Configuration plane: site settings and user management.
  *
- * Les réglages modifiables sont limités à une liste blanche (constante
- * SETTINGS) : toute autre option est rejetée. C'est le garde-fou principal —
- * l'API ne peut pas toucher à des options critiques (active_plugins, clés, etc.).
+ * Editable settings are restricted to an allow-list (the SETTINGS constant):
+ * any other option is rejected. That is the main safeguard — the API cannot
+ * touch critical options (active_plugins, keys, etc.).
  *
- * Routes POST avec corps JSON. Lecture en guard_read, écriture en guard_write.
+ * POST routes with JSON body. Reads use guard_read, writes use guard_write.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -16,12 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes de configuration du site.
+ * Site configuration routes.
  */
 class IAWM_Config {
 
 	/**
-	 * Réglages modifiables (liste blanche) : option => définition de type.
+	 * Editable settings (allow-list): option => type definition.
 	 */
 	const SETTINGS = array(
 		'blogname'               => array( 'type' => 'string' ),
@@ -42,11 +42,11 @@ class IAWM_Config {
 		'permalink_structure'    => array( 'type' => 'string', 'risky' => true ),
 	);
 
-	/** Rôles d'utilisateur acceptés. */
+	/** Accepted user roles. */
 	const USER_ROLES = array( 'subscriber', 'contributor', 'author', 'editor', 'administrator' );
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -55,7 +55,7 @@ class IAWM_Config {
 	}
 
 	/**
-	 * Enregistre les routes de configuration.
+	 * Registers configuration routes.
 	 *
 	 * @return void
 	 */
@@ -82,9 +82,9 @@ class IAWM_Config {
 	}
 
 	/**
-	 * POST /config/settings/get — lit les réglages de la liste blanche.
+	 * POST /config/settings/get — reads the allow-listed settings.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_settings_get( $request ) {
@@ -109,11 +109,11 @@ class IAWM_Config {
 	}
 
 	/**
-	 * POST /config/settings/update — modifie des réglages de la liste blanche.
+	 * POST /config/settings/update — modifies allow-listed settings.
 	 *
-	 * Corps JSON : { settings: { clé: valeur, ... }, dry_run? }
+	 * JSON body: { settings: { key: value, ... }, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_settings_update( $request ) {
@@ -121,7 +121,7 @@ class IAWM_Config {
 		$input  = ( isset( $params['settings'] ) && is_array( $params['settings'] ) ) ? $params['settings'] : array();
 
 		if ( empty( $input ) ) {
-			return IAWM_Support::rest_error( 'iawm_no_settings', "Le paramètre 'settings' (objet) est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_no_settings', "The 'settings' parameter (object) is required.", 400 );
 		}
 
 		$changes  = array();
@@ -146,7 +146,7 @@ class IAWM_Config {
 		if ( empty( $changes ) ) {
 			return IAWM_Support::rest_error(
 				'iawm_no_valid_settings',
-				'Aucun réglage valide à appliquer. Rejetés : ' . implode( ', ', $rejected ) . '.',
+				'No valid setting to apply. Rejected: ' . implode( ', ', $rejected ) . '.',
 				400
 			);
 		}
@@ -193,11 +193,11 @@ class IAWM_Config {
 	}
 
 	/**
-	 * POST /config/users/list — liste paginée des utilisateurs.
+	 * POST /config/users/list — paginated list of users.
 	 *
-	 * Corps JSON : { search?, per_page?, page? }
+	 * JSON body: { search?, per_page?, page? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_users_list( $request ) {
@@ -237,13 +237,13 @@ class IAWM_Config {
 	}
 
 	/**
-	 * POST /config/users/create — crée un utilisateur.
+	 * POST /config/users/create — creates a user.
 	 *
-	 * Corps JSON : { login, email, password?, role?, display_name?, dry_run? }
-	 * Sans mot de passe fourni, un mot de passe fort est généré et renvoyé.
-	 * Le rôle par défaut est « subscriber » (le moins privilégié).
+	 * JSON body: { login, email, password?, role?, display_name?, dry_run? }
+	 * Without a provided password, a strong one is generated and returned.
+	 * The default role is "subscriber" (least privileged).
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_users_create( $request ) {
@@ -252,15 +252,15 @@ class IAWM_Config {
 		$login = isset( $params['login'] ) ? sanitize_user( (string) $params['login'] ) : '';
 		$email = isset( $params['email'] ) ? sanitize_email( (string) $params['email'] ) : '';
 		if ( '' === $login || '' === $email ) {
-			return IAWM_Support::rest_error( 'iawm_missing_fields', "Les paramètres 'login' et 'email' sont requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_fields', "The 'login' and 'email' parameters are required.", 400 );
 		}
 		if ( ! is_email( $email ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_email', 'Adresse e-mail invalide.', 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_email', 'Invalid email address.', 400 );
 		}
 
 		$role = isset( $params['role'] ) ? sanitize_key( (string) $params['role'] ) : 'subscriber';
 		if ( ! in_array( $role, self::USER_ROLES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_role', "Rôle non pris en charge : {$role}.", 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_role', "Unsupported role: {$role}.", 400 );
 		}
 
 		$display       = isset( $params['display_name'] ) ? sanitize_text_field( (string) $params['display_name'] ) : $login;
@@ -284,7 +284,7 @@ class IAWM_Config {
 		}
 
 		if ( username_exists( $login ) || email_exists( $email ) ) {
-			return IAWM_Support::rest_error( 'iawm_user_exists', 'Un utilisateur avec ce login ou cet e-mail existe déjà.', 409 );
+			return IAWM_Support::rest_error( 'iawm_user_exists', 'A user with this login or email already exists.', 409 );
 		}
 
 		IAWM_Support::act_as_agent();
@@ -309,19 +309,19 @@ class IAWM_Config {
 		);
 		if ( ! $has_password ) {
 			$response['generated_password'] = $password;
-			$response['notice']             = 'Mot de passe généré : à transmettre de façon sécurisée, puis à faire changer.';
+			$response['notice']             = 'Generated password: deliver it securely, then require it to be changed.';
 		}
 
 		return new WP_REST_Response( $response, 201 );
 	}
 
 	/**
-	 * POST /config/users/update — modifie un utilisateur.
+	 * POST /config/users/update — modifies a user.
 	 *
-	 * Corps JSON : { id, email?, display_name?, role?, dry_run? }
-	 * L'utilisateur sous lequel l'agent opère ne peut pas être modifié.
+	 * JSON body: { id, email?, display_name?, role?, dry_run? }
+	 * The user the agent operates as cannot be modified.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_users_update( $request ) {
@@ -330,19 +330,19 @@ class IAWM_Config {
 
 		$user = $id > 0 ? get_user_by( 'id', $id ) : false;
 		if ( ! $user ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Utilisateur introuvable : {$id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "User not found: {$id}.", 404 );
 		}
 
-		// Garde-fou : l'agent ne peut pas modifier l'utilisateur sous lequel il opère.
+		// Safeguard: the agent cannot modify the user it operates as.
 		if ( $id === IAWM_Support::acting_user_id() ) {
-			return IAWM_Support::rest_error( 'iawm_protected_user', "L'utilisateur sous lequel l'agent opère ne peut pas être modifié via l'API.", 403 );
+			return IAWM_Support::rest_error( 'iawm_protected_user', 'The user the agent operates as cannot be modified via the API.', 403 );
 		}
 
 		$update = array( 'ID' => $id );
 		if ( isset( $params['email'] ) ) {
 			$email = sanitize_email( (string) $params['email'] );
 			if ( ! is_email( $email ) ) {
-				return IAWM_Support::rest_error( 'iawm_invalid_email', 'Adresse e-mail invalide.', 400 );
+				return IAWM_Support::rest_error( 'iawm_invalid_email', 'Invalid email address.', 400 );
 			}
 			$update['user_email'] = $email;
 		}
@@ -352,13 +352,13 @@ class IAWM_Config {
 		if ( isset( $params['role'] ) ) {
 			$role = sanitize_key( (string) $params['role'] );
 			if ( ! in_array( $role, self::USER_ROLES, true ) ) {
-				return IAWM_Support::rest_error( 'iawm_invalid_role', "Rôle non pris en charge : {$role}.", 400 );
+				return IAWM_Support::rest_error( 'iawm_invalid_role', "Unsupported role: {$role}.", 400 );
 			}
 			$update['role'] = $role;
 		}
 
 		if ( count( $update ) <= 1 ) {
-			return IAWM_Support::rest_error( 'iawm_no_change', 'Aucune modification fournie.', 400 );
+			return IAWM_Support::rest_error( 'iawm_no_change', 'No changes provided.', 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -391,11 +391,11 @@ class IAWM_Config {
 	}
 
 	/**
-	 * Valide et convertit la valeur d'un réglage selon son type.
+	 * Validates and converts a setting's value according to its type.
 	 *
-	 * @param array $def   Définition du réglage.
-	 * @param mixed $value Valeur entrante.
-	 * @return mixed|null Valeur normalisée, ou null si invalide.
+	 * @param array $def   Setting definition.
+	 * @param mixed $value Incoming value.
+	 * @return mixed|null Normalised value, or null if invalid.
 	 */
 	private static function sanitize_setting( $def, $value ) {
 		switch ( $def['type'] ) {
@@ -416,9 +416,9 @@ class IAWM_Config {
 	}
 
 	/**
-	 * Représentation d'un utilisateur.
+	 * Representation of a user.
 	 *
-	 * @param WP_User $user Utilisateur.
+	 * @param WP_User $user User.
 	 * @return array
 	 */
 	private static function user_data( $user ) {

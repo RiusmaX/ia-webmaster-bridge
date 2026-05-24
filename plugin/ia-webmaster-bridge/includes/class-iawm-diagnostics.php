@@ -1,9 +1,9 @@
 <?php
 /**
- * Diagnostic et accès aux logs — en lecture seule.
+ * Diagnostics and log access — read-only.
  *
- * Toutes les routes sont en guard_read : ce module n'effectue aucune écriture,
- * ce qui constitue son garde-fou principal. Chaque accès reste journalisé.
+ * All routes use guard_read: this module performs no writes,
+ * which is its main safeguard. Every access is still logged.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -13,15 +13,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes de diagnostic (système, extensions, thèmes, logs).
+ * Diagnostic routes (system, plugins, themes, logs).
  */
 class IAWM_Diagnostics {
 
-	/** Taille maximale lue en fin de fichier de log. */
+	/** Maximum size read from the end of the log file. */
 	const LOG_TAIL_BYTES = 262144;
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -30,7 +30,7 @@ class IAWM_Diagnostics {
 	}
 
 	/**
-	 * Enregistre les routes de diagnostic.
+	 * Registers diagnostic routes.
 	 *
 	 * @return void
 	 */
@@ -56,9 +56,9 @@ class IAWM_Diagnostics {
 	}
 
 	/**
-	 * POST /diagnostics/system — informations sur l'environnement.
+	 * POST /diagnostics/system — information about the environment.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_system( $request ) {
@@ -100,9 +100,9 @@ class IAWM_Diagnostics {
 	}
 
 	/**
-	 * POST /diagnostics/plugins — liste des extensions installées.
+	 * POST /diagnostics/plugins — list of installed plugins.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_plugins( $request ) {
@@ -141,9 +141,9 @@ class IAWM_Diagnostics {
 	}
 
 	/**
-	 * POST /diagnostics/themes — liste des thèmes installés.
+	 * POST /diagnostics/themes — list of installed themes.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_themes( $request ) {
@@ -171,11 +171,11 @@ class IAWM_Diagnostics {
 	}
 
 	/**
-	 * POST /diagnostics/logs — lit les dernières lignes du debug.log WordPress.
+	 * POST /diagnostics/logs — reads the last lines of WordPress's debug.log.
 	 *
-	 * Corps JSON : { lines? }
+	 * JSON body: { lines? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_logs( $request ) {
@@ -192,7 +192,7 @@ class IAWM_Diagnostics {
 					'exists'        => false,
 					'wp_debug_log'  => defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG,
 					'php_error_log' => $php_error_log ? $php_error_log : null,
-					'hint'          => 'Aucun fichier debug.log. Activer WP_DEBUG_LOG permet de journaliser les erreurs WordPress.',
+					'hint'          => 'No debug.log file. Enabling WP_DEBUG_LOG allows logging WordPress errors.',
 				),
 				200
 			);
@@ -214,7 +214,7 @@ class IAWM_Diagnostics {
 	}
 
 	/**
-	 * Détermine le chemin du debug.log de WordPress.
+	 * Determines the path to WordPress's debug.log.
 	 *
 	 * @return string
 	 */
@@ -227,10 +227,10 @@ class IAWM_Diagnostics {
 	}
 
 	/**
-	 * Retourne les dernières lignes d'un fichier (lecture de la fin seulement).
+	 * Returns the last lines of a file (reading from the end only).
 	 *
-	 * @param string $path  Chemin du fichier.
-	 * @param int    $lines Nombre de lignes souhaitées.
+	 * @param string $path  File path.
+	 * @param int    $lines Desired number of lines.
 	 * @return array
 	 */
 	private static function tail( $path, $lines ) {

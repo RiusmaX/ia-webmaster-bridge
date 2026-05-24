@@ -7,7 +7,7 @@
     {
       "name": "ia-webmaster",
       "source": "./claude-plugin",
-      "description": "Webmaster WordPress piloté par IA : piloter un site WordPress (contenu, médias, menus, configuration, diagnostic) depuis Claude Code, via un adaptateur sécurisé (signature HMAC, journal d'audit, garde-fous)."
+      "description": "AI-driven WordPress webmaster: pilot a WordPress site (content, media, menus, configuration, diagnostics) from Claude Code via a secure adapter (HMAC signature, audit log, guardrails)."
     }
   ]
 }

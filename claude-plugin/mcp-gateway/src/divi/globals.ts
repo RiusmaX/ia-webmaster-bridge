@@ -1,27 +1,27 @@
 /**
- * Helpers pour référencer les variables globales Divi (design system).
+ * Helpers for referencing Divi global variables (design system).
  *
- * Au lieu de coder en dur "#2ea3f2" pour la couleur primaire, on
- * référence `gcid-primary-color`. Une modification de la palette globale
- * du site se propage automatiquement à toutes les pages générées.
+ * Instead of hard-coding "#2ea3f2" for the primary color, we reference
+ * `gcid-primary-color`. A change to the site's global palette is then
+ * automatically propagated to every generated page.
  *
- * Voir docs/divi5-format.md § "Variables globales" pour le format brut.
+ * See docs/divi5-format.md § "Global variables" for the raw format.
  */
 
 import type { DiviColor, GlobalColorName } from "./types.js";
 
 /**
- * Sérialise une couleur Divi en chaîne JSON Divi.
+ * Serializes a Divi color to a Divi JSON string.
  *
- * - Si c'est un hex (`#xxx` ou `#xxxxxx`), retourne tel quel.
- * - Si c'est une référence globale `{ gcid: "gcid-primary-color" }`,
- *   construit la chaîne `$variable({...})$` que Divi interprète.
+ * - If it is a hex value (`#xxx` or `#xxxxxx`), returns it as-is.
+ * - If it is a global reference `{ gcid: "gcid-primary-color" }`,
+ *   builds the `$variable({...})$` string that Divi interprets.
  */
 export function colorToString(color: DiviColor): string {
   if (typeof color === "string") {
     return color;
   }
-  // Format observé sur la page de référence n°19 :
+  // Format observed on reference page #19:
   // $variable({"type":"color","value":{"name":"gcid-XXX","settings":{}}})$
   const json = JSON.stringify({
     type: "color",
@@ -30,12 +30,12 @@ export function colorToString(color: DiviColor): string {
   return `$variable(${json})$`;
 }
 
-/** Raccourci : référence à une couleur globale par nom court. */
+/** Shortcut: reference a global color by its short name. */
 export function gcid(name: GlobalColorName): DiviColor {
   return { gcid: name };
 }
 
-/** Couleurs globales standard Divi (raccourcis pratiques). */
+/** Standard Divi global colors (convenient shortcuts). */
 export const colors = {
   primary: gcid("gcid-primary-color"),
   secondary: gcid("gcid-secondary-color"),

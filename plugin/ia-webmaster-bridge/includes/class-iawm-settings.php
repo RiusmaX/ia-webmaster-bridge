@@ -1,6 +1,6 @@
 <?php
 /**
- * Stockage des réglages de l'adaptateur : identifiants d'API et kill switch.
+ * Storage for the adapter's settings: API credentials and kill switch.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -10,24 +10,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Accès centralisé aux options du plugin.
+ * Centralised access to the plugin's options.
  *
- * Le secret d'API est un secret partagé symétrique (HMAC) : il est donc stocké
- * en clair côté WordPress, comme il le sera côté pont MCP. La protection repose
- * sur l'accès restreint à la base et à la page d'administration.
+ * The API secret is a symmetric shared secret (HMAC): it is therefore stored
+ * in clear on the WordPress side, as it will be on the MCP bridge side. Protection
+ * relies on restricted access to the database and the admin page.
  */
 class IAWM_Settings {
 
-	/** Option stockant les identifiants d'API (key_id + secret). */
+	/** Option storing the API credentials (key_id + secret). */
 	const OPTION_CREDENTIALS = 'iawm_credentials';
 
-	/** Option stockant l'état du kill switch. */
+	/** Option storing the kill switch state. */
 	const OPTION_KILL_SWITCH = 'iawm_kill_switch';
 
 	/**
-	 * Retourne les identifiants d'API, ou null si aucun n'est configuré.
+	 * Returns the API credentials, or null if none are configured.
 	 *
-	 * @return array|null Tableau { key_id, secret, created_at } ou null.
+	 * @return array|null Array { key_id, secret, created_at } or null.
 	 */
 	public static function get_credentials() {
 		$creds = get_option( self::OPTION_CREDENTIALS );
@@ -40,7 +40,7 @@ class IAWM_Settings {
 	}
 
 	/**
-	 * Indique si des identifiants d'API sont configurés.
+	 * Indicates whether API credentials are configured.
 	 *
 	 * @return bool
 	 */
@@ -49,12 +49,12 @@ class IAWM_Settings {
 	}
 
 	/**
-	 * Génère un nouveau couple identifiant / secret et le sauvegarde.
+	 * Generates a new identifier / secret pair and saves it.
 	 *
-	 * Tout secret précédent est définitivement remplacé : le pont MCP doit
-	 * alors être reconfiguré avec le nouveau secret.
+	 * Any previous secret is permanently replaced: the MCP bridge must
+	 * then be reconfigured with the new secret.
 	 *
-	 * @return array Les nouveaux identifiants.
+	 * @return array The new credentials.
 	 */
 	public static function generate_credentials() {
 		$creds = array(
@@ -63,14 +63,14 @@ class IAWM_Settings {
 			'created_at' => gmdate( 'c' ),
 		);
 
-		// autoload=false : le secret n'est lu que sur les requêtes de l'API.
+		// autoload=false: the secret is only read on API requests.
 		update_option( self::OPTION_CREDENTIALS, $creds, false );
 
 		return $creds;
 	}
 
 	/**
-	 * Supprime les identifiants d'API : l'agent ne peut plus s'authentifier.
+	 * Deletes the API credentials: the agent can no longer authenticate.
 	 *
 	 * @return void
 	 */
@@ -79,7 +79,7 @@ class IAWM_Settings {
 	}
 
 	/**
-	 * Indique si le kill switch est actif (écritures coupées).
+	 * Indicates whether the kill switch is on (writes blocked).
 	 *
 	 * @return bool
 	 */
@@ -88,9 +88,9 @@ class IAWM_Settings {
 	}
 
 	/**
-	 * Active ou désactive le kill switch.
+	 * Enables or disables the kill switch.
 	 *
-	 * @param bool $on État souhaité.
+	 * @param bool $on Desired state.
 	 * @return void
 	 */
 	public static function set_kill_switch( $on ) {

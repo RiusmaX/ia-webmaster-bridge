@@ -1,52 +1,52 @@
-# Spec 05 — Plan configuration
+# Spec 05 — Configuration plan
 
-- **Statut** : Ébauche
-- **Phase** : 2
-- **Priorité** : Moyenne
-- **Dernière mise à jour** : 2026-05-21
+- **Status**: Draft
+- **Phase**: 2
+- **Priority**: Medium
+- **Last updated**: 2026-05-21
 
-## Objectif
+## Goal
 
-Permettre à Claude de gérer la configuration du site : réglages généraux,
-options du thème, utilisateurs et rôles.
+Enable Claude to manage the site's configuration: general settings, active
+theme options, users and roles.
 
-## Périmètre
+## Scope
 
-### Inclus
-- Réglages généraux WordPress (titre, slogan, fuseau, permaliens, langue…).
-- Options et personnalisation du thème actif.
-- Gestion des utilisateurs (création, rôles, profils).
-- Réglages de discussion, lecture, médias.
+### Included
+- General WordPress settings (title, tagline, timezone, permalinks, language…).
+- Active theme options and customisation.
+- User management (creation, roles, profiles).
+- Discussion, reading and media settings.
 
-### Exclu (pour l'instant)
-- L'installation / activation d'extensions et de thèmes → spec `06-infrastructure.md`.
-- Les réglages spécifiques à Divi → couverts avec la spec `04-divi5.md`.
+### Excluded (for now)
+- Installation / activation of plugins and themes → spec `06-infrastructure.md`.
+- Divi-specific settings → covered with spec `04-divi5.md`.
 
-## Approche technique
+## Technical approach
 
-- Capacités exposées par le plugin, regroupées « configuration ».
-- **Lecture exhaustive d'abord** : une capacité qui dresse l'état de
-  configuration du site, pour que Claude décide en connaissance de cause.
-- Écritures **ciblées et explicites** : pas de modification globale en bloc ;
-  chaque réglage modifié est nommé, et le dry-run montre l'avant/après.
-- **Utilisateurs** : capacité sensible. Création/modification d'utilisateurs
-  classée « à risque » → confirmation explicite (spec 02). Interdiction de
-  modifier ou supprimer l'utilisateur dédié à l'agent lui-même.
-- Certains réglages (permaliens, langue) ont des effets de bord importants → les
-  classer « à risque » et sauvegarder avant.
+- Capabilities exposed by the plugin, grouped under "configuration".
+- **Exhaustive read first**: a capability that reports the site's
+  configuration state, so Claude decides with full knowledge.
+- **Targeted and explicit writes**: no global bulk modification; each
+  modified setting is named, and the dry-run shows the before/after.
+- **Users**: sensitive capability. User creation/modification classified
+  "at risk" → explicit confirmation (spec 02). Forbidden to modify or
+  delete the user dedicated to the agent itself.
+- Some settings (permalinks, language) have significant side effects → classify
+  them as "at risk" and back up beforehand.
 
-## Points ouverts
+## Open questions
 
-- Périmètre exact des « options du thème » exposées (variable selon le thème).
-- Faut-il une capacité de sauvegarde/restauration d'un jeu de réglages
-  (snapshot de configuration) ?
-- Gestion des réglages multisites si le cas se présente.
-- Quels réglages interdire purement et simplement à l'agent (liste noire) ?
+- Exact scope of the exposed "theme options" (varies by theme).
+- Should there be a backup/restore capability for a settings set
+  (configuration snapshot)?
+- Multisite settings management if the case arises.
+- Which settings should be outright forbidden to the agent (blocklist)?
 
-## Dépendances & risques
+## Dependencies & risks
 
-- Dépend des specs 01 (adaptateur) et 02 (sécurité).
-- Risque : un changement de permaliens ou de langue peut perturber le site →
-  classification « à risque » et sauvegarde préalable obligatoires.
-- Risque : escalade de privilèges via la gestion des utilisateurs → garde-fous
-  stricts, l'agent ne peut pas s'auto-élever ni toucher à son propre compte.
+- Depends on specs 01 (adapter) and 02 (security).
+- Risk: a permalinks or language change can disrupt the site →
+  "at risk" classification and prior backup mandatory.
+- Risk: privilege escalation via user management → strict guardrails,
+  the agent cannot self-elevate or touch its own account.

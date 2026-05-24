@@ -1,13 +1,13 @@
 /**
- * Pattern Header Simple — header de site classique.
+ * Header Simple pattern — classic site header.
  *
- * Structure :
- *   Section (sans padding vertical excessif, bg primary ou body)
- *     Row 1_2,1_2 (logo à gauche, menu à droite)
- *       Column 1_2 : Image (logo)
- *       Column 1_2 : Menu
+ * Structure:
+ *   Section (no excessive vertical padding, bg primary or body)
+ *     Row 1_2,1_2 (logo on the left, menu on the right)
+ *       Column 1_2: Image (logo)
+ *       Column 1_2: Menu
  *
- * Variation avec CTA (3 colonnes) si ctaText fourni.
+ * 3-column variation with a CTA if ctaText is provided.
  */
 
 import { section, row, column, image, menu, text } from "../builders.js";
@@ -15,22 +15,22 @@ import { colors } from "../globals.js";
 import type { DiviColor, GutenbergBlock } from "../types.js";
 
 export interface HeaderSimpleOptions {
-  /** URL du logo (recommandé : SVG ou PNG transparent, 200x60 px). */
+  /** Logo URL (recommended: SVG or transparent PNG, 200x60 px). */
   logoUrl?: string;
-  /** Texte de remplacement si pas de logo. Devient un H1 stylé. */
+  /** Fallback text if no logo. Becomes a styled H1. */
   siteName?: string;
-  /** ID du menu WP à afficher. */
+  /** ID of the WP menu to display. */
   menuId?: number;
-  /** Couleur de fond. Défaut : body (clair). */
+  /** Background color. Default: body (light). */
   backgroundColor?: DiviColor;
-  /** Padding vertical. Défaut : "20px". */
+  /** Vertical padding. Default: "20px". */
   paddingY?: string;
 }
 
 export function headerSimple(options: HeaderSimpleOptions = {}): GutenbergBlock {
   const paddingY = options.paddingY ?? "20px";
 
-  // Colonne 1 : logo (image) ou texte du site
+  // Column 1: logo (image) or site text
   const logoModule = options.logoUrl
     ? image({ src: options.logoUrl, alt: options.siteName ?? "Logo" })
     : text({
@@ -38,7 +38,7 @@ export function headerSimple(options: HeaderSimpleOptions = {}): GutenbergBlock 
         headingFont: { h1: { size: "28px", weight: "700" } },
       });
 
-  // Colonne 2 : menu
+  // Column 2: menu
   const menuModule = menu({ menuId: options.menuId });
 
   return section(

@@ -1,10 +1,10 @@
 /**
- * Composeur Divi 5 unifié — accepte 3 modes de description en parallèle :
+ * Unified Divi 5 composer — accepts 3 description modes in parallel:
  *
- *   1. Pattern (raccourci pour cas standards)
+ *   1. Pattern (shortcut for standard cases)
  *      { pattern: "hero", options: { title, subtitle, ctaText, ctaUrl } }
  *
- *   2. Section free-form (improvisation à partir des modules de base)
+ *   2. Free-form section (improvise from base modules)
  *      { section: { background?, padding?, rows: [
  *          { structure: "1_2,1_2", columns: [
  *              [{ module: "text", html: "..." }, { module: "button", ... }],
@@ -12,11 +12,11 @@
  *          ] }
  *      ] } }
  *
- *   3. Block brut (escape hatch — JSON Divi déjà composé)
+ *   3. Raw block (escape hatch — already-composed Divi JSON)
  *      { block: { blockName: "divi/...", attrs: {...}, innerBlocks: [...] } }
  *
- * Les 3 modes cohabitent dans la même page. Le composeur dispatche chaque
- * section vers le bon builder et wrap le tout dans un `divi/placeholder`.
+ * The 3 modes coexist in the same page. The composer dispatches each section
+ * to the right builder and wraps everything in a `divi/placeholder`.
  */
 
 import {
@@ -58,37 +58,37 @@ import type {
 } from "./patterns/index.js";
 
 /* ------------------------------------------------------------------ */
-/* Types d'entrée du composeur                                        */
+/* Composer input types                                               */
 /* ------------------------------------------------------------------ */
 
-/** Un module feuille / composé décrit déclarativement. */
+/** A leaf / composite module described declaratively. */
 export type ModuleInput =
-  // Modules de contenu de base
+  // Base content modules
   | ({ module: "text" } & TextOptions)
   | ({ module: "blurb" } & BlurbOptions)
   | ({ module: "cta" } & CtaOptions)
   | ({ module: "image" } & ImageOptions)
   | ({ module: "button" } & ButtonOptions)
   | ({ module: "heading" } & HeadingOptions)
-  // Statistiques et chiffres
+  // Stats and numbers
   | ({ module: "number-counter" } & NumberCounterOptions)
   | ({ module: "circle-counter" } & CircleCounterOptions)
-  // Personne, témoignage
+  // Person, testimonial
   | ({ module: "testimonial" } & TestimonialOptions)
   | ({ module: "team-member" } & TeamMemberOptions)
-  // Médias
+  // Media
   | ({ module: "gallery" } & GalleryOptions)
   | ({ module: "video" } & VideoOptions)
   | ({ module: "audio" } & AudioOptions)
   | ({ module: "code" } & CodeOptions)
-  // Mise en page
+  // Layout
   | ({ module: "divider" } & DividerOptions)
   | ({ module: "icon" } & IconOptions)
   | ({ module: "toggle" } & ToggleOptions)
-  // Forms / inscription
+  // Forms / signup
   | ({ module: "signup" } & SignupOptions)
   | ({ module: "map" } & MapOptions)
-  // Navigation et theme builder
+  // Navigation and theme builder
   | ({ module: "menu" } & MenuOptions)
   | ({ module: "fullwidth-menu" } & MenuOptions)
   | ({ module: "search" } & SearchOptions)
@@ -97,7 +97,7 @@ export type ModuleInput =
   | { module: "post-content" }
   | ({ module: "post-navigation" } & PostNavigationOptions)
   | { module: "comments" }
-  // Composés (nested)
+  // Composite (nested)
   | { module: "accordion"; items: AccordionItemOptions[] }
   | { module: "tabs"; items: TabOptions[] }
   | { module: "slider"; items: SlideOptions[] }
@@ -106,45 +106,45 @@ export type ModuleInput =
   | { module: "icon-list"; items: IconListItemOptions[] }
   | { module: "social-media-follow"; networks: SocialNetworkOptions[] }
   | ({ module: "counters" } & CountersOptions)
-  // Escape : bloc Gutenberg brut
+  // Escape: raw Gutenberg block
   | { module: "block"; block: GutenbergBlock };
 
-/** Une colonne en mode free-form : soit liste directe de modules, soit objet enrichi. */
+/** A column in free-form mode: either a direct module list, or an enriched object. */
 export type ColumnInput =
   | ModuleInput[]
   | {
-      /** Notation `a_b` (ex. "1_3"). Si omis, déduit du parent row. */
+      /** `a_b` notation (e.g. "1_3"). If omitted, inferred from the parent row. */
       type?: string;
-      /** Plein largeur sur mobile (défaut true sauf 4_4). */
+      /** Full-width on mobile (default true except 4_4). */
       fullWidthOnMobile?: boolean;
       modules: ModuleInput[];
     };
 
-/** Une row free-form. */
+/** A free-form row. */
 export interface RowInput {
-  /** Structure de colonnes (ex. "1_3,1_3,1_3"). */
+  /** Column structure (e.g. "1_3,1_3,1_3"). */
   structure: ColumnStructure;
-  /** Wrap des colonnes en pile sur mobile (défaut true). */
+  /** Stack columns on mobile (default true). */
   wrapMobile?: boolean;
-  /** Espacement de la row. */
+  /** Row spacing. */
   spacing?: { padding?: Spacing; margin?: Spacing };
-  /** Liste des colonnes (autant que la structure). */
+  /** Column list (as many as the structure). */
   columns: ColumnInput[];
 }
 
-/** Une section free-form. */
+/** A free-form section. */
 export interface FreeFormSection {
-  /** Couleur de fond (hex ou référence globale). */
+  /** Background color (hex or global reference). */
   background?: { color?: DiviColor; imageUrl?: string };
-  /** Espacement de la section. */
+  /** Section spacing. */
   spacing?: { padding?: Spacing; margin?: Spacing };
-  /** Rows de la section. */
+  /** Section rows. */
   rows: RowInput[];
 }
 
-/** Un item de section pour `compose` — 3 modes possibles. */
+/** A section item for `compose` — 3 possible modes. */
 export type SectionInput =
-  // Mode 1 : pattern prêt
+  // Mode 1: ready-made pattern
   | { pattern: "hero"; options: HeroOptions }
   | { pattern: "features3col"; options: Features3ColOptions }
   | { pattern: "ctaBanner"; options: CtaBannerOptions }
@@ -158,20 +158,20 @@ export type SectionInput =
   | { pattern: "teamGrid"; options: TeamGridOptions }
   | { pattern: "headerSimple"; options: HeaderSimpleOptions }
   | { pattern: "footerStandard"; options: FooterStandardOptions }
-  // Mode 2 : free-form
+  // Mode 2: free-form
   | { section: FreeFormSection }
-  // Mode 3 : escape hatch
+  // Mode 3: escape hatch
   | { block: GutenbergBlock };
 
 /* ------------------------------------------------------------------ */
-/* Dispatcher : module → builder                                      */
+/* Dispatcher: module → builder                                       */
 /* ------------------------------------------------------------------ */
 
 /**
- * Construit un GutenbergBlock à partir d'un ModuleInput déclaratif.
+ * Builds a GutenbergBlock from a declarative ModuleInput.
  *
- * @param input  Description du module.
- * @returns      Bloc Gutenberg prêt à inclure.
+ * @param input  Module description.
+ * @returns      Gutenberg block ready to include.
  */
 export function composeModule(input: ModuleInput): GutenbergBlock {
   switch (input.module) {
@@ -212,22 +212,22 @@ export function composeModule(input: ModuleInput): GutenbergBlock {
     case "counters":        return counters(input);
     case "block":           return input.block;
     default: {
-      // Vérification exhaustive — TS détecte les cas non gérés.
+      // Exhaustive check — TS detects unhandled cases.
       const _exhaust: never = input;
-      throw new Error(`Module inconnu : ${JSON.stringify(_exhaust)}`);
+      throw new Error(`Unknown module: ${JSON.stringify(_exhaust)}`);
     }
   }
 }
 
 /* ------------------------------------------------------------------ */
-/* Composition d'une section free-form                                */
+/* Free-form section composition                                      */
 /* ------------------------------------------------------------------ */
 
 /**
- * Construit un GutenbergBlock section à partir d'une FreeFormSection.
+ * Builds a section GutenbergBlock from a FreeFormSection.
  */
 function composeFreeFormSection(input: FreeFormSection): GutenbergBlock {
-  // Options de section.
+  // Section options.
   const sectionOpts: SectionOptions = {};
   if (input.background?.color) sectionOpts.backgroundColor = input.background.color;
   if (input.background?.imageUrl) sectionOpts.backgroundImageUrl = input.background.imageUrl;
@@ -235,10 +235,10 @@ function composeFreeFormSection(input: FreeFormSection): GutenbergBlock {
 
   // Rows.
   const rows: GutenbergBlock[] = input.rows.map((rowInput) => {
-    // Déduire les types des colonnes depuis la structure.
+    // Derive column types from the structure.
     const colTypes = rowInput.structure.split(",");
     const cols: GutenbergBlock[] = rowInput.columns.map((colInput, i) => {
-      // Normaliser : list de modules → objet {modules: list}.
+      // Normalize: module list → {modules: list} object.
       const norm = Array.isArray(colInput) ? { modules: colInput } : colInput;
       const colType = norm.type ?? colTypes[i] ?? "4_4";
       const modules: GutenbergBlock[] = norm.modules.map((m) => composeModule(m));
@@ -260,25 +260,25 @@ function composeFreeFormSection(input: FreeFormSection): GutenbergBlock {
 }
 
 /* ------------------------------------------------------------------ */
-/* Composition d'une section (3 modes)                                */
+/* Section composition (3 modes)                                      */
 /* ------------------------------------------------------------------ */
 
 /**
- * Dispatche une SectionInput vers le bon builder selon son mode.
+ * Dispatches a SectionInput to the right builder according to its mode.
  *
- * @param input  Description de la section (pattern / section / block).
- * @returns      Bloc Gutenberg section prêt à inclure.
+ * @param input  Section description (pattern / section / block).
+ * @returns      Section Gutenberg block ready to include.
  */
 export function composeSection(input: SectionInput): GutenbergBlock {
-  // Mode 3 : block brut.
+  // Mode 3: raw block.
   if ("block" in input) {
     return input.block;
   }
-  // Mode 2 : free-form.
+  // Mode 2: free-form.
   if ("section" in input) {
     return composeFreeFormSection(input.section);
   }
-  // Mode 1 : pattern.
+  // Mode 1: pattern.
   switch (input.pattern) {
     case "hero":            return hero(input.options);
     case "features3col":    return features3col(input.options);
@@ -295,24 +295,23 @@ export function composeSection(input: SectionInput): GutenbergBlock {
     case "footerStandard":  return footerStandard(input.options);
     default: {
       const _exhaust: never = input;
-      throw new Error(`Pattern inconnu : ${JSON.stringify(_exhaust)}`);
+      throw new Error(`Unknown pattern: ${JSON.stringify(_exhaust)}`);
     }
   }
 }
 
 /* ------------------------------------------------------------------ */
-/* Composition de page complète                                       */
+/* Full page composition                                              */
 /* ------------------------------------------------------------------ */
 
 /**
- * Compose une page Divi 5 complète à partir d'une liste de sections.
+ * Composes a full Divi 5 page from a list of sections.
  *
- * Chaque section peut être un pattern, du free-form, ou un block brut.
- * Toutes les sections sont assemblées sous un wrapper racine
- * `divi/placeholder`.
+ * Each section can be a pattern, free-form, or a raw block. All sections are
+ * assembled under a root `divi/placeholder` wrapper.
  *
- * @param sections  Liste mixte de SectionInput.
- * @returns         Bloc Gutenberg racine prêt à être écrit via
+ * @param sections  Mixed list of SectionInput.
+ * @returns         Root Gutenberg block ready to be written via
  *                  iawm_divi_page_write.
  */
 export function composePage(sections: SectionInput[]): GutenbergBlock {
@@ -321,9 +320,8 @@ export function composePage(sections: SectionInput[]): GutenbergBlock {
 }
 
 /**
- * Compose un layout Theme Builder (header / footer / body) à partir
- * d'une liste de sections. Même grammaire que composePage : wrapper
- * placeholder racine.
+ * Composes a Theme Builder layout (header / footer / body) from a list of
+ * sections. Same grammar as composePage: root placeholder wrapper.
  */
 export function composeThemeZone(sections: SectionInput[]): GutenbergBlock {
   return composePage(sections);

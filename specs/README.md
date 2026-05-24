@@ -1,32 +1,32 @@
-# Specs par fonctionnalité
+# Specs by feature
 
-Ce dossier contient une spec par fonctionnalité du système. Les specs sont des
-**documents vivants** : à ce stade du projet (conception, on teste et itère),
-elles cadrent le périmètre et l'approche, pas l'implémentation ligne à ligne.
+This folder contains one spec per feature of the system. Specs are
+**living documents**: at this stage of the project (design, test and iterate),
+they frame the scope and approach, not the line-by-line implementation.
 
 ## Index
 
-| # | Spec | Objet | Phase | Priorité |
-|---|------|-------|-------|----------|
-| 01 | [`01-adaptateur.md`](01-adaptateur.md) | Plugin WordPress + pont MCP local | 1–2 | Haute |
-| 02 | [`02-securite.md`](02-securite.md) | Authentification, audit, garde-fous | Transversale | Haute |
-| 03 | [`03-contenu.md`](03-contenu.md) | Pages, articles, médias, menus, blocs | 2 | Haute |
-| 04 | [`04-divi5.md`](04-divi5.md) | Génération de layouts Divi 5 | 3 | **Prioritaire** |
-| 05 | [`05-configuration.md`](05-configuration.md) | Réglages, thème, utilisateurs | 2 | Moyenne |
-| 06 | [`06-infrastructure.md`](06-infrastructure.md) | Extensions, base de données, sauvegardes | 4 | Moyenne |
-| 07 | [`07-couche-webmaster.md`](07-couche-webmaster.md) | Skills et workflows webmaster | 6 | Moyenne |
+| # | Spec | Subject | Phase | Priority |
+|---|------|---------|-------|----------|
+| 01 | [`01-adapter.md`](01-adapter.md) | WordPress plugin + local MCP gateway | 1–2 | High |
+| 02 | [`02-security.md`](02-security.md) | Authentication, audit, guardrails | Cross-cutting | High |
+| 03 | [`03-content.md`](03-content.md) | Pages, posts, media, menus, blocks | 2 | High |
+| 04 | [`04-divi5.md`](04-divi5.md) | Divi 5 layout generation | 3 | **Top** |
+| 05 | [`05-configuration.md`](05-configuration.md) | Settings, theme, users | 2 | Medium |
+| 06 | [`06-infrastructure.md`](06-infrastructure.md) | Plugins, database, backups | 4 | Medium |
+| 07 | [`07-webmaster-layer.md`](07-webmaster-layer.md) | Webmaster skills and workflows | 6 | Medium |
 
-## Convention de statut
+## Status convention
 
-Chaque spec porte un statut en en-tête :
+Every spec carries a status in its header:
 
-- **Ébauche** — cadrage initial, beaucoup de points ouverts.
-- **En conception** — approche en cours de stabilisation.
-- **Validée** — approche arrêtée, prête à implémenter.
-- **En implémentation** — code en cours.
-- **Implémentée** — livrée et vérifiée.
+- **Draft** — initial framing, many open questions.
+- **In design** — approach being stabilised.
+- **Validated** — approach settled, ready to implement.
+- **In implementation** — code in progress.
+- **Implemented** — delivered and verified.
 
-## Règle de maintenance
+## Maintenance rule
 
-Toute modification d'une spec doit mettre à jour son champ « Statut » et sa date.
-Toute décision structurante est aussi reportée dans `../docs/decisions.md`.
+Any change to a spec must update its "Status" field and its date.
+Any structuring decision is also recorded in `../docs/decisions.md`.

@@ -1,30 +1,30 @@
-# Dépendances Node
+# Node dependencies
 node_modules/
 
-# Configuration sensible — NE JAMAIS publier (secret HMAC, URL du site)
+# Sensitive configuration — NEVER publish (HMAC secret, site URL)
 config.json
 
-# Build du pont MCP : seul le bundle autonome est versionné
+# MCP gateway build: only the self-contained bundle is versioned
 claude-plugin/mcp-gateway/dist/*
 !claude-plugin/mcp-gateway/dist/index.js
 
-# Connexion MCP locale temporaire (chemin absolu, propre au poste de dev)
+# Temporary local MCP connection (absolute path, dev-machine specific)
 /.mcp.json
 
-# Scripts spécifiques à des projets / clients — JAMAIS dans le repo public.
-# Le repo doit rester agnostique : il fournit le plugin + le connecteur,
-# pas des intégrations propres à un site donné. Les scripts par client
-# vont dans un dossier externe au repo (ex. ../iawm-clients/<nom>/).
+# Project-specific / client scripts — NEVER in the public repo.
+# The repo must stay agnostic: it ships the plugin + the connector,
+# not integrations specific to a given site. Per-client scripts live
+# in a folder outside the repo (e.g. ../iawm-clients/<name>/).
 tools/*-client.mjs
 tools/*-client.php
 tools/clients/
 
-# Préférences personnelles du mainteneur courant (langue, style, env de dev).
-# Le CLAUDE.md versionné reste générique pour le public ; CLAUDE.local.md
-# contient les préférences propres au poste de travail.
+# Personal preferences of the current maintainer (language, style, dev env).
+# The versioned CLAUDE.md stays generic for the public; CLAUDE.local.md
+# holds preferences specific to the workstation.
 CLAUDE.local.md
 
-# Divers
+# Misc
 *.log
 .DS_Store
 Thumbs.db

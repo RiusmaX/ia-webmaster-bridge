@@ -1,11 +1,11 @@
 /**
- * Bibliothèque de patterns Divi 5 paramétrables.
+ * Library of parameterized Divi 5 patterns.
  *
- * Chaque pattern accepte des options haut niveau (textes, images,
- * couleurs gcid-*) et produit un GutenbergBlock prêt à être inclus
- * dans une page Divi 5 via `iawm_divi_page_write` (param `blocks`).
+ * Each pattern accepts high-level options (texts, images, gcid-* colors) and
+ * produces a GutenbergBlock ready to be included in a Divi 5 page via
+ * `iawm_divi_page_write` (the `blocks` parameter).
  *
- * Usage :
+ * Usage:
  *   import { placeholder } from "../builders.js";
  *   import { hero, features3col, ctaBanner } from "./patterns/index.js";
  *
@@ -15,18 +15,18 @@
  *     ctaBanner({ title, contentHtml, buttonText, buttonUrl }),
  *   ]);
  *
- * Patterns disponibles (Phase 3.4 initiale) :
+ * Patterns available (initial Phase 3.4):
  *   - hero
  *   - features3col
  *   - ctaBanner
  *   - imageTextSplit
  *
- * À venir une fois les modules avancés documentés (page 29) :
- *   - testimonials (module testimonial)
- *   - faq-accordion (module accordion)
+ * Coming once advanced modules are documented (page 29):
+ *   - testimonials (testimonial module)
+ *   - faq-accordion (accordion module)
  *   - pricing-3col (button + features list)
  *   - numbers-bar (number-counter)
- *   - team-grid (team module ou blurb personne)
+ *   - team-grid (team module or person blurb)
  *   - gallery-grid (gallery)
  *   - video-section (video)
  *   - contact-form (form)

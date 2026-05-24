@@ -1,37 +1,37 @@
 <?php
 /**
- * Theme Builder Divi 5 — création de templates (headers, footers, body)
- * dynamiques applicables au site.
+ * Divi 5 Theme Builder — creates templates (headers, footers, body)
+ * dynamically applied to the site.
  *
- * Modèle de données Divi 5 :
- *  - 1 post `et_theme_builder` (conteneur global) avec meta `_et_template` qui
- *    pointe vers le post `et_template`.
- *  - N posts `et_template` chacun avec :
- *      - meta `_et_default` (1 = template par défaut du site)
+ * Divi 5 data model:
+ *  - 1 `et_theme_builder` post (global container) with `_et_template` meta
+ *    pointing to the `et_template` post.
+ *  - N `et_template` posts each with:
+ *      - meta `_et_default` (1 = site's default template)
  *      - meta `_et_enabled`
- *      - meta `_et_header_layout_id` → post `et_header_layout`
- *      - meta `_et_body_layout_id`   → post `et_body_layout`
- *      - meta `_et_footer_layout_id` → post `et_footer_layout`
- *      - chaque zone : meta `_et_<zone>_layout_enabled`, `_et_<zone>_layout_global`,
+ *      - meta `_et_header_layout_id` -> `et_header_layout` post
+ *      - meta `_et_body_layout_id`   -> `et_body_layout` post
+ *      - meta `_et_footer_layout_id` -> `et_footer_layout` post
+ *      - per zone: meta `_et_<zone>_layout_enabled`, `_et_<zone>_layout_global`,
  *        `_et_<zone>_layout_override`.
- *  - Chaque `et_header_layout` / `et_body_layout` / `et_footer_layout` est un
- *    post WP avec `post_content` = blocs Divi 5 (même format que les pages).
- *  - Assignation via `use_on` et `exclude_from` (gérée par la route REST
+ *  - Each `et_header_layout` / `et_body_layout` / `et_footer_layout` is a
+ *    WP post with `post_content` = Divi 5 blocks (same format as pages).
+ *  - Assignment via `use_on` and `exclude_from` (handled by the REST route
  *    `divi/v1/outside-vb/theme-builder/assign-template`).
  *
- * Routes exposées :
- *  - /divi/theme-builder/list                  — proxy + détails layouts
+ * Exposed routes:
+ *  - /divi/theme-builder/list                  — proxy + layout details
  *  - /divi/theme-builder/template/create       — proxy create-template
  *  - /divi/theme-builder/template/update       — proxy update-template
  *  - /divi/theme-builder/template/delete       — proxy delete-template
  *  - /divi/theme-builder/template/assign       — proxy assign-template
- *  - /divi/theme-builder/layout/create         — crée un et_*_layout avec
- *                                                contenu Divi 5 + retourne l'id.
- *  - /divi/theme-builder/layout/read           — lit un et_*_layout en structure
- *                                                Divi (réutilise IAWM_Divi).
- *  - /divi/theme-builder/setup-site-defaults   — wrapper haut-niveau qui crée
- *                                                en une fois le conteneur +
- *                                                template par défaut + header
+ *  - /divi/theme-builder/layout/create         — creates an et_*_layout with
+ *                                                Divi 5 content + returns the id.
+ *  - /divi/theme-builder/layout/read           — reads an et_*_layout as a Divi
+ *                                                structure (reuses IAWM_Divi).
+ *  - /divi/theme-builder/setup-site-defaults   — high-level wrapper that creates
+ *                                                in one call the container +
+ *                                                default template + header
  *                                                + body + footer.
  *
  * @package IA_Webmaster_Bridge
@@ -42,13 +42,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes Theme Builder Divi.
+ * Divi Theme Builder routes.
  */
 class IAWM_Divi_Theme_Builder {
 
 	const ZONES = array( 'header', 'body', 'footer' );
 
-	/** Mapping zone → post_type. */
+	/** Mapping zone -> post_type. */
 	const ZONE_POST_TYPE = array(
 		'header' => 'et_header_layout',
 		'body'   => 'et_body_layout',
@@ -56,7 +56,7 @@ class IAWM_Divi_Theme_Builder {
 	);
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -65,7 +65,7 @@ class IAWM_Divi_Theme_Builder {
 	}
 
 	/**
-	 * Enregistre les routes.
+	 * Registers routes.
 	 *
 	 * @return void
 	 */
@@ -95,10 +95,10 @@ class IAWM_Divi_Theme_Builder {
 	}
 
 	/**
-	 * Appel interne d'une route divi/v1 protégée par nonce.
+	 * Internal call to a nonce-protected divi/v1 route.
 	 *
-	 * @param string $route  Route relative (ex. "/outside-vb/theme-builder/list-templates").
-	 * @param array  $body   Corps JSON.
+	 * @param string $route  Relative route (e.g. "/outside-vb/theme-builder/list-templates").
+	 * @param array  $body   JSON body.
 	 * @return array { status, data }
 	 */
 	protected static function call_divi( $route, $body = array() ) {
@@ -117,10 +117,10 @@ class IAWM_Divi_Theme_Builder {
 	}
 
 	/**
-	 * POST /divi/theme-builder/list — liste les templates du site avec
-	 * détails sur les layouts assignés.
+	 * POST /divi/theme-builder/list — lists the site's templates with
+	 * details about the assigned layouts.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_list( $request ) {
@@ -129,10 +129,10 @@ class IAWM_Divi_Theme_Builder {
 
 		$res = self::call_divi( '/outside-vb/theme-builder/list-templates', array( 'live' => $live ) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'theme_builder_list_failed', 'Échec liste templates.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'theme_builder_list_failed', 'Failed to list templates.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
-		// Enrichir : pour chaque template, ajouter les titres des layouts liés.
+		// Enrich: for each template, add the titles of related layouts.
 		$data = $res['data'];
 		if ( isset( $data['templates'] ) && is_array( $data['templates'] ) ) {
 			foreach ( $data['templates'] as &$tmpl ) {
@@ -159,9 +159,9 @@ class IAWM_Divi_Theme_Builder {
 	}
 
 	/**
-	 * POST /divi/theme-builder/template/create — crée un template.
+	 * POST /divi/theme-builder/template/create — creates a template.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_template_create( $request ) {
@@ -174,17 +174,17 @@ class IAWM_Divi_Theme_Builder {
 			'title' => $title,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_create_failed', 'Échec création template.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_create_failed', 'Failed to create template.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
 	}
 
 	/**
-	 * POST /divi/theme-builder/template/update — met à jour un template
-	 * (titre, layouts assignés, état).
+	 * POST /divi/theme-builder/template/update — updates a template
+	 * (title, assigned layouts, state).
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_template_update( $request ) {
@@ -194,7 +194,7 @@ class IAWM_Divi_Theme_Builder {
 		$template    = isset( $params['template'] ) && is_array( $params['template'] ) ? $params['template'] : array();
 
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id required.', 400 );
 		}
 
 		$res = self::call_divi( '/outside-vb/theme-builder/update-template', array(
@@ -203,16 +203,16 @@ class IAWM_Divi_Theme_Builder {
 			'template'    => $template,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_update_failed', 'Échec update template.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_update_failed', 'Failed to update template.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
 	}
 
 	/**
-	 * POST /divi/theme-builder/template/delete — supprime un template.
+	 * POST /divi/theme-builder/template/delete — deletes a template.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_template_delete( $request ) {
@@ -221,7 +221,7 @@ class IAWM_Divi_Theme_Builder {
 		$live        = isset( $params['live'] ) ? (bool) $params['live'] : true;
 
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id required.', 400 );
 		}
 
 		$res = self::call_divi( '/outside-vb/theme-builder/delete-template', array(
@@ -229,24 +229,24 @@ class IAWM_Divi_Theme_Builder {
 			'template_id' => $template_id,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_delete_failed', 'Échec suppression.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_delete_failed', 'Deletion failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
 	}
 
 	/**
-	 * POST /divi/theme-builder/template/assign — assigne un template à des
-	 * conditions (use_on) et exceptions (exclude_from).
+	 * POST /divi/theme-builder/template/assign — assigns a template to
+	 * conditions (use_on) and exceptions (exclude_from).
 	 *
-	 * Exemples de conditions Divi :
-	 *  - "default"          → template par défaut du site (tout)
-	 *  - "singular:page"    → toutes les pages
-	 *  - "singular:post"    → tous les articles
-	 *  - "page:123"         → la page d'id 123
-	 *  - "archive:category" → toutes les pages de catégorie
+	 * Examples of Divi conditions:
+	 *  - "default"          -> site default template (everything)
+	 *  - "singular:page"    -> all pages
+	 *  - "singular:post"    -> all posts
+	 *  - "page:123"         -> the page with id 123
+	 *  - "archive:category" -> all category archive pages
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_template_assign( $request ) {
@@ -257,7 +257,7 @@ class IAWM_Divi_Theme_Builder {
 		$exclude_from = isset( $params['exclude_from'] ) && is_array( $params['exclude_from'] ) ? $params['exclude_from'] : array();
 
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id required.', 400 );
 		}
 
 		$res = self::call_divi( '/outside-vb/theme-builder/assign-template', array(
@@ -267,24 +267,24 @@ class IAWM_Divi_Theme_Builder {
 			'exclude_from' => $exclude_from,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_assign_failed', 'Échec assignation.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_assign_failed', 'Assignment failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
 	}
 
 	/**
-	 * POST /divi/theme-builder/layout/create — crée un layout physique
-	 * (et_header_layout / et_body_layout / et_footer_layout) avec son
-	 * contenu Divi 5.
+	 * POST /divi/theme-builder/layout/create — creates a physical layout
+	 * (et_header_layout / et_body_layout / et_footer_layout) with its
+	 * Divi 5 content.
 	 *
-	 * Paramètres :
-	 *   - zone (string, requis) : "header" | "body" | "footer".
-	 *   - title (string, optionnel) : titre du layout.
-	 *   - content (string, optionnel) : post_content brut (blocs Divi 5).
-	 *   - blocks (array, optionnel) : alternative au content, tableau parse_blocks.
+	 * Parameters:
+	 *   - zone (string, required): "header" | "body" | "footer".
+	 *   - title (string, optional): layout title.
+	 *   - content (string, optional): raw post_content (Divi 5 blocks).
+	 *   - blocks (array, optional): alternative to content, parse_blocks array.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_layout_create( $request ) {
@@ -293,12 +293,12 @@ class IAWM_Divi_Theme_Builder {
 		$title  = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : '';
 
 		if ( ! in_array( $zone, self::ZONES, true ) ) {
-			return IAWM_Support::rest_error( 'invalid_zone', 'zone doit être header, body ou footer.', 400 );
+			return IAWM_Support::rest_error( 'invalid_zone', 'zone must be header, body or footer.', 400 );
 		}
 
 		$post_type = self::ZONE_POST_TYPE[ $zone ];
 
-		// Contenu : soit "content" (chaîne), soit "blocks" (array parse_blocks).
+		// Content: either "content" (string) or "blocks" (parse_blocks array).
 		$content = '';
 		if ( isset( $params['content'] ) && is_string( $params['content'] ) ) {
 			$content = $params['content'];
@@ -324,7 +324,7 @@ class IAWM_Divi_Theme_Builder {
 			return IAWM_Support::rest_error( 'layout_create_failed', $post_id->get_error_message(), 500 );
 		}
 
-		// Meta pour signaler que c'est un layout Divi 5.
+		// Meta to signal this is a Divi 5 layout.
 		update_post_meta( $post_id, '_et_pb_use_builder', 'on' );
 		update_post_meta( $post_id, '_et_pb_built_for_post_type', $post_type );
 
@@ -341,11 +341,11 @@ class IAWM_Divi_Theme_Builder {
 	}
 
 	/**
-	 * POST /divi/theme-builder/layout/read — lit le contenu d'un layout
-	 * (et_header_layout / et_body_layout / et_footer_layout) en structure
-	 * Divi.
+	 * POST /divi/theme-builder/layout/read — reads a layout's content
+	 * (et_header_layout / et_body_layout / et_footer_layout) as a Divi
+	 * structure.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_layout_read( $request ) {
@@ -354,21 +354,21 @@ class IAWM_Divi_Theme_Builder {
 		$mode   = isset( $params['mode'] ) ? (string) $params['mode'] : 'tree';
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
 		}
 		$post = get_post( $id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'not_found', "Layout {$id} introuvable.", 404 );
+			return IAWM_Support::rest_error( 'not_found', "Layout {$id} not found.", 404 );
 		}
 		if ( ! in_array( $post->post_type, self::ZONE_POST_TYPE, true ) ) {
 			return IAWM_Support::rest_error(
 				'not_a_layout',
-				"Le post {$id} n'est pas un layout Theme Builder (type={$post->post_type}).",
+				"Post {$id} is not a Theme Builder layout (type={$post->post_type}).",
 				400
 			);
 		}
 
-		// Réutiliser IAWM_Divi::handle_page_read en interne.
+		// Reuse IAWM_Divi::handle_page_read internally.
 		$req = new WP_REST_Request( 'POST', '/' . IAWM_REST_NAMESPACE . '/divi/page/read' );
 		$req->set_header( 'Content-Type', 'application/json' );
 		$req->set_body( wp_json_encode( array( 'post_id' => $id, 'mode' => $mode ) ) );
@@ -377,24 +377,24 @@ class IAWM_Divi_Theme_Builder {
 	}
 
 	/**
-	 * POST /divi/theme-builder/setup-site-defaults — wrapper haut niveau :
-	 * crée le conteneur Theme Builder + un template par défaut avec header,
-	 * body et footer (selon ce qui est fourni), assigne le template comme
-	 * default du site.
+	 * POST /divi/theme-builder/setup-site-defaults — high-level wrapper:
+	 * creates the Theme Builder container + a default template with header,
+	 * body and footer (depending on what is provided), and assigns the
+	 * template as the site's default.
 	 *
-	 * Paramètres :
-	 *   - title (string, optionnel) : titre du template (défaut : "Default Site Template").
-	 *   - header (object, optionnel) : { title?, content?, blocks? }.
-	 *   - body   (object, optionnel) : { title?, content?, blocks? }.
-	 *   - footer (object, optionnel) : { title?, content?, blocks? }.
-	 *   - assign_default (bool, défaut true) : si true, le template devient
-	 *     le default du site (s'applique à tous les posts/pages sans override).
+	 * Parameters:
+	 *   - title (string, optional): template title (default: "Default Site Template").
+	 *   - header (object, optional): { title?, content?, blocks? }.
+	 *   - body   (object, optional): { title?, content?, blocks? }.
+	 *   - footer (object, optional): { title?, content?, blocks? }.
+	 *   - assign_default (bool, default true): if true, the template becomes
+	 *     the site default (applied to all posts/pages without override).
 	 *
-	 * Si un template default existe déjà, refuse l'opération (pour éviter
-	 * d'écraser). L'utilisateur doit le supprimer manuellement ou passer
+	 * If a default template already exists, refuses the operation (to avoid
+	 * overwriting). The user must delete it manually or pass
 	 * `replace_existing=true`.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_setup_site_defaults( $request ) {
@@ -403,7 +403,7 @@ class IAWM_Divi_Theme_Builder {
 		$assign_default = ! isset( $params['assign_default'] ) || (bool) $params['assign_default'];
 		$replace        = ! empty( $params['replace_existing'] );
 
-		// Récupérer les payloads par zone (header/body/footer).
+		// Get the payloads per zone (header/body/footer).
 		$zone_inputs = array();
 		foreach ( self::ZONES as $zone ) {
 			if ( isset( $params[ $zone ] ) && is_array( $params[ $zone ] ) ) {
@@ -414,19 +414,19 @@ class IAWM_Divi_Theme_Builder {
 		if ( empty( $zone_inputs ) ) {
 			return IAWM_Support::rest_error(
 				'no_layouts',
-				'Au moins un parmi header / body / footer doit être fourni.',
+				'At least one of header / body / footer must be provided.',
 				400
 			);
 		}
 
-		// Vérifier l'existence d'un template default.
+		// Check for the existence of a default template.
 		$existing = self::call_divi( '/outside-vb/theme-builder/list-templates', array( 'live' => true ) );
 		$tmpls    = isset( $existing['data']['templates'] ) ? $existing['data']['templates'] : array();
 		foreach ( $tmpls as $t ) {
 			if ( ! empty( $t['default'] ) && ! $replace ) {
 				return IAWM_Support::rest_error(
 					'default_template_exists',
-					"Un template par défaut existe déjà (id={$t['id']}). Passe replace_existing=true pour écraser.",
+					"A default template already exists (id={$t['id']}). Pass replace_existing=true to overwrite.",
 					409,
 					array( 'existing_template' => $t )
 				);
@@ -435,7 +435,7 @@ class IAWM_Divi_Theme_Builder {
 
 		IAWM_Support::act_as_agent();
 
-		// 1. Créer les layouts physiques.
+		// 1. Create the physical layouts.
 		$layouts = array();
 		foreach ( $zone_inputs as $zone => $layout_input ) {
 			$content      = '';
@@ -444,7 +444,7 @@ class IAWM_Divi_Theme_Builder {
 			} elseif ( isset( $layout_input['blocks'] ) && is_array( $layout_input['blocks'] ) ) {
 				$content = serialize_blocks( $layout_input['blocks'] );
 			}
-			$layout_title = isset( $layout_input['title'] ) ? sanitize_text_field( (string) $layout_input['title'] ) : ucfirst( $zone ) . ' — ' . $title;
+			$layout_title = isset( $layout_input['title'] ) ? sanitize_text_field( (string) $layout_input['title'] ) : ucfirst( $zone ) . ' - ' . $title;
 
 			$post_id = wp_insert_post(
 				array(
@@ -457,33 +457,33 @@ class IAWM_Divi_Theme_Builder {
 				true
 			);
 			if ( is_wp_error( $post_id ) ) {
-				return IAWM_Support::rest_error( 'layout_create_failed', "Échec création {$zone} : " . $post_id->get_error_message(), 500 );
+				return IAWM_Support::rest_error( 'layout_create_failed', "Failed to create {$zone}: " . $post_id->get_error_message(), 500 );
 			}
 			update_post_meta( $post_id, '_et_pb_use_builder', 'on' );
 			update_post_meta( $post_id, '_et_pb_built_for_post_type', self::ZONE_POST_TYPE[ $zone ] );
 			$layouts[ $zone ] = $post_id;
 		}
 
-		// 2. Créer le template via la route Divi.
+		// 2. Create the template via the Divi route.
 		$create_res = self::call_divi( '/outside-vb/theme-builder/create-template', array(
 			'live'  => true,
 			'title' => $title,
 		) );
 		if ( $create_res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_create_failed', 'Échec création template.', $create_res['status'], array( 'divi_response' => $create_res['data'] ) );
+			return IAWM_Support::rest_error( 'template_create_failed', 'Failed to create template.', $create_res['status'], array( 'divi_response' => $create_res['data'] ) );
 		}
 		$template_id = isset( $create_res['data']['id'] ) ? (int) $create_res['data']['id'] : 0;
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'no_template_id', 'Pas d\'id de template retourné.', 500, array( 'divi_response' => $create_res['data'] ) );
+			return IAWM_Support::rest_error( 'no_template_id', 'No template id returned.', 500, array( 'divi_response' => $create_res['data'] ) );
 		}
 
-		// 3. Lier les layouts via update-template.
-		// Logique Divi (theme-builder.php) :
+		// 3. Link the layouts via update-template.
+		// Divi logic (theme-builder.php):
 		//   override = (id != 0) OR (enabled === false)
-		// Donc pour qu'une zone RESTE en rendu natif WordPress (ex. body
-		// affichant le post_content de la page courante), il faut
-		// enabled = TRUE et id = 0. Si on met enabled = false, Divi prend
-		// le contrôle de la zone et ne rend rien sans layout custom.
+		// So for a zone to REMAIN in native WordPress rendering (e.g. body
+		// displaying the current page's post_content), it must be
+		// enabled = TRUE and id = 0. If we set enabled = false, Divi takes
+		// control of the zone and renders nothing without a custom layout.
 		$template_payload = array(
 			'id'      => $template_id,
 			'title'   => $title,
@@ -495,8 +495,8 @@ class IAWM_Divi_Theme_Builder {
 			$has = isset( $layouts[ $zone ] );
 			$template_payload['layouts'][ $zone ] = array(
 				'id'       => $has ? $layouts[ $zone ] : 0,
-				// IMPORTANT : enabled=true même sans layout — sinon Divi
-				// override la zone et l'efface du rendu.
+				// IMPORTANT: enabled=true even without a layout — otherwise Divi
+				// overrides the zone and removes it from the rendering.
 				'enabled'  => true,
 				'override' => false,
 				'global'   => false,
@@ -509,19 +509,19 @@ class IAWM_Divi_Theme_Builder {
 			'template'    => $template_payload,
 		) );
 		if ( $update_res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_link_failed', 'Échec assignation des layouts.', $update_res['status'], array( 'divi_response' => $update_res['data'] ) );
+			return IAWM_Support::rest_error( 'template_link_failed', 'Failed to assign layouts.', $update_res['status'], array( 'divi_response' => $update_res['data'] ) );
 		}
 
-		// 4. Si demandé, le marquer comme default (assignation use_on).
+		// 4. If requested, mark it as default (use_on assignment).
 		if ( $assign_default ) {
-			// On met directement la meta _et_default=1 ; et on appelle assign-template
-			// avec use_on vide (le default capture tout ce qui n'est pas explicitement assigné).
+			// We set the _et_default=1 meta directly; and call assign-template
+			// with empty use_on (default catches everything not explicitly assigned).
 			update_post_meta( $template_id, '_et_default', '1' );
 		}
 
-		// 5. Forcer en post_meta pour les zones sans layout fourni :
-		// id=0 + enabled=1 → la zone reste en rendu natif WordPress.
-		// (Voir la logique override dans Divi : id!=0 OR !enabled.)
+		// 5. Force in post_meta for zones without a provided layout:
+		// id=0 + enabled=1 -> the zone stays in native WordPress rendering.
+		// (See the override logic in Divi: id!=0 OR !enabled.)
 		foreach ( self::ZONES as $zone ) {
 			if ( ! isset( $layouts[ $zone ] ) ) {
 				update_post_meta( $template_id, "_et_{$zone}_layout_enabled", '1' );

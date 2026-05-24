@@ -1,20 +1,20 @@
 <?php
 /**
- * Capacité Divi 5 — lecture et écriture de layouts.
+ * Divi 5 capability — reading and writing layouts.
  *
- * Phase 3.2 (lecture) :
- *  - /divi/page/read : projette le post_content d'une page Divi en arbre
- *    JSON simplifié (sections > rows > columns > modules), avec attributs
- *    normalisés et résumé contenu.
+ * Phase 3.2 (reads):
+ *  - /divi/page/read: projects a Divi page's post_content into a simplified
+ *    JSON tree (sections > rows > columns > modules), with normalised
+ *    attributes and a content summary.
  *
- * Phase 3.2 (écriture) — à venir :
- *  - /divi/page/write : prend un arbre simplifié, le sérialise en blocs
- *    Divi 5 valides et l'écrit dans post_content.
+ * Phase 3.2 (writes) — coming:
+ *  - /divi/page/write: takes a simplified tree, serialises it to valid
+ *    Divi 5 blocks and writes it into post_content.
  *
- * Phase 3.3 (Divi Cloud) — à venir.
+ * Phase 3.3 (Divi Cloud) — coming.
  *
- * Le format est documenté dans docs/divi5-format.md (rétro-ingénierie
- * faite sur la page de référence locale n°19).
+ * The format is documented in docs/divi5-format.md (reverse-engineered
+ * from local reference page #19).
  *
  * @package IA_Webmaster_Bridge
  */
@@ -24,21 +24,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes Divi 5.
+ * Divi 5 routes.
  */
 class IAWM_Divi {
 
-	/** Préfixe des blocs Divi 5 dans le balisage Gutenberg. */
+	/** Prefix of Divi 5 blocks in Gutenberg markup. */
 	const BLOCK_PREFIX = 'divi/';
 
-	/** Nom du wrapper racine. */
+	/** Root wrapper block name. */
 	const ROOT_BLOCK = 'divi/placeholder';
 
-	/** Modules structurels (non-feuilles). */
+	/** Structural (non-leaf) modules. */
 	const STRUCTURAL_BLOCKS = array( 'divi/placeholder', 'divi/section', 'divi/row', 'divi/column' );
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -47,7 +47,7 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Enregistre les routes.
+	 * Registers routes.
 	 *
 	 * @return void
 	 */
@@ -77,9 +77,9 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * POST /divi/status — état de Divi 5 sur le site.
+	 * POST /divi/status — state of Divi 5 on the site.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_status( $request ) {
@@ -87,7 +87,7 @@ class IAWM_Divi {
 
 		$divi_active = defined( 'ET_BUILDER_VERSION' );
 		$version     = $divi_active && defined( 'ET_BUILDER_VERSION' ) ? ET_BUILDER_VERSION : null;
-		// Couvre aussi le cas où Divi expose sa version via une autre constante.
+		// Also covers the case where Divi exposes its version via another constant.
 		if ( null === $version && defined( 'ET_CORE_VERSION' ) ) {
 			$version = ET_CORE_VERSION;
 		}
@@ -105,13 +105,13 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * POST /divi/page/read — lit une page Divi 5 et la projette en arbre.
+	 * POST /divi/page/read — reads a Divi 5 page and projects it into a tree.
 	 *
-	 * Paramètres :
-	 *   - post_id (int, requis).
-	 *   - mode    (string, optionnel) : "tree" (défaut) | "raw" | "flat".
+	 * Parameters:
+	 *   - post_id (int, required).
+	 *   - mode    (string, optional): "tree" (default) | "raw" | "flat".
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_page_read( $request ) {
@@ -120,15 +120,15 @@ class IAWM_Divi {
 		$mode    = isset( $params['mode'] ) ? (string) $params['mode'] : 'tree';
 
 		if ( ! in_array( $mode, array( 'tree', 'raw', 'flat' ), true ) ) {
-			return IAWM_Support::rest_error( 'invalid_mode', "Mode inconnu : {$mode}.", 400 );
+			return IAWM_Support::rest_error( 'invalid_mode', "Unknown mode: {$mode}.", 400 );
 		}
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} introuvable.", 404 );
+			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
 		}
 
 		$uses_builder = 'on' === get_post_meta( $post_id, '_et_pb_use_builder', true );
@@ -137,7 +137,7 @@ class IAWM_Divi {
 		if ( ! $uses_builder && ! $has_d5_marker ) {
 			return IAWM_Support::rest_error(
 				'not_a_divi_page',
-				"Le post {$post_id} n'est pas une page Divi 5 (ni meta _et_pb_use_builder=on, ni blocs wp:divi/ détectés).",
+				"Post {$post_id} is not a Divi 5 page (neither meta _et_pb_use_builder=on, nor wp:divi/ blocks detected).",
 				400,
 				array( 'meta_use_builder' => $uses_builder, 'has_d5_marker' => $has_d5_marker )
 			);
@@ -155,8 +155,8 @@ class IAWM_Divi {
 			'built_for_post_type'  => get_post_meta( $post_id, '_et_pb_built_for_post_type', true ),
 		);
 
-		// Aller chercher le wrapper placeholder en racine — s'il existe, on
-		// descend dedans pour exposer directement les sections.
+		// Look for the root placeholder wrapper — if present, descend into it
+		// to expose sections directly.
 		$layout_blocks = self::unwrap_placeholder( $blocks );
 
 		switch ( $mode ) {
@@ -172,7 +172,7 @@ class IAWM_Divi {
 				break;
 		}
 
-		// Stats utiles (toujours fournies).
+		// Useful stats (always provided).
 		$counts = self::count_block_types( $blocks );
 
 		return new WP_REST_Response(
@@ -192,17 +192,17 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Proxy interne vers une route divi/v1 protégée par nonce.
+	 * Internal proxy to a nonce-protected divi/v1 route.
 	 *
-	 * Divi 5 protège ses routes REST par un nonce nommé selon le pattern :
-	 *   "{full_route}--{METHOD}"  (ex. "/divi/v1/divi-library--POST")
+	 * Divi 5 protects its REST routes with a nonce named after the pattern:
+	 *   "{full_route}--{METHOD}"  (e.g. "/divi/v1/divi-library--POST")
 	 *
-	 * On se connecte comme admin, on génère le nonce attendu, on injecte
-	 * dans le header X-ET-Nonce et on appelle rest_do_request().
+	 * We sign in as admin, generate the expected nonce, inject it into the
+	 * X-ET-Nonce header and call rest_do_request().
 	 *
-	 * @param string $route    Route relative (ex. "/divi-library").
-	 * @param string $method   Méthode HTTP (POST par défaut).
-	 * @param array  $body     Corps JSON.
+	 * @param string $route    Relative route (e.g. "/divi-library").
+	 * @param string $method   HTTP method (POST by default).
+	 * @param array  $body     JSON body.
 	 * @return array { status, data, headers }
 	 */
 	protected static function call_divi_route( $route, $method = 'POST', $body = array() ) {
@@ -219,7 +219,7 @@ class IAWM_Divi {
 		if ( ! empty( $body ) ) {
 			$req->set_body( wp_json_encode( $body ) );
 		} else {
-			// Divi attend parfois un body JSON même vide.
+			// Divi sometimes expects a JSON body even when empty.
 			$req->set_body( '{}' );
 		}
 
@@ -232,14 +232,14 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * POST /divi/library/list — liste la library Divi locale (et Cloud si connecté).
+	 * POST /divi/library/list — lists the local Divi library (and Cloud if connected).
 	 *
-	 * Paramètres :
-	 *   - type (string, optionnel) : "layout" (défaut) | "section" | "row" | "module".
+	 * Parameters:
+	 *   - type (string, optional): "layout" (default) | "section" | "row" | "module".
 	 *
-	 * Renvoie : { categories, packs, tags, items } provenant de Divi.
+	 * Returns: { categories, packs, tags, items } from Divi.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_library_list( $request ) {
@@ -249,7 +249,7 @@ class IAWM_Divi {
 
 		$valid_types = array( 'layout', 'section', 'row', 'module' );
 		if ( ! in_array( $type, $valid_types, true ) ) {
-			return IAWM_Support::rest_error( 'invalid_type', "Type invalide. Attendu : " . implode( ', ', $valid_types ), 400 );
+			return IAWM_Support::rest_error( 'invalid_type', "Invalid type. Expected: " . implode( ', ', $valid_types ), 400 );
 		}
 
 		$res = self::call_divi_route( '/divi-library', 'POST', array(
@@ -258,13 +258,13 @@ class IAWM_Divi {
 		) );
 
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'divi_library_failed', 'Échec de l\'appel à divi-library.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'divi_library_failed', 'Call to divi-library failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
-		// Aplatir : Divi renvoie { layout: { categories, packs, tags, items } }
-		// ou directement la structure selon le type.
+		// Flatten: Divi returns { layout: { categories, packs, tags, items } }
+		// or directly the structure depending on the type.
 		$payload = $res['data'];
-		$root_key = $type; // ex. "layout" / "section"
+		$root_key = $type; // e.g. "layout" / "section"
 		if ( isset( $payload[ $root_key ] ) ) {
 			$payload = $payload[ $root_key ];
 		}
@@ -288,23 +288,23 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * POST /divi/library/item — récupère un item de la library Divi.
+	 * POST /divi/library/item — fetches an item from the Divi library.
 	 *
-	 * Paramètres :
-	 *   - id (int|string, requis) : identifiant de l'item.
-	 *   - library_type (string, optionnel) : "layout" (défaut).
-	 *   - built_for (string, optionnel) : "page" (défaut).
-	 *   - content_type (string, optionnel) : "layout" (défaut).
+	 * Parameters:
+	 *   - id (int|string, required): item identifier.
+	 *   - library_type (string, optional): "layout" (default).
+	 *   - built_for (string, optional): "page" (default).
+	 *   - content_type (string, optional): "layout" (default).
 	 *
-	 * Renvoie : { content, globalColors, globalVariables }.
+	 * Returns: { content, globalColors, globalVariables }.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_library_item( $request ) {
 		$params = IAWM_Support::json_params( $request );
 		if ( ! isset( $params['id'] ) || '' === $params['id'] ) {
-			return IAWM_Support::rest_error( 'invalid_id', 'id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_id', 'id required.', 400 );
 		}
 
 		$res = self::call_divi_route( '/divi-library/item', 'POST', array(
@@ -315,24 +315,24 @@ class IAWM_Divi {
 		) );
 
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'divi_library_item_failed', 'Échec de l\'appel à divi-library/item.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'divi_library_item_failed', 'Call to divi-library/item failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
 	}
 
 	/**
-	 * POST /divi/library/local — liste les layouts sauvegardés dans la
-	 * bibliothèque Divi locale (post_type et_pb_layout).
+	 * POST /divi/library/local — lists the layouts saved in the local Divi
+	 * library (et_pb_layout post type).
 	 *
-	 * Workflow hybride : quand l'utilisateur trouve un layout intéressant
-	 * dans Divi Cloud (depuis le Visual Builder de son navigateur), il
-	 * clique "Save to Library" — ça crée un post et_pb_layout que cette route
-	 * expose à notre API. On peut ensuite lire son contenu via
-	 * iawm_content_get (le post_content contient les blocs Divi 5) ou via
-	 * iawm_divi_page_read si on adapte la garde-fou.
+	 * Hybrid workflow: when the user finds an interesting layout in Divi
+	 * Cloud (from the Visual Builder in their browser), they click
+	 * "Save to Library" — this creates an et_pb_layout post that this route
+	 * exposes to our API. We can then read its content via
+	 * iawm_content_get (post_content contains the Divi 5 blocks) or via
+	 * iawm_divi_page_read if the safeguard is adapted.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_library_local( $request ) {
@@ -371,7 +371,7 @@ class IAWM_Divi {
 			$tags        = wp_get_post_terms( $post->ID, 'layout_tag', array( 'fields' => 'names' ) );
 			$pack        = wp_get_post_terms( $post->ID, 'layout_pack', array( 'fields' => 'names' ) );
 
-			// Détecter si c'est du Divi 5 (blocs) ou du Divi 4 (shortcodes).
+			// Detect whether it's Divi 5 (blocks) or Divi 4 (shortcodes).
 			$is_d5 = false !== strpos( $post->post_content, '<!-- wp:divi/' );
 
 			$items[] = array(
@@ -390,7 +390,7 @@ class IAWM_Divi {
 			);
 		}
 
-		// Lister aussi les catégories/tags pour aider à filtrer.
+		// Also list categories/tags to help with filtering.
 		$all_categories = get_terms( array( 'taxonomy' => 'layout_category', 'hide_empty' => false, 'fields' => 'names' ) );
 		$all_tags       = get_terms( array( 'taxonomy' => 'layout_tag', 'hide_empty' => false, 'fields' => 'names' ) );
 
@@ -410,12 +410,12 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * POST /divi/cloud/status — état de la connexion Divi Cloud.
+	 * POST /divi/cloud/status — state of the Divi Cloud connection.
 	 *
-	 * Récupère le cloudToken et l'identité de l'API Elegant Marketplace si
-	 * disponibles (sans exposer la clé d'API en clair).
+	 * Retrieves the cloudToken and the Elegant Marketplace API identity if
+	 * available (without exposing the API key in clear).
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_cloud_status( $request ) {
@@ -437,7 +437,7 @@ class IAWM_Divi {
 				'has_elegant_license'      => $has_license,
 				'elegant_username'         => $has_license ? (string) $marketplace['username'] : null,
 				'cloud_token_present'      => '' !== $cloud_token,
-				// On NE renvoie PAS le token brut (sensible).
+				// We do NOT return the raw token (sensitive).
 				'cloud_token_length'       => strlen( $cloud_token ),
 			),
 			200
@@ -445,23 +445,22 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * POST /divi/global-data — récupère le design system Divi du site.
+	 * POST /divi/global-data — fetches the site's Divi design system.
 	 *
-	 * Astuce : on récupère un item de la library Divi (n'importe lequel)
-	 * dont la réponse inclut systématiquement les global colors et
-	 * global variables. On peut aussi aller plus loin avec les routes
-	 * divi/v1/global-data/* directes.
+	 * Tip: we fetch any item from the Divi library; its response always
+	 * includes global colors and global variables. We could also go further
+	 * with direct divi/v1/global-data/* routes.
 	 *
-	 * Cette route est utile pour piloter les pages générées en
-	 * référençant les variables du design system (gcid-*).
+	 * This route is useful for driving generated pages by referencing the
+	 * design system variables (gcid-*).
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_global_data( $request ) {
 		unset( $request );
 
-		// On essaie via un appel item avec id=1 pour piggybacker globalColors+globalVariables.
+		// Try via an item call with id=1 to piggyback globalColors + globalVariables.
 		$res = self::call_divi_route( '/divi-library/item', 'POST', array(
 			'id'          => 1,
 			'libraryType' => 'layout',
@@ -470,7 +469,7 @@ class IAWM_Divi {
 		) );
 
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'global_data_unavailable', 'Impossible de récupérer le design system Divi.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'global_data_unavailable', 'Could not retrieve the Divi design system.', $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		$data = (array) $res['data'];
@@ -485,26 +484,25 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * POST /divi/page/write — écrit un layout Divi 5 dans un post.
+	 * POST /divi/page/write — writes a Divi 5 layout into a post.
 	 *
-	 * Deux formats d'entrée acceptés :
-	 *  - "content" (string) : post_content déjà sérialisé (chaîne avec
-	 *    `<!-- wp:divi/... -->`). Passe par parse_blocks+serialize_blocks
-	 *    pour normalisation et validation.
-	 *  - "blocks" (array) : tableau de blocs au format parse_blocks
+	 * Two accepted input formats:
+	 *  - "content" (string): post_content already serialised (string with
+	 *    `<!-- wp:divi/... -->`). Goes through parse_blocks + serialize_blocks
+	 *    for normalisation and validation.
+	 *  - "blocks" (array): array of blocks in the parse_blocks format
 	 *    (`{ blockName, attrs, innerBlocks, innerHTML, innerContent }`).
-	 *    Sérialisé via serialize_blocks().
+	 *    Serialised via serialize_blocks().
 	 *
-	 * Garantit :
-	 *  - le wrapper wp:divi/placeholder racine (ajouté automatiquement
-	 *    s'il manque) ;
-	 *  - la meta _et_pb_use_builder=on (posée si absente) ;
-	 *  - la meta _et_pb_built_for_post_type alignée sur le type du post.
+	 * Guarantees:
+	 *  - the root wp:divi/placeholder wrapper (added automatically if missing);
+	 *  - the _et_pb_use_builder=on meta (set if absent);
+	 *  - the _et_pb_built_for_post_type meta aligned with the post's type.
 	 *
-	 * dry_run=true : valide et décrit ce qui serait écrit sans toucher
-	 * au post.
+	 * dry_run=true: validates and describes what would be written without
+	 * touching the post.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_page_write( $request ) {
@@ -513,15 +511,15 @@ class IAWM_Divi {
 		$dry_run = ! empty( $params['dry_run'] );
 
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} introuvable.", 404 );
+			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
 		}
 
-		// Récupération du contenu à écrire selon le format fourni.
+		// Retrieve the content to write according to the format provided.
 		$blocks = null;
 		if ( isset( $params['blocks'] ) && is_array( $params['blocks'] ) ) {
 			$blocks = $params['blocks'];
@@ -530,22 +528,22 @@ class IAWM_Divi {
 		} else {
 			return IAWM_Support::rest_error(
 				'missing_payload',
-				'Fournir "content" (chaîne sérialisée) OU "blocks" (tableau de blocs).',
+				'Provide "content" (serialised string) OR "blocks" (array of blocks).',
 				400
 			);
 		}
 
-		// Filtrer les blocs vides issus du parsing (whitespace).
+		// Filter out empty blocks from parsing (whitespace).
 		$real_blocks = array_values( array_filter( $blocks, function( $b ) {
 			return ! empty( $b['blockName'] );
 		} ) );
 
 		if ( empty( $real_blocks ) ) {
-			return IAWM_Support::rest_error( 'empty_layout', 'Aucun bloc Divi détecté dans le payload.', 400 );
+			return IAWM_Support::rest_error( 'empty_layout', 'No Divi block detected in the payload.', 400 );
 		}
 
-		// Vérifier qu'on a soit un placeholder racine, soit uniquement des
-		// blocs divi/. Si non, refuser.
+		// Check we either have a root placeholder or only divi/ blocks.
+		// If not, refuse.
 		$has_placeholder = count( $real_blocks ) === 1 && $real_blocks[0]['blockName'] === self::ROOT_BLOCK;
 		$all_divi        = true;
 		foreach ( $real_blocks as $b ) {
@@ -557,13 +555,13 @@ class IAWM_Divi {
 		if ( ! $all_divi ) {
 			return IAWM_Support::rest_error(
 				'non_divi_blocks',
-				'Le layout contient des blocs hors namespace divi/.',
+				'The layout contains blocks outside the divi/ namespace.',
 				400,
 				array( 'detected' => array_map( function( $b ) { return $b['blockName']; }, $real_blocks ) )
 			);
 		}
 
-		// Auto-wrap : si on n'a pas le placeholder racine, on l'ajoute.
+		// Auto-wrap: if there is no root placeholder, add one.
 		if ( ! $has_placeholder ) {
 			$real_blocks = array(
 				array(
@@ -599,11 +597,11 @@ class IAWM_Divi {
 
 		IAWM_Support::act_as_agent();
 
-		// wp_update_post applique wp_unslash() en interne (suppose que les
-		// données viennent d'un $_POST déjà slashed). On doit donc slasher
-		// nous-mêmes pour préserver les backslashes du JSON Divi
-		// (", <, etc.) — sans ça, les attributs des blocs sont
-		// corrompus à l'écriture.
+		// wp_update_post applies wp_unslash() internally (assumes the data
+		// comes from an already-slashed $_POST). We must therefore slash
+		// ourselves to preserve the backslashes in Divi's JSON
+		// (", <, etc.) — without this, block attributes are corrupted
+		// on write.
 		$result = wp_update_post(
 			array(
 				'ID'           => $post_id,
@@ -615,7 +613,7 @@ class IAWM_Divi {
 			return IAWM_Support::rest_error( 'write_failed', $result->get_error_message(), 500 );
 		}
 
-		// Garantir les meta Divi.
+		// Ensure the Divi metas.
 		if ( 'on' !== get_post_meta( $post_id, '_et_pb_use_builder', true ) ) {
 			update_post_meta( $post_id, '_et_pb_use_builder', 'on' );
 		}
@@ -635,14 +633,14 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Si la racine contient un (et un seul) wp:divi/placeholder, descend
-	 * dedans pour exposer les sections directement.
+	 * If the root contains a single wp:divi/placeholder, descend into it
+	 * to expose sections directly.
 	 *
-	 * @param array $blocks Blocs racine.
+	 * @param array $blocks Root blocks.
 	 * @return array
 	 */
 	protected static function unwrap_placeholder( $blocks ) {
-		// Filtrer les blocs vides (espaces blancs entre les commentaires).
+		// Filter out empty blocks (whitespace between comments).
 		$real = array_values( array_filter( $blocks, function( $b ) {
 			return ! empty( $b['blockName'] );
 		} ) );
@@ -654,12 +652,12 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Projette une liste de blocs en arbre simplifié.
+	 * Projects a list of blocks into a simplified tree.
 	 *
-	 * Garde la hiérarchie mais aplatit les wrappers de breakpoints
-	 * intermédiaires pour exposer un JSON exploitable directement.
+	 * Preserves the hierarchy but flattens intermediate breakpoint wrappers
+	 * to expose JSON usable directly.
 	 *
-	 * @param array $blocks Blocs à projeter.
+	 * @param array $blocks Blocks to project.
 	 * @return array
 	 */
 	protected static function project_tree( $blocks ) {
@@ -674,9 +672,9 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Projette un seul bloc en structure simplifiée.
+	 * Projects a single block into a simplified structure.
 	 *
-	 * @param array $block Bloc Gutenberg.
+	 * @param array $block Gutenberg block.
 	 * @return array
 	 */
 	protected static function project_block( $block ) {
@@ -691,27 +689,27 @@ class IAWM_Divi {
 			'builder_version'=> isset( $attrs['builderVersion'] ) ? $attrs['builderVersion'] : null,
 		);
 
-		// Champs spécifiques à certains modules : on tire le contenu textuel
-		// pour faciliter la lecture par Claude.
+		// Module-specific fields: we extract the textual content
+		// to make it easier for Claude to read.
 		$summary = self::summarize_module( $name, $attrs );
 		if ( ! empty( $summary ) ) {
 			$node['summary'] = $summary;
 		}
 
-		// Style normalisé : on remonte ce qui est généralement intéressant.
+		// Normalised style: lift up what's generally interesting.
 		$style = self::summarize_style( $attrs );
 		if ( ! empty( $style ) ) {
 			$node['style'] = $style;
 		}
 
-		// Pour les blocs structurels, on récurse dans innerBlocks.
+		// For structural blocks, recurse into innerBlocks.
 		if ( in_array( $name, self::STRUCTURAL_BLOCKS, true ) && ! empty( $block['innerBlocks'] ) ) {
 			$children = self::project_tree( $block['innerBlocks'] );
 			$child_key = self::children_key( $name );
 			$node[ $child_key ] = $children;
 		} else {
-			// Pour les modules feuilles, on garde les attrs bruts pour
-			// inspection détaillée (utile en debug).
+			// For leaf modules, keep the raw attrs for
+			// detailed inspection (useful in debug).
 			$node['attrs'] = $attrs;
 		}
 
@@ -719,9 +717,9 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Nom court d'un bloc Divi (sans le préfixe "divi/").
+	 * Short name of a Divi block (without the "divi/" prefix).
 	 *
-	 * @param string $block_name Nom complet.
+	 * @param string $block_name Full name.
 	 * @return string
 	 */
 	protected static function short_name( $block_name ) {
@@ -732,9 +730,9 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Renvoie la clé d'enfants attendue pour un bloc structurel donné.
+	 * Returns the children key expected for a given structural block.
 	 *
-	 * @param string $block_name Nom du bloc parent.
+	 * @param string $block_name Parent block name.
 	 * @return string
 	 */
 	protected static function children_key( $block_name ) {
@@ -752,16 +750,16 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Extrait un résumé lisible du contenu d'un module (texte, titre, etc.).
+	 * Extracts a readable summary of a module's content (text, title, etc.).
 	 *
-	 * @param string $name  Nom du bloc.
-	 * @param array  $attrs Attributs.
+	 * @param string $name  Block name.
+	 * @param array  $attrs Attributes.
 	 * @return array
 	 */
 	protected static function summarize_module( $name, $attrs ) {
 		$summary = array();
 
-		// Helper : récupère innerContent.desktop.value (le HTML/texte par défaut).
+		// Helper: gets innerContent.desktop.value (default HTML/text).
 		$pick_desktop = function( $field ) use ( $attrs ) {
 			if ( ! isset( $attrs[ $field ]['innerContent']['desktop']['value'] ) ) {
 				return null;
@@ -800,7 +798,7 @@ class IAWM_Divi {
 			case 'divi/image':
 				if ( isset( $attrs['image']['innerContent']['desktop']['value']['src'] ) ) {
 					$src = $attrs['image']['innerContent']['desktop']['value']['src'];
-					// On tronque les data: URLs pour ne pas polluer l'output.
+					// Truncate data: URLs so they don't pollute the output.
 					$summary['src'] = self::truncate_src( $src );
 				}
 				break;
@@ -814,7 +812,7 @@ class IAWM_Divi {
 				break;
 
 			case 'divi/row':
-				// Structure de colonnes.
+				// Column structure.
 				if ( isset( $attrs['module']['advanced']['columnStructure']['desktop']['value'] ) ) {
 					$summary['column_structure'] = $attrs['module']['advanced']['columnStructure']['desktop']['value'];
 				}
@@ -827,14 +825,14 @@ class IAWM_Divi {
 				break;
 		}
 
-		// Nettoyer les nulls.
+		// Strip nulls.
 		return array_filter( $summary, function( $v ) { return null !== $v && '' !== $v; } );
 	}
 
 	/**
-	 * Tronque les data: URLs ou très longues URLs pour l'affichage.
+	 * Truncates data: URLs or very long URLs for display.
 	 *
-	 * @param string $src URL ou data: URI.
+	 * @param string $src URL or data: URI.
 	 * @return string
 	 */
 	protected static function truncate_src( $src ) {
@@ -849,9 +847,9 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Extrait un résumé du style d'un bloc (couleurs, espacement…).
+	 * Extracts a summary of a block's style (colours, spacing, etc.).
 	 *
-	 * @param array $attrs Attributs du bloc.
+	 * @param array $attrs Block attributes.
 	 * @return array
 	 */
 	protected static function summarize_style( $attrs ) {
@@ -862,7 +860,7 @@ class IAWM_Divi {
 		}
 		$deco = $attrs['module']['decoration'];
 
-		// Fond.
+		// Background.
 		if ( isset( $deco['background']['desktop']['value'] ) ) {
 			$bg = $deco['background']['desktop']['value'];
 			if ( isset( $bg['color'] ) ) {
@@ -907,10 +905,10 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Simplifie une référence de variable globale en son nom.
-	 * Ex. `$variable({"type":"color","value":{"name":"gcid-foo","settings":{}}})$` → `var:gcid-foo`.
+	 * Simplifies a global variable reference to its name.
+	 * E.g. `$variable({"type":"color","value":{"name":"gcid-foo","settings":{}}})$` -> `var:gcid-foo`.
 	 *
-	 * @param string $color Valeur de couleur (peut contenir une variable ou un code hex).
+	 * @param string $color Colour value (may contain a variable or a hex code).
 	 * @return string
 	 */
 	protected static function shorten_variable( $color ) {
@@ -924,10 +922,10 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Produit une liste linéaire (mode flat) des blocs avec chemin.
+	 * Produces a linear list (flat mode) of blocks with paths.
 	 *
-	 * @param array  $blocks Liste de blocs racine.
-	 * @param string $path   Chemin courant.
+	 * @param array  $blocks List of root blocks.
+	 * @param string $path   Current path.
 	 * @return array
 	 */
 	protected static function flatten( $blocks, $path = '' ) {
@@ -955,10 +953,10 @@ class IAWM_Divi {
 	}
 
 	/**
-	 * Compte les blocs récursivement par type.
+	 * Counts blocks recursively by type.
 	 *
-	 * @param array $blocks Blocs.
-	 * @param array $acc    Accumulateur.
+	 * @param array $blocks Blocks.
+	 * @param array $acc    Accumulator.
 	 * @return array
 	 */
 	protected static function count_block_types( $blocks, $acc = array() ) {

@@ -1,207 +1,203 @@
 ---
 name: marketing-conversion-wordpress
-description: Produire et améliorer des pages WordPress qui convertissent (landing pages, pages services, pages produits). À utiliser pour le copywriting orienté action, la structure des CTA, la preuve sociale, et la psychologie de conversion. Complémentaire de design-frontend-wordpress et seo-wordpress.
+description: Produce and improve WordPress pages that convert (landing pages, service pages, product pages). Use it for action-oriented copywriting, CTA structure, social proof, and conversion psychology. Complementary to frontend-design-wordpress and seo-wordpress.
 ---
 
-# Marketing & conversion WordPress — méthode
+# WordPress marketing & conversion — method
 
-Une page WordPress qui n'amène pas à une action est une page qui coûte
-plus qu'elle ne rapporte. Ce skill rassemble les frameworks et tactiques
-de conversion à appliquer dès qu'on écrit du contenu marketing :
-landing page, page service, page produit, formulaire, CTA.
+A WordPress page that does not lead to an action costs more than it
+produces. This skill gathers the conversion frameworks and tactics to
+apply whenever you write marketing content: landing pages, service
+pages, product pages, forms, CTAs.
 
-## Le triangle : objectif × audience × action
+## The triangle: goal × audience × action
 
-Avant d'écrire un mot, fixer **un objectif unique par page** :
+Before writing a word, set **a single goal per page**:
 
-| Type de page       | Objectif unique typique             | Métrique de succès |
-|--------------------|-------------------------------------|--------------------|
-| Landing page       | Inscription, demande de devis       | Taux de conversion |
-| Page service       | Prise de contact, RDV               | Leads qualifiés    |
-| Page produit       | Achat                               | Taux d'achat       |
-| Page « À propos »  | Construire la confiance             | Bounce rate        |
-| Article de blog    | Capturer l'email (lead magnet)      | Opt-in rate        |
+| Page type           | Typical single goal                  | Success metric    |
+|---------------------|--------------------------------------|-------------------|
+| Landing page        | Signup, quote request                | Conversion rate   |
+| Service page        | Contact, appointment                 | Qualified leads   |
+| Product page        | Purchase                             | Purchase rate     |
+| About page          | Build trust                          | Bounce rate       |
+| Blog article        | Capture email (lead magnet)          | Opt-in rate       |
 
-**Une page = une action.** Multiplier les CTA qui partent dans toutes les
-directions tue la conversion. S'il faut deux actions, hiérarchiser
-(primaire visuellement dominante, secondaire en lien texte discret).
+**One page = one action.** Multiplying CTAs that pull in every
+direction kills conversion. If you need two actions, prioritise them
+(primary visually dominant, secondary as a discrete text link).
 
-## Les frameworks de copywriting
+## Copywriting frameworks
 
-Choisis le framework adapté au contexte. Tu n'as **pas besoin** de tous
-les utiliser sur chaque page — un seul, bien appliqué, suffit.
+Pick the framework that fits the context. You **don't need** to use
+all of them on every page — one well-applied framework is enough.
 
-### AIDA (Attention, Intérêt, Désir, Action)
+### AIDA (Attention, Interest, Desire, Action)
 
-Le classique. Bon pour les landing pages.
+The classic. Great for landing pages.
 
-1. **Attention** — accroche forte (problème ou bénéfice extrême).
-2. **Intérêt** — détailler la promesse, faire écho à la douleur du
-   lecteur.
-3. **Désir** — démontrer la valeur (bénéfices concrets, preuve sociale).
-4. **Action** — CTA clair, sans friction.
+1. **Attention** — strong hook (extreme problem or benefit).
+2. **Interest** — detail the promise, echo the reader's pain.
+3. **Desire** — demonstrate value (concrete benefits, social proof).
+4. **Action** — clear, friction-less CTA.
 
 ### PAS (Problem, Agitation, Solution)
 
-Très efficace en B2B et pour les sujets « douloureux ».
+Very effective in B2B and on "painful" topics.
 
-1. **Problem** — nommer le problème précis du visiteur.
-2. **Agitation** — rendre le problème vivace (conséquences, coût, perte
-   de temps).
-3. **Solution** — présenter l'offre comme la résolution naturelle.
+1. **Problem** — name the visitor's exact problem.
+2. **Agitation** — make the problem feel alive (consequences, cost,
+   lost time).
+3. **Solution** — present the offer as the natural resolution.
 
 ### FAB (Features, Advantages, Benefits)
 
-Pour les pages produit / service techniques.
+For technical product / service pages.
 
-1. **Feature** — ce qu'est la chose (caractéristique).
-2. **Advantage** — ce qu'elle fait (capacité technique).
-3. **Benefit** — ce que le client gagne (résultat pour lui).
+1. **Feature** — what the thing is (characteristic).
+2. **Advantage** — what it does (technical capability).
+3. **Benefit** — what the customer gains (outcome for them).
 
-Exemple : « Stockage 1 To (F) → vous pouvez archiver 200 000 photos (A) →
-plus jamais de perte de souvenirs (B) ».
+Example: "1 TB storage (F) → archive 200,000 photos (A) → never lose
+memories again (B)."
 
-### 4 U's (titre)
+### 4 U's (headline)
 
-Pour rédiger une accroche performante : la combinaison de Urgent, Unique,
-Utile, Ultra-spécifique.
+To write a performing hook: combine Urgent, Unique, Useful,
+Ultra-specific.
 
-## Structure d'une landing page qui convertit
+## Structure of a converting landing page
 
-Schéma type, à adapter, **dans cet ordre** :
+Default skeleton, to adapt, **in this order**:
 
-1. **Hero** — accroche forte (≤ 12 mots) + sous-titre (1 phrase qui
-   résout le « pour qui / pour quoi ») + CTA primaire + visuel.
-2. **Problème** — nommer la douleur du visiteur (3 à 5 lignes).
-3. **Solution** — présenter l'offre (1 paragraphe).
-4. **Bénéfices** — 3 à 6 bénéfices concrets, chacun avec icône + titre +
-   1 phrase (module Blurb Divi parfait pour ça).
-5. **Preuve sociale** — témoignages (avec photo + nom + fonction), logos
-   clients, chiffres clés, badges.
-6. **Détails / fonctionnalités** — pour qui veut creuser. Listes,
-   tableaux comparatifs.
-7. **FAQ** — répondre aux 5 à 8 objections principales. Bonus SEO
-   (schema FAQPage).
-8. **CTA final** — rappeler l'offre et l'action, avec urgence ou
-   bénéfice de dernière chance si pertinent.
-9. **Footer minimal** — mentions légales, pas de menu de navigation
-   complet qui distrairait.
+1. **Hero** — strong hook (≤ 12 words) + subtitle (1 sentence answering
+   "for whom / why") + primary CTA + visual.
+2. **Problem** — name the visitor's pain (3 to 5 lines).
+3. **Solution** — present the offer (1 paragraph).
+4. **Benefits** — 3 to 6 concrete benefits, each with icon + title +
+   1 sentence (Divi Blurb module is perfect).
+5. **Social proof** — testimonials (with photo + name + role), client
+   logos, key numbers, badges.
+6. **Details / features** — for visitors who want to dig deeper. Lists,
+   comparison tables.
+7. **FAQ** — answer the 5 to 8 main objections. SEO bonus
+   (FAQPage schema).
+8. **Final CTA** — restate the offer and action, with urgency or a
+   last-chance benefit if relevant.
+9. **Minimal footer** — legal, no full navigation menu that would
+   distract.
 
-## Les leviers de conversion
+## Conversion levers
 
-### Preuve sociale (social proof)
+### Social proof
 
-C'est **le levier le plus puissant**. Plus c'est concret, plus ça
-convertit :
+**The most powerful lever.** The more concrete, the better:
 
-- **Chiffres** : « 12 000 clients » > « beaucoup de clients ».
-- **Témoignages** avec **photo, nom complet, fonction, entreprise**.
-  Sans photo, divisé par 3.
-- **Études de cas** chiffrées (« +47 % de leads en 3 mois pour X »).
-- **Logos clients** reconnaissables (avec accord).
-- **Avis** (Google, Trustpilot) intégrés.
-- **Compteurs en temps réel** (« 42 personnes consultent ce produit »).
+- **Numbers**: "12,000 customers" > "many customers".
+- **Testimonials** with **photo, full name, role, company**. Without
+  a photo, divide impact by 3.
+- **Quantified case studies** ("+47 % leads in 3 months for X").
+- **Recognisable client logos** (with permission).
+- **Reviews** (Google, Trustpilot) embedded.
+- **Real-time counters** ("42 people are looking at this product").
 
-### Urgence et rareté
+### Urgency and scarcity
 
-À utiliser **avec parcimonie** et **uniquement si réel** (sinon perte
-de confiance) :
+Use **sparingly** and **only if real** (otherwise loss of trust):
 
-- Date limite (« offre valable jusqu'au 31 mai »).
-- Stock limité (« plus que 3 places »).
-- Bonus disponibles pour les X premiers.
+- Deadline ("offer valid until May 31").
+- Limited stock ("only 3 spots left").
+- Bonuses for the first X buyers.
 
-### Réduction de friction
+### Friction reduction
 
-Chaque champ supplémentaire, chaque clic de plus = des conversions
-perdues. Optimiser :
+Every extra field, every extra click = lost conversions. Optimise:
 
-- **Formulaires** : 3 champs maximum sur la première étape. Demander
-  l'email et le strict nécessaire ; le reste en post-conversion.
-- **Pas de captcha visible** si possible (Akismet, honeypot, hCaptcha
-  invisible).
-- **CTA clair** : verbe d'action + bénéfice (« Recevoir mon devis
-  gratuit » > « Envoyer »).
-- **Pas de barrière à l'inscription** : pas d'obligation de créer un
-  compte avant un achat (option invité).
+- **Forms**: 3 fields maximum on the first step. Ask for email and the
+  bare minimum; the rest after conversion.
+- **No visible captcha** if possible (Akismet, honeypot, invisible
+  hCaptcha).
+- **Clear CTA**: action verb + benefit ("Get my free quote" > "Submit").
+- **No registration barrier**: no forced account creation before a
+  purchase (guest option).
 
-### Garantie / sécurité
+### Guarantee / safety
 
-- **Garantie satisfait ou remboursé** (« 30 jours sans risque »).
-- **Logos de paiement sécurisé** (cartes acceptées, SSL).
-- **Mentions de protection des données** (RGPD).
-- **Politique de remboursement** accessible en 1 clic.
+- **Satisfaction or money-back guarantee** ("30 days risk-free").
+- **Secure payment logos** (accepted cards, SSL).
+- **Privacy mentions** (GDPR).
+- **Refund policy** accessible in 1 click.
 
-### Hiérarchie des CTA
+### CTA hierarchy
 
-- **1 CTA primaire** très visible (couleur forte, gros bouton).
-- **0 à 1 CTA secondaire** discret (lien texte, bouton ghost).
-- Le CTA primaire répété **plusieurs fois** dans la page (hero, milieu,
-  fin) — mais c'est le **même** CTA, pas un autre.
+- **1 primary CTA**, very visible (strong colour, large button).
+- **0 to 1 secondary CTA**, discrete (text link, ghost button).
+- The primary CTA repeated **several times** on the page (hero, middle,
+  end) — but it's the **same** CTA, not a different one.
 
-## Anti-patterns à corriger
+## Anti-patterns to fix
 
-- **Plusieurs CTA concurrents** (« Acheter », « Essayer », « En savoir
-  plus », « Nous contacter » tous au même endroit).
-- **Hero générique** (« Bienvenue sur notre site ») au lieu d'une
-  promesse forte.
-- **Pages « moi, moi, moi »** centrées sur l'entreprise au lieu du
-  client.
-- **Témoignages anonymes** ou clairement inventés.
-- **Pop-ups intempestifs** dès le chargement.
-- **Liens de navigation dans une landing page** (laisser une seule
-  porte de sortie : le CTA).
-- **Promesses extravagantes** non étayées (perte de confiance immédiate).
-- **Pas de mobile-friendly** (50 % à 70 % du trafic est mobile).
+- **Competing CTAs** ("Buy", "Try", "Learn more", "Contact us" all in
+  one spot).
+- **Generic hero** ("Welcome to our website") instead of a strong
+  promise.
+- **"Me, me, me" pages** focused on the company instead of the
+  customer.
+- **Anonymous or clearly fake testimonials.**
+- **Pop-ups on load.**
+- **Navigation links inside a landing page** (leave only one exit:
+  the CTA).
+- **Outlandish unsupported claims** (instant loss of trust).
+- **Not mobile-friendly** (50 % to 70 % of traffic is mobile).
 
-## Workflow conversion
+## Conversion workflow
 
-Quand on te demande de créer ou améliorer une page de conversion :
+When asked to create or improve a conversion page:
 
-1. **Comprendre l'audience et l'offre** :
-   - Qui est le visiteur cible ? (persona précise — pas « tout le monde »)
-   - Quelle est sa douleur principale ?
-   - Quel est le bénéfice unique de l'offre ?
-   - Quelle est l'action attendue ?
-2. **Proposer un framework** (AIDA, PAS, FAB) cohérent avec le contexte.
-3. **Rédiger le hero en premier** (accroche + promesse + CTA). Le reste
-   suit.
-4. **Lister les bénéfices** (côté client, pas côté fonctionnalité).
-5. **Identifier les objections** et les traiter (FAQ, garantie).
-6. **Trouver / créer la preuve sociale** disponible.
-7. **Faire valider** la structure et le ton avant production.
-8. **Construire la page** avec design-frontend-wordpress en parallèle.
-9. **Tester** sur mobile avant publication.
-10. **Documenter** le CTA pour suivi (à terme : intégration avec un
-    outil d'analytics).
+1. **Understand the audience and the offer**:
+   - Who is the target visitor? (precise persona — not "everyone")
+   - What is their main pain?
+   - What is the unique benefit of the offer?
+   - What action is expected?
+2. **Propose a framework** (AIDA, PAS, FAB) consistent with the
+   context.
+3. **Write the hero first** (hook + promise + CTA). The rest
+   follows.
+4. **List the benefits** (customer side, not feature side).
+5. **Identify the objections** and address them (FAQ, guarantee).
+6. **Find / create the available social proof.**
+7. **Have the structure and tone validated** before production.
+8. **Build the page** with frontend-design-wordpress in parallel.
+9. **Test on mobile** before publishing.
+10. **Document the CTA** for tracking (eventually: integration with
+    an analytics tool).
 
-## Sortie attendue
+## Expected output
 
-Quand on te demande un plan de conversion :
+When asked for a conversion plan:
 
 ```
-## Plan de conversion — [page]
+## Conversion plan — [page]
 
-### Objectif unique
-[action attendue]
+### Single goal
+[expected action]
 
-### Audience cible
-[persona en 2-3 phrases]
+### Target audience
+[persona in 2-3 sentences]
 
-### Framework retenu
-[AIDA / PAS / FAB] — justification courte
+### Chosen framework
+[AIDA / PAS / FAB] — short justification
 
-### Structure proposée
-1. Hero : « [accroche] » + CTA « [verbe + bénéfice] »
-2. Problème : ...
-3. Solution : ...
+### Proposed structure
+1. Hero: "[hook]" + CTA "[verb + benefit]"
+2. Problem: ...
+3. Solution: ...
 [etc.]
 
-### Preuve sociale disponible
+### Available social proof
 - ...
 
-### Objections à traiter
+### Objections to address
 - ...
 ```
 
-Toujours demander validation avant de produire la page complète.
+Always ask for validation before producing the full page.

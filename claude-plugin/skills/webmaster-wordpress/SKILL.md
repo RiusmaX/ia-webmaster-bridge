@@ -1,53 +1,62 @@
 ---
 name: webmaster-wordpress
-description: Méthode et garde-fous pour gérer un site WordPress via l'adaptateur IA Webmaster Bridge. À utiliser pour toute tâche de gestion de contenu, de médias, de menus, de configuration ou de diagnostic sur un site WordPress connecté par les outils mcp__ia-webmaster__iawm_*.
+description: Method and guardrails to manage a WordPress site through the IA Webmaster Bridge adapter. Use it for any content, media, menu, configuration or diagnostics task on a WordPress site connected via the mcp__ia-webmaster__iawm_* tools.
 ---
 
-# Webmaster WordPress — méthode
+# WordPress webmaster — method
 
-Le site WordPress est piloté via l'adaptateur **IA Webmaster Bridge**. Toutes les
-actions passent par les outils MCP `mcp__ia-webmaster__iawm_*` — chaque appel est
-authentifié (signature HMAC) et journalisé.
+The WordPress site is driven through the **IA Webmaster Bridge** adapter. Every
+action goes through the MCP tools `mcp__ia-webmaster__iawm_*` — each call is
+authenticated (HMAC signature) and logged.
 
-## Avant toute chose
+## First thing first
 
-Commencer par `iawm_status` : confirmer que la connexion est valide et que le
-**kill switch** n'est pas actif. S'il l'est, les écritures sont volontairement
-coupées : prévenir l'utilisateur plutôt que de tenter d'écrire.
+Start with `iawm_status`: confirm that the connection is valid and that the
+**kill switch** is not active. If it is, writes have been intentionally turned
+off — warn the user instead of trying to write.
 
-## Familles d'outils
+## Tool families
 
-- **Diagnostic** (`iawm_diagnostics_*`) — système, extensions, thèmes, logs.
-- **Contenu** (`iawm_content_*`) — pages et articles : list, get, create, update.
-- **Médias** (`iawm_media_*`) — médiathèque : list, get, sideload, update.
-- **Taxonomies** (`iawm_taxonomy_*`) — catégories, étiquettes.
-- **Menus** (`iawm_menu_*`) — menus de navigation.
-- **Configuration** (`iawm_config_*`) — réglages du site, utilisateurs.
-- **Audit** (`iawm_audit`) — journal de toutes les actions effectuées.
+- **Diagnostics** (`iawm_diagnostics_*`) — system, plugins, themes, logs.
+- **Content** (`iawm_content_*`) — pages and posts: list, get, create, update.
+- **Media** (`iawm_media_*`) — media library: list, get, sideload, update.
+- **Taxonomies** (`iawm_taxonomy_*`) — categories, tags.
+- **Menus** (`iawm_menu_*`) — navigation menus.
+- **Configuration** (`iawm_config_*`) — site settings, users.
+- **Audit** (`iawm_audit`) — log of every action performed.
 
-## Garde-fous — à respecter systématiquement
+## Guardrails — to follow systematically
 
-1. **Lire avant d'écrire.** Avant de modifier un contenu, le lire (`get`) pour
-   connaître son état et son `builder` (gutenberg / divi / classic).
-2. **Dry-run d'abord.** Pour toute écriture non triviale, appeler l'outil avec
-   `dry_run: true`, montrer à l'utilisateur ce qui serait fait, et n'appliquer
-   qu'après son accord.
-3. **Brouillon par défaut.** Les contenus sont créés en brouillon. Ne publier
-   (`status: publish`) que sur demande explicite.
-4. **Vérifier après écriture.** Après une création ou modification, relire le
-   résultat pour confirmer.
-5. **Ne jamais contourner les garde-fous** ni proposer de les désactiver.
+1. **Read before writing.** Before modifying a content item, read it (`get`)
+   to know its state and its `builder` (gutenberg / divi / classic).
+2. **Dry-run first.** For any non-trivial write, call the tool with
+   `dry_run: true`, show the user what would happen, and apply only after
+   their agreement.
+3. **Draft by default.** Content is created as a draft. Only publish
+   (`status: publish`) on explicit request.
+4. **Verify after writing.** After a creation or update, read the result back
+   to confirm.
+5. **Never bypass the guardrails** and never suggest disabling them.
 
-## En cas de problème
+## Troubleshooting
 
-- Consulter `iawm_diagnostics_logs` (erreurs WordPress) et `iawm_diagnostics_system`.
-- Consulter `iawm_audit` pour retracer les dernières actions.
-- Un statut 403 « kill switch » sur une écriture : prévenir l'utilisateur que les
-  écritures ont été coupées côté site.
+- Check `iawm_diagnostics_logs` (WordPress errors) and
+  `iawm_diagnostics_system`.
+- Check `iawm_audit` to trace the recent actions.
+- A 403 "kill switch" status on a write: warn the user that writes have been
+  turned off on the site side.
 
-## Pages construites avec Divi
+## Pages built with Divi
 
-Le champ `builder` de `iawm_content_get` indique `divi`, `gutenberg` ou
-`classic`. **Ne pas écrire de contenu Gutenberg dans une page Divi** (ni
-l'inverse) : cela corromprait la page. La prise en charge fine de Divi est en
-cours (Phase 3 du projet).
+The `builder` field of `iawm_content_get` returns `divi`, `gutenberg` or
+`classic`. **Do not write Gutenberg content into a Divi page** (or vice
+versa): it would corrupt the page. Fine-grained Divi support is in place
+(Phase 3 of the project) — use the `create-divi-page` skill for those.
+
+## Content language
+
+When the user asks Claude to produce text (page bodies, headings, button
+copy…), respect the **target language**. By default, follow the WordPress
+site locale. The content-generation tools accept an explicit `language`
+parameter (BCP-47, e.g. `fr-FR`, `en-US`, `es-ES`, `de-DE`) — pass it
+through whenever the user states a language preference.

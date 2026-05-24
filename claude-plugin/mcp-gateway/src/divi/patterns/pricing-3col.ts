@@ -1,9 +1,9 @@
 /**
- * Pattern Pricing 3 colonnes — section de tarifs (3 plans).
+ * Pricing 3-column pattern — pricing section (3 plans).
  *
- * Structure :
+ * Structure:
  *   Section
- *     Row 4_4 (titre + sous-titre)
+ *     Row 4_4 (title + subtitle)
  *     Row 4_4
  *       Column 4_4
  *         PricingTables

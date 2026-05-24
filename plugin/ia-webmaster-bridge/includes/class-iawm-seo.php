@@ -1,21 +1,21 @@
 <?php
 /**
- * Capacité SEO — lecture/écriture des métadonnées d'une page.
+ * SEO capability — read/write a page's SEO metadata.
  *
- * S'appuie sur un backend SEO actif sur le site. Les backends supportés
- * sont, par ordre de priorité :
+ * Relies on an SEO backend active on the site. Supported backends, in
+ * order of priority, are:
  *  - Rank Math (`seo-by-rank-math/rank-math.php`).
  *  - Yoast SEO (`wordpress-seo/wp-seo.php`) — backlog.
  *
- * Les noms de champs sont **normalisés** dans cette API (pas dépendants
- * du plugin sous-jacent) : meta_title, meta_description, focus_keyword,
+ * Field names are **normalised** in this API (independent of the
+ * underlying plugin): meta_title, meta_description, focus_keyword,
  * canonical_url, robots_noindex, robots_nofollow, og_title, og_description,
  * og_image_id, twitter_title, twitter_description, twitter_image_id.
  *
- * Routes :
- *  - /seo/status        — backend détecté, capacités disponibles.
- *  - /seo/page/get      — lit les méta SEO d'un post.
- *  - /seo/page/update   — modifie les méta SEO d'un post.
+ * Routes:
+ *  - /seo/status        — detected backend, available capabilities.
+ *  - /seo/page/get      — reads a post's SEO metadata.
+ *  - /seo/page/update   — updates a post's SEO metadata.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -25,21 +25,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes SEO.
+ * SEO routes.
  */
 class IAWM_Seo {
 
-	/** Backend Rank Math. */
+	/** Rank Math backend. */
 	const BACKEND_RANK_MATH = 'rank-math';
 
-	/** Backend Yoast. */
+	/** Yoast backend. */
 	const BACKEND_YOAST = 'yoast';
 
-	/** Aucun backend SEO détecté. */
+	/** No SEO backend detected. */
 	const BACKEND_NONE = 'none';
 
 	/**
-	 * Mapping nom normalisé → meta_key Rank Math.
+	 * Mapping normalised name -> Rank Math meta_key.
 	 *
 	 * @var array
 	 */
@@ -58,7 +58,7 @@ class IAWM_Seo {
 	);
 
 	/**
-	 * Mapping nom normalisé → meta_key Yoast.
+	 * Mapping normalised name -> Yoast meta_key.
 	 *
 	 * @var array
 	 */
@@ -76,7 +76,7 @@ class IAWM_Seo {
 	);
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -85,7 +85,7 @@ class IAWM_Seo {
 	}
 
 	/**
-	 * Enregistre les routes.
+	 * Registers routes.
 	 *
 	 * @return void
 	 */
@@ -110,9 +110,9 @@ class IAWM_Seo {
 	}
 
 	/**
-	 * Détermine le backend SEO actif.
+	 * Determines the active SEO backend.
 	 *
-	 * @return string Un des constants BACKEND_*.
+	 * @return string One of the BACKEND_* constants.
 	 */
 	public static function detect_backend() {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
@@ -129,9 +129,9 @@ class IAWM_Seo {
 	}
 
 	/**
-	 * Retourne le mapping nom normalisé → meta_key pour un backend donné.
+	 * Returns the normalised name -> meta_key mapping for a given backend.
 	 *
-	 * @param string $backend Backend (constant BACKEND_*).
+	 * @param string $backend Backend (BACKEND_* constant).
 	 * @return array
 	 */
 	protected static function get_map( $backend ) {
@@ -146,9 +146,9 @@ class IAWM_Seo {
 	}
 
 	/**
-	 * POST /seo/status — détecte le backend actif et son périmètre.
+	 * POST /seo/status — detects the active backend and its scope.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_status( $request ) {
@@ -168,11 +168,11 @@ class IAWM_Seo {
 	}
 
 	/**
-	 * POST /seo/page/get — lit les méta SEO d'un post.
+	 * POST /seo/page/get — reads a post's SEO metadata.
 	 *
-	 * Paramètre : post_id (requis).
+	 * Parameter: post_id (required).
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_page_get( $request ) {
@@ -180,19 +180,19 @@ class IAWM_Seo {
 		$post_id = isset( $params['post_id'] ) ? (int) $params['post_id'] : 0;
 
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} introuvable.", 404 );
+			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
 		}
 
 		$backend = self::detect_backend();
 		if ( self::BACKEND_NONE === $backend ) {
 			return IAWM_Support::rest_error(
 				'no_seo_backend',
-				'Aucun plugin SEO actif détecté. Installer Rank Math ou Yoast.',
+				'No active SEO plugin detected. Install Rank Math or Yoast.',
 				503
 			);
 		}
@@ -200,7 +200,7 @@ class IAWM_Seo {
 		if ( self::BACKEND_YOAST === $backend ) {
 			return IAWM_Support::rest_error(
 				'yoast_not_implemented',
-				'Le backend Yoast n\'est pas encore implémenté (backlog).',
+				'The Yoast backend is not yet implemented (backlog).',
 				501
 			);
 		}
@@ -212,7 +212,7 @@ class IAWM_Seo {
 			$fields[ $name ] = '' === $value ? null : $value;
 		}
 
-		// Rank Math spécifique : robots est une liste sérialisée.
+		// Rank Math specific: robots is a serialised list.
 		if ( self::BACKEND_RANK_MATH === $backend ) {
 			$robots = get_post_meta( $post_id, 'rank_math_robots', true );
 			$robots = is_array( $robots ) ? $robots : array();
@@ -232,14 +232,14 @@ class IAWM_Seo {
 	}
 
 	/**
-	 * POST /seo/page/update — met à jour les méta SEO d'un post.
+	 * POST /seo/page/update — updates a post's SEO metadata.
 	 *
-	 * Paramètres :
-	 *   - post_id (int, requis).
-	 *   - fields (object, requis) : { meta_title, meta_description, ... }.
-	 *   - dry_run (bool, défaut false).
+	 * Parameters:
+	 *   - post_id (int, required).
+	 *   - fields (object, required): { meta_title, meta_description, ... }.
+	 *   - dry_run (bool, default false).
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_page_update( $request ) {
@@ -249,29 +249,29 @@ class IAWM_Seo {
 		$dry_run = ! empty( $params['dry_run'] );
 
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id requis.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
 		}
 		if ( empty( $fields ) ) {
-			return IAWM_Support::rest_error( 'no_fields', 'Aucun champ à mettre à jour.', 400 );
+			return IAWM_Support::rest_error( 'no_fields', 'No fields to update.', 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} introuvable.", 404 );
+			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
 		}
 
 		$backend = self::detect_backend();
 		if ( self::BACKEND_NONE === $backend ) {
 			return IAWM_Support::rest_error(
 				'no_seo_backend',
-				'Aucun plugin SEO actif détecté.',
+				'No active SEO plugin detected.',
 				503
 			);
 		}
 		if ( self::BACKEND_YOAST === $backend ) {
 			return IAWM_Support::rest_error(
 				'yoast_not_implemented',
-				'Le backend Yoast n\'est pas encore implémenté (backlog).',
+				'The Yoast backend is not yet implemented (backlog).',
 				501
 			);
 		}
@@ -280,7 +280,7 @@ class IAWM_Seo {
 		$applied  = array();
 		$rejected = array();
 
-		// Robots (cas spécial pour Rank Math).
+		// Robots (special case for Rank Math).
 		$robots_update = null;
 		if ( self::BACKEND_RANK_MATH === $backend
 			&& ( isset( $fields['robots_noindex'] ) || isset( $fields['robots_nofollow'] ) )
@@ -300,7 +300,7 @@ class IAWM_Seo {
 			unset( $fields['robots_noindex'], $fields['robots_nofollow'] );
 		}
 
-		// Champs standards.
+		// Standard fields.
 		foreach ( $fields as $name => $value ) {
 			if ( ! isset( $map[ $name ] ) ) {
 				$rejected[] = array( 'field' => $name, 'reason' => 'unknown_field' );

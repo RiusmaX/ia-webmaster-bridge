@@ -1,9 +1,9 @@
 /**
- * Pattern Video Section — vidéo de démo/présentation pleine largeur.
+ * Video Section pattern — full-width demo/presentation video.
  *
- * Structure :
+ * Structure:
  *   Section
- *     Row 4_4 (titre + sous-titre optionnels)
+ *     Row 4_4 (optional title + subtitle)
  *     Row 4_4
  *       Column 4_4
  *         Video

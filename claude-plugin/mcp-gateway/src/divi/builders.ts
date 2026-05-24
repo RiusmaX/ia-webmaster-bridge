@@ -1,18 +1,18 @@
 /**
- * Constructeurs bas-niveau de blocs Divi 5.
+ * Low-level Divi 5 block constructors.
  *
- * Toutes les fonctions produisent des `GutenbergBlock` parse_blocks-compatibles,
- * prêts à être envoyés à `iawm_divi_page_write` (param `blocks`) ou
- * sérialisés via `serialize_blocks` côté PHP.
+ * All functions produce parse_blocks-compatible `GutenbergBlock` values, ready
+ * to be sent to `iawm_divi_page_write` (the `blocks` parameter) or serialized
+ * via `serialize_blocks` on the PHP side.
  *
- * Format documenté dans `docs/divi5-format.md`. Les attributs suivent la
- * structure observée :
+ * Format documented in `docs/divi5-format.md`. Attributes follow the observed
+ * structure:
  *   module: { advanced, decoration: { background, spacing, sizing, layout } }
- *   content / title / button / image / imageIcon : par module
+ *   content / title / button / image / imageIcon: per module
  *
- * Multi-breakpoints : pour l'instant on pose seulement "desktop" — Divi
- * hérite automatiquement aux autres breakpoints. Les overrides phone/tablet
- * sont à ajouter pour le responsive fin.
+ * Multi-breakpoints: for now only "desktop" is set — Divi automatically
+ * inherits to the other breakpoints. Phone/tablet overrides should be added
+ * for fine-grained responsive design.
  */
 
 import { BUILDER_VERSION, DiviBlock } from "./types.js";
@@ -24,7 +24,7 @@ import type {
 } from "./types.js";
 import { colorToString } from "./globals.js";
 
-/** Construit un GutenbergBlock vide avec les bons champs structurels. */
+/** Builds an empty GutenbergBlock with the right structural fields. */
 function makeBlock(name: string, attrs: Record<string, unknown>, innerBlocks: GutenbergBlock[] = []): GutenbergBlock {
   return {
     blockName: name,
@@ -35,25 +35,25 @@ function makeBlock(name: string, attrs: Record<string, unknown>, innerBlocks: Gu
   };
 }
 
-/** Pose une valeur "desktop" sur un attribut (helper). */
+/** Sets a "desktop" value on an attribute (helper). */
 function desktopValue<T>(value: T): { desktop: { value: T } } {
   return { desktop: { value } };
 }
 
 /* ------------------------------------------------------------------ */
-/* Structurels : placeholder, section, row, column                    */
+/* Structural: placeholder, section, row, column                      */
 /* ------------------------------------------------------------------ */
 
 /**
- * Wrapper racine `wp:divi/placeholder`. Obligatoire au top-level d'une
- * page Divi 5 (sans lui, Divi ne prend pas le contrôle du rendu).
+ * Root `wp:divi/placeholder` wrapper. Required at the top level of a Divi 5
+ * page (without it, Divi does not take over the rendering).
  */
 export function placeholder(children: GutenbergBlock[]): GutenbergBlock {
   return makeBlock(DiviBlock.Placeholder, {}, children);
 }
 
 /**
- * Section Divi (bande horizontale pleine largeur).
+ * Divi section (full-width horizontal band).
  */
 export interface SectionOptions {
   backgroundColor?: DiviColor;
@@ -90,8 +90,8 @@ export function section(options: SectionOptions, rows: GutenbergBlock[]): Gutenb
 }
 
 /**
- * Row Divi (ligne dans une section). La structure de colonnes (1_3,1_3,1_3
- * etc.) est obligatoire et doit correspondre au nombre de columns enfants.
+ * Divi row (a row within a section). The column structure (1_3,1_3,1_3 etc.)
+ * is required and must match the number of child columns.
  */
 export interface RowOptions {
   columnStructure: ColumnStructure;
@@ -100,7 +100,7 @@ export interface RowOptions {
 }
 
 export function row(options: RowOptions, columns: GutenbergBlock[]): GutenbergBlock {
-  // flexColumnStructure dérivé du nombre de colonnes (observé sur la page 19).
+  // flexColumnStructure derived from the column count (observed on page 19).
   const colCount = columns.length;
   const flexColumnStructure = `equal-columns_${colCount === 1 ? 1 : colCount}`;
 
@@ -130,17 +130,17 @@ export function row(options: RowOptions, columns: GutenbergBlock[]): GutenbergBl
 }
 
 /**
- * Column Divi (une part de row). `type` doit matcher la structure
+ * Divi column (a portion of a row). `type` must match the structure
  * (`1_3`, `1_2`, `4_4`, etc.).
  */
 export interface ColumnOptions {
-  /** Notation `a_b` ex. "1_3". */
+  /** `a_b` notation, e.g. "1_3". */
   type: string;
-  /** Si true, la colonne passe en pleine largeur sur mobile. Défaut: true. */
+  /** If true, the column becomes full-width on mobile. Default: true. */
   fullWidthOnMobile?: boolean;
 }
 
-/** Conversion `1_3` → `8_24`, `1_2` → `12_24`, `4_4` → `24_24`. */
+/** Convert `1_3` → `8_24`, `1_2` → `12_24`, `4_4` → `24_24`. */
 function typeToFlexType(type: string): string {
   const [num, denom] = type.split("_").map(Number);
   if (!num || !denom) return "24_24";
@@ -173,18 +173,17 @@ export function column(options: ColumnOptions, modules: GutenbergBlock[]): Guten
 }
 
 /* ------------------------------------------------------------------ */
-/* Modules feuilles                                                   */
+/* Leaf modules                                                       */
 /* ------------------------------------------------------------------ */
 
 /**
- * Module Texte. Le contenu HTML peut inclure des balises h1-h6, p, span,
- * etc. Pour styler les titres (taille, couleur, alignement), utiliser
- * l'option `headingFont`.
+ * Text module. The HTML content can include h1-h6, p, span, etc. tags.
+ * To style headings (size, color, alignment), use the `headingFont` option.
  */
 export interface TextOptions {
-  /** HTML du contenu, ex. "<h1>Bienvenue</h1>". */
+  /** HTML content, e.g. "<h1>Welcome</h1>". */
   html: string;
-  /** Styles par tag (h1, h2, …). */
+  /** Styles by tag (h1, h2, …). */
   headingFont?: Partial<
     Record<
       "h1" | "h2" | "h3" | "h4" | "h5" | "h6",
@@ -211,8 +210,8 @@ export function text(options: TextOptions): GutenbergBlock {
       if (settings.color) {
         value.color = colorToString(settings.color);
         delete (value as Record<string, unknown>).color;
-        // En réalité la couleur de heading se met dans une sous-structure
-        // séparée — gardée simple ici, à raffiner après peuplement de la page 29.
+        // In reality the heading color belongs in a separate sub-structure —
+        // kept simple here, to be refined after populating page 29.
         value.color = colorToString(settings.color);
       }
       fontDecoration[tag] = { font: desktopValue(value) };
@@ -224,14 +223,14 @@ export function text(options: TextOptions): GutenbergBlock {
 }
 
 /**
- * Module Blurb (icône + titre + texte) — idéal pour les listes de features.
+ * Blurb module (icon + title + text) — ideal for feature lists.
  */
 export interface BlurbOptions {
   title: string;
   contentHtml: string;
-  /** Code unicode d'une icône Divi, ex. "&#xe0e1;". */
+  /** Unicode code of a Divi icon, e.g. "&#xe0e1;". */
   iconUnicode?: string;
-  /** URL d'image en alternative à l'icône. */
+  /** Image URL as an alternative to the icon. */
   imageUrl?: string;
 }
 
@@ -256,7 +255,7 @@ export function blurb(options: BlurbOptions): GutenbergBlock {
 }
 
 /**
- * Module Call To Action (titre + texte + bouton).
+ * Call To Action module (title + text + button).
  */
 export interface CtaOptions {
   title: string;
@@ -284,7 +283,7 @@ export function cta(options: CtaOptions): GutenbergBlock {
 }
 
 /**
- * Module Image.
+ * Image module.
  */
 export interface ImageOptions {
   src: string;
@@ -303,7 +302,7 @@ export function image(options: ImageOptions): GutenbergBlock {
 }
 
 /**
- * Module Heading (titre dédié, alternative à text avec h1).
+ * Heading module (dedicated heading, alternative to text with h1).
  */
 export interface HeadingOptions {
   text: string;
@@ -316,8 +315,8 @@ export function heading(options: HeadingOptions): GutenbergBlock {
 }
 
 /**
- * Module Button (bouton seul). linkUrl peut être une variable Divi
- * (ex. `$variable({"type":"content","value":{"name":"home_url",…}})$`).
+ * Button module (standalone button). linkUrl can be a Divi variable
+ * (e.g. `$variable({"type":"content","value":{"name":"home_url",…}})$`).
  */
 export interface ButtonOptions {
   text: string;
@@ -336,13 +335,13 @@ export function button(options: ButtonOptions): GutenbergBlock {
 }
 
 /**
- * Module Number Counter (chiffre animé au scroll, idéal pour KPIs).
+ * Number Counter module (number animated on scroll, ideal for KPIs).
  */
 export interface NumberCounterOptions {
   title: string;
-  /** Valeur à afficher (string pour supporter "1.5k" si besoin). */
+  /** Value to display (string to support "1.5k" if needed). */
   number: string;
-  /** Ajoute un "%" auto. Défaut : false. */
+  /** Auto-appends "%". Default: false. */
   percent?: boolean;
 }
 
@@ -359,12 +358,12 @@ export function numberCounter(options: NumberCounterOptions): GutenbergBlock {
 }
 
 /**
- * Module Testimonial (citation client avec photo).
+ * Testimonial module (customer quote with photo).
  */
 export interface TestimonialOptions {
   quoteHtml: string;
   author: string;
-  /** URL de la photo (optionnel). */
+  /** Photo URL (optional). */
   portraitUrl?: string;
 }
 
@@ -383,12 +382,12 @@ export function testimonial(options: TestimonialOptions): GutenbergBlock {
 }
 
 /**
- * Module Gallery (liste d'IDs media WP).
+ * Gallery module (list of WP media IDs).
  */
 export interface GalleryOptions {
-  /** IDs d'attachments WP. */
+  /** WP attachment IDs. */
   ids: number[];
-  /** Nb de colonnes en desktop. Défaut : 4. */
+  /** Number of columns on desktop. Default: 4. */
   columns?: number;
 }
 
@@ -412,7 +411,7 @@ export function gallery(options: GalleryOptions): GutenbergBlock {
 }
 
 /**
- * Module Video (URL YouTube/Vimeo/mp4).
+ * Video module (YouTube/Vimeo/mp4 URL).
  */
 export interface VideoOptions {
   src: string;
@@ -427,7 +426,7 @@ export function video(options: VideoOptions): GutenbergBlock {
 }
 
 /**
- * Module Code (HTML brut — à utiliser avec parcimonie).
+ * Code module (raw HTML — to be used sparingly).
  */
 export interface CodeOptions {
   html: string;
@@ -440,16 +439,16 @@ export function code(options: CodeOptions): GutenbergBlock {
 }
 
 /* ------------------------------------------------------------------ */
-/* Modules composés (nested)                                          */
+/* Composite modules (nested)                                         */
 /* ------------------------------------------------------------------ */
 
 /**
- * Item d'accordion.
+ * Accordion item.
  */
 export interface AccordionItemOptions {
   title: string;
   contentHtml: string;
-  /** Ouvert par défaut ? */
+  /** Open by default? */
   open?: boolean;
 }
 
@@ -465,7 +464,7 @@ export function accordionItem(options: AccordionItemOptions): GutenbergBlock {
 }
 
 /**
- * Module Accordion (contient des accordion-item).
+ * Accordion module (contains accordion-item).
  */
 export function accordion(items: AccordionItemOptions[]): GutenbergBlock {
   return makeBlock(
@@ -476,7 +475,7 @@ export function accordion(items: AccordionItemOptions[]): GutenbergBlock {
 }
 
 /**
- * Tab d'un module Tabs.
+ * Tab of a Tabs module.
  */
 export interface TabOptions {
   title: string;
@@ -491,7 +490,7 @@ export function tab(options: TabOptions): GutenbergBlock {
 }
 
 /**
- * Module Tabs (contient des tab).
+ * Tabs module (contains tab).
  */
 export function tabs(items: TabOptions[]): GutenbergBlock {
   return makeBlock(
@@ -502,7 +501,7 @@ export function tabs(items: TabOptions[]): GutenbergBlock {
 }
 
 /**
- * Slide d'un module Slider.
+ * Slide of a Slider module.
  */
 export interface SlideOptions {
   title: string;
@@ -528,7 +527,7 @@ export function slide(options: SlideOptions): GutenbergBlock {
 }
 
 /**
- * Module Slider (contient des slide).
+ * Slider module (contains slide).
  */
 export function slider(items: SlideOptions[]): GutenbergBlock {
   return makeBlock(
@@ -539,16 +538,16 @@ export function slider(items: SlideOptions[]): GutenbergBlock {
 }
 
 /**
- * Champ d'un formulaire de contact.
+ * Field of a contact form.
  */
 export interface ContactFieldOptions {
-  /** Identifiant interne (sans espaces : "name", "email", "message"). */
+  /** Internal identifier (no spaces: "name", "email", "message"). */
   id: string;
-  /** Libellé visible. */
+  /** Visible label. */
   label: string;
   /** Type. */
   type?: "input" | "email" | "text" | "phone" | "select" | "checkbox" | "radio";
-  /** Champ pleine largeur ? Défaut : false (sauf "text"). */
+  /** Full-width field? Default: false (except "text"). */
   fullwidth?: boolean;
 }
 
@@ -574,19 +573,19 @@ export function contactField(options: ContactFieldOptions): GutenbergBlock {
 }
 
 /**
- * Module Contact Form (contient des contact-field).
+ * Contact Form module (contains contact-field).
  *
- * Le uniqueId est généré automatiquement (UUID-like) — utilisé par Divi
- * pour identifier les soumissions dans les notifications email.
+ * The uniqueId is generated automatically (UUID-like) — used by Divi to
+ * identify submissions in email notifications.
  */
 export interface ContactFormOptions {
   fields: ContactFieldOptions[];
-  /** UUID custom (sinon généré). */
+  /** Custom UUID (otherwise generated). */
   uniqueId?: string;
 }
 
 function generateUniqueId(): string {
-  // Format UUID-like minimaliste suffisant pour Divi.
+  // Minimalist UUID-like format, sufficient for Divi.
   const hex = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
   return `${hex()}${hex()}-${hex()}-${hex()}-${hex()}-${hex()}${hex()}${hex()}`;
 }
@@ -606,16 +605,16 @@ export function contactForm(options: ContactFormOptions): GutenbergBlock {
 }
 
 /* ------------------------------------------------------------------ */
-/* Modules prioritaires Phase 3.5 (page de référence n°53)            */
+/* Phase 3.5 priority modules (reference page #53)                    */
 /* ------------------------------------------------------------------ */
 
 /**
- * Module Divider — séparateur visuel.
+ * Divider module — visual separator.
  */
 export interface DividerOptions {
-  /** Couleur de la ligne. */
+  /** Line color. */
   color?: DiviColor;
-  /** Hauteur en pixels. */
+  /** Height in pixels. */
   height?: string;
 }
 
@@ -635,14 +634,14 @@ export function divider(options: DividerOptions = {}): GutenbergBlock {
 }
 
 /**
- * Module Icon — icône standalone (Divi font icon).
+ * Icon module — standalone icon (Divi font icon).
  */
 export interface IconOptions {
-  /** Code unicode de l'icône Divi, ex. "&#xe0e1;". */
+  /** Unicode code of the Divi icon, e.g. "&#xe0e1;". */
   unicode: string;
-  /** Couleur de l'icône. */
+  /** Icon color. */
   color?: DiviColor;
-  /** Taille (ex. "48px"). */
+  /** Size (e.g. "48px"). */
   size?: string;
 }
 
@@ -668,7 +667,7 @@ export function icon(options: IconOptions): GutenbergBlock {
 }
 
 /**
- * Module Toggle — bloc révélable (équivalent accordion 1 item).
+ * Toggle module — revealable block (equivalent to a 1-item accordion).
  */
 export interface ToggleOptions {
   title: string;
@@ -683,25 +682,25 @@ export function toggle(options: ToggleOptions): GutenbergBlock {
 }
 
 /**
- * Item d'une grille de pricing.
+ * Item of a pricing grid.
  */
 export interface PricingTableOptions {
   title: string;
   subtitle?: string;
-  /** Symbole monétaire ("$", "€", "£"…). */
+  /** Currency symbol ("$", "€", "£"…). */
   currency?: string;
   price: string;
-  /** Fréquence ("month", "year"…). */
+  /** Frequency ("month", "year"…). */
   frequency?: string;
-  /** Liste de features : commence par `+` (incluse) ou `-` (non incluse). */
+  /** Feature list: starts with `+` (included) or `-` (not included). */
   features: Array<{ text: string; included?: boolean }>;
-  /** Texte du bouton (optionnel). */
+  /** Button text (optional). */
   buttonText?: string;
   buttonUrl?: string;
 }
 
 export function pricingTable(options: PricingTableOptions): GutenbergBlock {
-  // Format content : "+ feature\n+ feature\n- feature"
+  // content format: "+ feature\n+ feature\n- feature"
   const contentValue = options.features
     .map((f) => `${f.included !== false ? "+" : "-"} ${f.text}`)
     .join("\n");
@@ -732,7 +731,7 @@ export function pricingTable(options: PricingTableOptions): GutenbergBlock {
 }
 
 /**
- * Module Pricing Tables (contient des pricing-table).
+ * Pricing Tables module (contains pricing-table).
  */
 export function pricingTables(items: PricingTableOptions[]): GutenbergBlock {
   return makeBlock(
@@ -743,15 +742,15 @@ export function pricingTables(items: PricingTableOptions[]): GutenbergBlock {
 }
 
 /**
- * Item d'une icon-list.
+ * Item of an icon-list.
  */
 export interface IconListItemOptions {
   text: string;
-  /** Code unicode de l'icône Divi. */
+  /** Unicode code of the Divi icon. */
   iconUnicode?: string;
-  /** Lien optionnel. */
+  /** Optional link. */
   url?: string;
-  /** Ouvrir dans un nouvel onglet. */
+  /** Open in a new tab. */
   newTab?: boolean;
 }
 
@@ -771,7 +770,7 @@ export function iconListItem(options: IconListItemOptions): GutenbergBlock {
 }
 
 /**
- * Module Icon List (contient des icon-list-item).
+ * Icon List module (contains icon-list-item).
  */
 export function iconList(items: IconListItemOptions[]): GutenbergBlock {
   return makeBlock(
@@ -782,18 +781,18 @@ export function iconList(items: IconListItemOptions[]): GutenbergBlock {
 }
 
 /**
- * Réseau social pour Social Media Follow.
+ * Social network for Social Media Follow.
  */
 export interface SocialNetworkOptions {
-  /** Identifiant : "facebook", "twitter", "instagram", "linkedin", "youtube", "tiktok"… */
+  /** Identifier: "facebook", "twitter", "instagram", "linkedin", "youtube", "tiktok"… */
   network: string;
-  /** Label affiché (utile pour l'accessibilité). */
+  /** Displayed label (useful for accessibility). */
   label?: string;
-  /** URL du profil (sinon Divi propose une URL par défaut). */
+  /** Profile URL (otherwise Divi falls back to a default URL). */
   url?: string;
 }
 
-/** Couleurs de marque par défaut. */
+/** Default brand colors. */
 const NETWORK_COLORS: Record<string, string> = {
   facebook: "#3b5998",
   twitter: "#1da1f2",
@@ -824,7 +823,7 @@ export function socialMediaFollowNetwork(options: SocialNetworkOptions): Gutenbe
 }
 
 /**
- * Module Social Media Follow (contient des social-media-follow-network).
+ * Social Media Follow module (contains social-media-follow-network).
  */
 export function socialMediaFollow(networks: SocialNetworkOptions[]): GutenbergBlock {
   return makeBlock(
@@ -839,14 +838,14 @@ function capitalize(s: string): string {
 }
 
 /**
- * Module Team Member — membre d'équipe.
+ * Team Member module — team member.
  */
 export interface TeamMemberOptions {
   name: string;
   position: string;
-  /** URL de la photo. */
+  /** Photo URL. */
   imageUrl?: string;
-  /** Bio en HTML. */
+  /** Bio in HTML. */
   bioHtml?: string;
 }
 
@@ -865,7 +864,7 @@ export function teamMember(options: TeamMemberOptions): GutenbergBlock {
 }
 
 /**
- * Module Signup — email opt-in (newsletter).
+ * Signup module — email opt-in (newsletter).
  */
 export interface SignupOptions {
   title: string;
@@ -880,14 +879,14 @@ export function signup(options: SignupOptions): GutenbergBlock {
 }
 
 /**
- * Module Map — Google Maps.
+ * Map module — Google Maps.
  *
- * Options : adresse, zoom, marqueurs (à enrichir en fonction des besoins).
+ * Options: address, zoom, markers (to be enriched as needs evolve).
  */
 export interface MapOptions {
-  /** Adresse (ex. "1 rue de la Paix, Paris"). */
+  /** Address (e.g. "1600 Amphitheatre Parkway, Mountain View"). */
   address?: string;
-  /** Niveau de zoom (1-22). */
+  /** Zoom level (1-22). */
   zoom?: number;
 }
 
@@ -905,7 +904,7 @@ export function map(options: MapOptions = {}): GutenbergBlock {
 }
 
 /**
- * Module Circle Counter — pourcentage en cercle animé.
+ * Circle Counter module — animated percentage circle.
  */
 export interface CircleCounterOptions {
   title: string;
@@ -920,11 +919,11 @@ export function circleCounter(options: CircleCounterOptions): GutenbergBlock {
 }
 
 /**
- * Item d'un Counters (bar counters / skill bars).
+ * Item of a Counters module (bar counters / skill bars).
  */
 export interface CounterItemOptions {
   title: string;
-  /** Pourcentage (0-100). */
+  /** Percentage (0-100). */
   progress: string;
 }
 
@@ -936,13 +935,13 @@ export function counter(options: CounterItemOptions): GutenbergBlock {
 }
 
 /**
- * Module Counters (barres animées de compétences/progression).
+ * Counters module (animated skill/progress bars).
  *
- * Le blockName est `divi/counters` (et NON `divi/bar-counters`).
+ * The blockName is `divi/counters` (NOT `divi/bar-counters`).
  */
 export interface CountersOptions {
   items: CounterItemOptions[];
-  /** Afficher le pourcentage à droite ? Défaut : true. */
+  /** Show the percentage on the right? Default: true. */
   showPercentages?: boolean;
 }
 
@@ -961,12 +960,12 @@ export function counters(options: CountersOptions): GutenbergBlock {
 }
 
 /**
- * Module Audio — lecteur audio HTML5.
+ * Audio module — HTML5 audio player.
  */
 export interface AudioOptions {
   title: string;
   artistName?: string;
-  /** URL du fichier audio. */
+  /** URL of the audio file. */
   audioUrl?: string;
 }
 
@@ -984,20 +983,20 @@ export function audio(options: AudioOptions): GutenbergBlock {
 }
 
 /* ------------------------------------------------------------------ */
-/* Theme Builder & contenu dynamique (Phase 3.6)                      */
+/* Theme Builder & dynamic content (Phase 3.6)                        */
 /* ------------------------------------------------------------------ */
 
 /**
- * Module Menu — barre de navigation (menu WP).
+ * Menu module — navigation bar (WP menu).
  *
- * Affiche un menu WordPress par son ID. Idéal dans un header.
+ * Displays a WordPress menu by its ID. Ideal inside a header.
  */
 export interface MenuOptions {
-  /** ID du menu WP. Si omis, Divi affiche le menu par défaut. */
+  /** WP menu ID. If omitted, Divi displays the default menu. */
   menuId?: number;
-  /** Logo à gauche du menu (URL). */
+  /** Logo on the left of the menu (URL). */
   logoUrl?: string;
-  /** Direction des sous-menus desktop. "downwards" (défaut) | "upwards". */
+  /** Desktop sub-menu direction. "downwards" (default) | "upwards". */
   dropdownDirection?: "downwards" | "upwards";
 }
 
@@ -1020,17 +1019,17 @@ export function menu(options: MenuOptions = {}): GutenbergBlock {
 }
 
 /**
- * Module Fullwidth Menu — version pleine largeur du Menu.
+ * Fullwidth Menu module — full-width version of Menu.
  */
 export function fullwidthMenu(options: MenuOptions = {}): GutenbergBlock {
-  // Mêmes attributs que Menu, juste le blockName diffère.
+  // Same attributes as Menu, only the blockName differs.
   const block = menu(options);
   block.blockName = DiviBlock.FullwidthMenu;
   return block;
 }
 
 /**
- * Module Search — barre de recherche WordPress.
+ * Search module — WordPress search bar.
  */
 export interface SearchOptions {
   placeholder?: string;
@@ -1049,14 +1048,14 @@ export function search(options: SearchOptions = {}): GutenbergBlock {
 }
 
 /**
- * Module Breadcrumbs — fil d'Ariane (utile SEO + nav).
+ * Breadcrumbs module — breadcrumb trail (useful for SEO + navigation).
  */
 export interface BreadcrumbsOptions {
-  /** Texte du lien Accueil. Défaut : "Home". */
+  /** Text of the Home link. Default: "Home". */
   homeText?: string;
-  /** Séparateur entre items. Défaut : "/". */
+  /** Separator between items. Default: "/". */
   separator?: string;
-  /** Balise HTML wrapper. Défaut : "nav". */
+  /** Wrapper HTML tag. Default: "nav". */
   htmlTag?: string;
 }
 
@@ -1073,15 +1072,15 @@ export function breadcrumbs(options: BreadcrumbsOptions = {}): GutenbergBlock {
 }
 
 /**
- * Module Post Title — titre dynamique du post courant (Theme Builder).
+ * Post Title module — dynamic title of the current post (Theme Builder).
  *
- * À utiliser dans les templates de single post / page pour afficher
- * automatiquement le titre du post visité.
+ * Use inside single post / page templates to automatically display the title
+ * of the post being viewed.
  */
 export interface PostTitleOptions {
-  /** Inclut la meta (date, auteur). Défaut : false. */
+  /** Include meta (date, author). Default: false. */
   includeMeta?: boolean;
-  /** Inclut l'image vedette en arrière-plan. Défaut : false. */
+  /** Include the featured image as background. Default: false. */
   includeFeaturedImage?: boolean;
 }
 
@@ -1101,19 +1100,19 @@ export function postTitle(options: PostTitleOptions = {}): GutenbergBlock {
 }
 
 /**
- * Module Post Content — contenu dynamique du post courant (Theme Builder).
+ * Post Content module — dynamic content of the current post (Theme Builder).
  */
 export function postContent(): GutenbergBlock {
   return makeBlock(DiviBlock.PostContent, {});
 }
 
 /**
- * Module Post Navigation — liens précédent / suivant.
+ * Post Navigation module — previous / next links.
  */
 export interface PostNavigationOptions {
   prevText?: string;
   nextText?: string;
-  /** Limiter aux articles de la même catégorie. */
+  /** Restrict to posts in the same category. */
   sameTerm?: boolean;
 }
 
@@ -1130,7 +1129,7 @@ export function postNavigation(options: PostNavigationOptions = {}): GutenbergBl
 }
 
 /**
- * Module Comments — commentaires WP.
+ * Comments module — WP comments.
  */
 export function comments(): GutenbergBlock {
   return makeBlock(DiviBlock.Comments, {});

@@ -30964,18 +30964,18 @@ function loadConfig() {
   const configPath = candidates.find((path) => existsSync(path));
   if (!configPath) {
     throw new Error(
-      `Configuration introuvable. Cr\xE9ez le fichier ${candidates[0]} \xE0 partir du mod\xE8le config.example.json.`
+      `Configuration not found. Create the file ${candidates[0]} from the config.example.json template.`
     );
   }
   let parsed;
   try {
     parsed = JSON.parse(readFileSync(configPath, "utf8"));
   } catch {
-    throw new Error(`Configuration illisible : ${configPath} n'est pas un JSON valide.`);
+    throw new Error(`Unreadable configuration: ${configPath} is not valid JSON.`);
   }
   if (!parsed.baseUrl || !parsed.keyId || !parsed.secret) {
     throw new Error(
-      `Configuration incompl\xE8te dans ${configPath} : les champs baseUrl, keyId et secret sont requis.`
+      `Incomplete configuration in ${configPath}: the baseUrl, keyId and secret fields are required.`
     );
   }
   return {
@@ -30995,18 +30995,18 @@ var IawmClient = class {
   }
   config;
   /**
-   * Appelle une route GET de l'adaptateur.
+   * Calls a GET route on the adapter.
    *
-   * @param path Chemin relatif au namespace, ex. "/status".
+   * @param path Path relative to the namespace, e.g. "/status".
    */
   async get(path) {
     return this.request("GET", path);
   }
   /**
-   * Appelle une route POST de l'adaptateur avec un corps JSON.
+   * Calls a POST route on the adapter with a JSON body.
    *
-   * @param path    Chemin relatif au namespace, ex. "/content/list".
-   * @param payload Objet sérialisé en JSON et signé.
+   * @param path    Path relative to the namespace, e.g. "/content/list".
+   * @param payload Object serialized to JSON and signed.
    */
   async post(path, payload) {
     return this.request("POST", path, payload);
@@ -31022,7 +31022,7 @@ var IawmClient = class {
       method.toUpperCase(),
       route,
       "",
-      // query canonique vide : tous les paramètres passent par le corps
+      // empty canonical query: all parameters go through the body
       timestamp,
       nonce,
       createHash("sha256").update(body).digest("hex")
@@ -31050,7 +31050,7 @@ var IawmClient = class {
       response = await fetch(url2, init);
     } catch (err) {
       throw new Error(
-        `\xC9chec de la connexion \xE0 ${url2} : ${err.message}`
+        `Failed to connect to ${url2}: ${err.message}`
       );
     }
     const text2 = await response.text();
@@ -31089,23 +31089,23 @@ var DiviBlock = {
   Slide: "divi/slide",
   ContactForm: "divi/contact-form",
   ContactField: "divi/contact-field",
-  // Modules prioritaires Phase 3.5 (page de référence n°53).
+  // Phase 3.5 priority modules (reference page #53).
   Divider: "divi/divider",
   Icon: "divi/icon",
   Toggle: "divi/toggle",
-  // ⚠️ Convention : tables (pluriel) + table (singulier).
+  // Warning: convention is tables (plural) + table (singular).
   PricingTables: "divi/pricing-tables",
   PricingTable: "divi/pricing-table",
   IconList: "divi/icon-list",
   IconListItem: "divi/icon-list-item",
-  // ⚠️ Convention : -network et pas -item.
+  // Warning: convention is -network and not -item.
   SocialMediaFollow: "divi/social-media-follow",
   SocialMediaFollowNetwork: "divi/social-media-follow-network",
   TeamMember: "divi/team-member",
   Signup: "divi/signup",
   Map: "divi/map",
   CircleCounter: "divi/circle-counter",
-  // ⚠️ blockName = divi/counters (pas divi/bar-counters).
+  // Warning: blockName = divi/counters (not divi/bar-counters).
   Counters: "divi/counters",
   Counter: "divi/counter",
   Audio: "divi/audio",
@@ -32059,9 +32059,9 @@ function escapeHtml6(s) {
 
 // src/divi/patterns/contact-section.ts
 var DEFAULT_FIELDS = [
-  { id: "Name", label: "Nom", type: "input", fullwidth: false },
-  { id: "Email", label: "Adresse email", type: "email", fullwidth: false },
-  { id: "Message", label: "Votre message", type: "text", fullwidth: true }
+  { id: "Name", label: "Name", type: "input", fullwidth: false },
+  { id: "Email", label: "Email address", type: "email", fullwidth: false },
+  { id: "Message", label: "Your message", type: "text", fullwidth: true }
 ];
 function contactSection(options) {
   const rows = [];
@@ -32385,7 +32385,7 @@ function composeModule(input) {
       return input.block;
     default: {
       const _exhaust = input;
-      throw new Error(`Module inconnu : ${JSON.stringify(_exhaust)}`);
+      throw new Error(`Unknown module: ${JSON.stringify(_exhaust)}`);
     }
   }
 }
@@ -32450,7 +32450,7 @@ function composeSection(input) {
       return footerStandard(input.options);
     default: {
       const _exhaust = input;
-      throw new Error(`Pattern inconnu : ${JSON.stringify(_exhaust)}`);
+      throw new Error(`Unknown pattern: ${JSON.stringify(_exhaust)}`);
     }
   }
 }
@@ -32476,28 +32476,31 @@ ${JSON.stringify(result.data, null, 2)}`
   };
 }
 var WRITE_STATUS = external_exports.enum(["draft", "publish", "pending", "private", "future"]);
+var LANGUAGE_HINT = external_exports.string().optional().describe(
+  "Optional BCP-47 language tag for the website content to generate (e.g. en-US, fr-FR, es-ES, de-DE, pt-BR, ja-JP). Hint only \u2014 defaults to the WordPress site locale. Affects the language of the produced page, NOT the tooling language."
+);
 function registerSystem(server, client) {
   server.registerTool(
     "iawm_ping",
     {
-      title: "Diagnostic public",
-      description: "V\xE9rifie que l'adaptateur est joignable et renvoie les versions de l'environnement (WordPress, PHP, Divi). Aucune authentification requise."
+      title: "Public diagnostics",
+      description: "Checks that the adapter is reachable and returns environment versions (WordPress, PHP, Divi). No authentication required."
     },
     async () => toToolResult("ping", await client.get("/ping"))
   );
   server.registerTool(
     "iawm_status",
     {
-      title: "\xC9tat authentifi\xE9",
-      description: "Diagnostic authentifi\xE9 : valide la connexion sign\xE9e HMAC et renvoie l'\xE9tat de l'adaptateur (identit\xE9 de la cl\xE9, kill switch, environnement)."
+      title: "Authenticated status",
+      description: "Authenticated diagnostics: validates the HMAC-signed connection and returns the adapter state (key identity, kill switch, environment)."
     },
     async () => toToolResult("status", await client.get("/status"))
   );
   server.registerTool(
     "iawm_audit",
     {
-      title: "Journal d'audit",
-      description: "Renvoie les derni\xE8res entr\xE9es du journal d'audit : chaque appel de l'API y est trac\xE9 (date, route, r\xE9sultat, identit\xE9, IP)."
+      title: "Audit log",
+      description: "Returns the latest entries in the audit log: every API call is recorded (timestamp, route, outcome, identity, IP)."
     },
     async () => toToolResult("audit", await client.get("/audit"))
   );
@@ -32506,14 +32509,14 @@ function registerContent(server, client) {
   server.registerTool(
     "iawm_content_list",
     {
-      title: "Lister le contenu",
-      description: "Liste les pages ou articles du site, avec pagination, recherche et filtre par statut.",
+      title: "List content",
+      description: "Lists pages or posts on the site, with pagination, search and status filter.",
       inputSchema: {
-        type: external_exports.enum(["post", "page"]).optional().describe("Type de contenu (d\xE9faut : post)"),
-        status: external_exports.string().optional().describe("Statuts inclus, s\xE9par\xE9s par des virgules (ex. publish,draft)"),
-        search: external_exports.string().optional().describe("Terme de recherche"),
-        per_page: external_exports.number().int().min(1).max(100).optional().describe("R\xE9sultats par page (d\xE9faut : 20)"),
-        page: external_exports.number().int().min(1).optional().describe("Num\xE9ro de page (d\xE9faut : 1)")
+        type: external_exports.enum(["post", "page"]).optional().describe("Content type (default: post)"),
+        status: external_exports.string().optional().describe("Statuses to include, comma-separated (e.g. publish,draft)"),
+        search: external_exports.string().optional().describe("Search term"),
+        per_page: external_exports.number().int().min(1).max(100).optional().describe("Results per page (default: 20)"),
+        page: external_exports.number().int().min(1).optional().describe("Page number (default: 1)")
       }
     },
     async (args) => toToolResult("content/list", await client.post("/content/list", args))
@@ -32521,10 +32524,10 @@ function registerContent(server, client) {
   server.registerTool(
     "iawm_content_get",
     {
-      title: "Lire un contenu",
-      description: "Renvoie le contenu d\xE9taill\xE9 d'une page ou d'un article : corps complet, m\xE9tadonn\xE9es, builder d\xE9tect\xE9.",
+      title: "Read a content item",
+      description: "Returns the detail of a page or post: full body, metadata, detected builder.",
       inputSchema: {
-        id: external_exports.number().int().describe("Identifiant du contenu")
+        id: external_exports.number().int().describe("Content id")
       }
     },
     async (args) => toToolResult("content/get", await client.post("/content/get", args))
@@ -32532,55 +32535,63 @@ function registerContent(server, client) {
   server.registerTool(
     "iawm_content_create",
     {
-      title: "Cr\xE9er un contenu",
-      description: "Cr\xE9e une page ou un article. Statut \xAB draft \xBB par d\xE9faut (publication explicite). Le balisage de blocs Gutenberg est normalis\xE9 sauf si raw_content=true. dry_run=true simule sans rien cr\xE9er.",
+      title: "Create a content item",
+      description: "Creates a page or a post. Status defaults to 'draft' (publishing is explicit). Gutenberg block markup is normalised unless raw_content=true. dry_run=true simulates without creating.",
       inputSchema: {
-        type: external_exports.enum(["post", "page"]).describe("Type de contenu \xE0 cr\xE9er"),
-        title: external_exports.string().optional().describe("Titre"),
-        content: external_exports.string().optional().describe("Contenu (HTML ou balisage de blocs Gutenberg)"),
-        status: WRITE_STATUS.optional().describe("Statut (d\xE9faut : draft)"),
+        type: external_exports.enum(["post", "page"]).describe("Content type to create"),
+        title: external_exports.string().optional().describe("Title"),
+        content: external_exports.string().optional().describe("Body (HTML or Gutenberg block markup)"),
+        status: WRITE_STATUS.optional().describe("Status (default: draft)"),
         slug: external_exports.string().optional(),
         excerpt: external_exports.string().optional(),
-        parent: external_exports.number().int().optional().describe("ID du contenu parent"),
+        parent: external_exports.number().int().optional().describe("Parent content id"),
         menu_order: external_exports.number().int().optional(),
-        template: external_exports.string().optional().describe("Slug de gabarit de page"),
-        raw_content: external_exports.boolean().optional().describe("True pour ne pas normaliser le contenu"),
-        dry_run: external_exports.boolean().optional().describe("True pour simuler sans rien cr\xE9er")
+        template: external_exports.string().optional().describe("Page template slug"),
+        language: LANGUAGE_HINT,
+        raw_content: external_exports.boolean().optional().describe("True to skip content normalisation"),
+        dry_run: external_exports.boolean().optional().describe("True to simulate without creating")
       }
     },
-    async (args) => toToolResult("content/create", await client.post("/content/create", args))
+    async (args) => {
+      const { language: _language, ...payload } = args;
+      return toToolResult("content/create", await client.post("/content/create", payload));
+    }
   );
   server.registerTool(
     "iawm_content_update",
     {
-      title: "Modifier un contenu",
-      description: "Modifie une page ou un article existant. Seuls les champs fournis sont chang\xE9s. dry_run=true pr\xE9visualise sans appliquer.",
+      title: "Update a content item",
+      description: "Updates an existing page or post. Only provided fields are changed. dry_run=true previews without applying.",
       inputSchema: {
-        id: external_exports.number().int().describe("Identifiant du contenu \xE0 modifier"),
+        id: external_exports.number().int().describe("Id of the content to update"),
         title: external_exports.string().optional(),
-        content: external_exports.string().optional().describe("Nouveau contenu (HTML ou blocs Gutenberg)"),
+        content: external_exports.string().optional().describe("New body (HTML or Gutenberg blocks)"),
         status: WRITE_STATUS.optional(),
         slug: external_exports.string().optional(),
         excerpt: external_exports.string().optional(),
         parent: external_exports.number().int().optional(),
         menu_order: external_exports.number().int().optional(),
         template: external_exports.string().optional(),
-        raw_content: external_exports.boolean().optional().describe("True pour ne pas normaliser le contenu"),
-        dry_run: external_exports.boolean().optional().describe("True pour pr\xE9visualiser sans appliquer")
+        language: LANGUAGE_HINT,
+        raw_content: external_exports.boolean().optional().describe("True to skip content normalisation"),
+        dry_run: external_exports.boolean().optional().describe("True to preview without applying")
       }
     },
-    async (args) => toToolResult("content/update", await client.post("/content/update", args))
+    async (args) => {
+      const { language: _language, ...payload } = args;
+      return toToolResult("content/update", await client.post("/content/update", payload));
+    }
   );
 }
 function registerMedia(server, client) {
   server.registerTool(
     "iawm_media_list",
     {
-      title: "Lister les m\xE9dias",
-      description: "Liste la m\xE9diath\xE8que, avec pagination, recherche et filtre par type MIME.",
+      title: "List media",
+      description: "Lists the media library, with pagination, search and MIME-type filter.",
       inputSchema: {
-        search: external_exports.string().optional().describe("Terme de recherche"),
-        mime_type: external_exports.string().optional().describe("Filtre par type MIME (ex. image)"),
+        search: external_exports.string().optional().describe("Search term"),
+        mime_type: external_exports.string().optional().describe("MIME-type filter (e.g. image)"),
         per_page: external_exports.number().int().min(1).max(100).optional(),
         page: external_exports.number().int().min(1).optional()
       }
@@ -32590,10 +32601,10 @@ function registerMedia(server, client) {
   server.registerTool(
     "iawm_media_get",
     {
-      title: "Lire un m\xE9dia",
-      description: "Renvoie le d\xE9tail d'un m\xE9dia : URL, type MIME, texte alternatif, dimensions.",
+      title: "Read a media item",
+      description: "Returns the detail of a media item: URL, MIME type, alternative text, dimensions.",
       inputSchema: {
-        id: external_exports.number().int().describe("Identifiant du m\xE9dia")
+        id: external_exports.number().int().describe("Media id")
       }
     },
     async (args) => toToolResult("media/get", await client.post("/media/get", args))
@@ -32601,15 +32612,15 @@ function registerMedia(server, client) {
   server.registerTool(
     "iawm_media_sideload",
     {
-      title: "Importer un m\xE9dia depuis une URL",
-      description: "T\xE9l\xE9charge un fichier depuis une URL et l'ajoute \xE0 la m\xE9diath\xE8que. dry_run=true simule sans rien importer.",
+      title: "Sideload a media item from a URL",
+      description: "Downloads a file from a URL and adds it to the media library. dry_run=true simulates without importing.",
       inputSchema: {
-        url: external_exports.string().describe("URL du fichier \xE0 importer"),
+        url: external_exports.string().describe("URL of the file to import"),
         title: external_exports.string().optional(),
-        alt: external_exports.string().optional().describe("Texte alternatif"),
-        caption: external_exports.string().optional().describe("L\xE9gende"),
+        alt: external_exports.string().optional().describe("Alternative text"),
+        caption: external_exports.string().optional().describe("Caption"),
         description: external_exports.string().optional(),
-        attached_to: external_exports.number().int().optional().describe("ID du contenu auquel rattacher le m\xE9dia"),
+        attached_to: external_exports.number().int().optional().describe("Id of the content to attach the media to"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32618,10 +32629,10 @@ function registerMedia(server, client) {
   server.registerTool(
     "iawm_media_update",
     {
-      title: "Modifier un m\xE9dia",
-      description: "Met \xE0 jour les m\xE9tadonn\xE9es d'un m\xE9dia (titre, texte alternatif, l\xE9gende, description).",
+      title: "Update a media item",
+      description: "Updates the metadata of a media item (title, alt text, caption, description).",
       inputSchema: {
-        id: external_exports.number().int().describe("Identifiant du m\xE9dia"),
+        id: external_exports.number().int().describe("Media id"),
         title: external_exports.string().optional(),
         alt: external_exports.string().optional(),
         caption: external_exports.string().optional(),
@@ -32636,10 +32647,10 @@ function registerTaxonomy(server, client) {
   server.registerTool(
     "iawm_taxonomy_list",
     {
-      title: "Lister les termes",
-      description: "Liste les termes d'une taxonomie (category, post_tag ou taxonomie personnalis\xE9e).",
+      title: "List terms",
+      description: "Lists the terms of a taxonomy (category, post_tag or a custom taxonomy).",
       inputSchema: {
-        taxonomy: external_exports.string().describe("Slug de la taxonomie (ex. category, post_tag)"),
+        taxonomy: external_exports.string().describe("Taxonomy slug (e.g. category, post_tag)"),
         search: external_exports.string().optional(),
         per_page: external_exports.number().int().min(1).max(200).optional(),
         page: external_exports.number().int().min(1).optional()
@@ -32650,14 +32661,14 @@ function registerTaxonomy(server, client) {
   server.registerTool(
     "iawm_taxonomy_create",
     {
-      title: "Cr\xE9er un terme",
-      description: "Cr\xE9e un terme (cat\xE9gorie, \xE9tiquette\u2026) dans une taxonomie.",
+      title: "Create a term",
+      description: "Creates a term (category, tag, \u2026) in a taxonomy.",
       inputSchema: {
-        taxonomy: external_exports.string().describe("Slug de la taxonomie"),
-        name: external_exports.string().describe("Nom du terme"),
+        taxonomy: external_exports.string().describe("Taxonomy slug"),
+        name: external_exports.string().describe("Term name"),
         slug: external_exports.string().optional(),
         description: external_exports.string().optional(),
-        parent: external_exports.number().int().optional().describe("ID du terme parent"),
+        parent: external_exports.number().int().optional().describe("Parent term id"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32666,13 +32677,13 @@ function registerTaxonomy(server, client) {
   server.registerTool(
     "iawm_taxonomy_assign",
     {
-      title: "Assigner des termes",
-      description: "Assigne des termes \xE0 un contenu. terms accepte des identifiants (recommand\xE9) ou des noms. append=true ajoute sans remplacer.",
+      title: "Assign terms",
+      description: "Assigns terms to a content item. `terms` accepts ids (recommended) or names. append=true adds without replacing.",
       inputSchema: {
-        id: external_exports.number().int().describe("Identifiant du contenu"),
-        taxonomy: external_exports.string().describe("Slug de la taxonomie"),
-        terms: external_exports.array(external_exports.union([external_exports.string(), external_exports.number()])).describe("Termes (identifiants ou noms)"),
-        append: external_exports.boolean().optional().describe("True pour ajouter aux termes existants"),
+        id: external_exports.number().int().describe("Content id"),
+        taxonomy: external_exports.string().describe("Taxonomy slug"),
+        terms: external_exports.array(external_exports.union([external_exports.string(), external_exports.number()])).describe("Terms (ids or names)"),
+        append: external_exports.boolean().optional().describe("True to add to existing terms"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32683,18 +32694,18 @@ function registerMenu(server, client) {
   server.registerTool(
     "iawm_menu_list",
     {
-      title: "Lister les menus",
-      description: "Liste les menus de navigation et les emplacements de menu du th\xE8me."
+      title: "List menus",
+      description: "Lists navigation menus and the theme's menu locations."
     },
     async () => toToolResult("menu/list", await client.post("/menu/list", {}))
   );
   server.registerTool(
     "iawm_menu_get",
     {
-      title: "Lire un menu",
-      description: "Renvoie un menu et ses \xE9l\xE9ments.",
+      title: "Read a menu",
+      description: "Returns a menu and its items.",
       inputSchema: {
-        id: external_exports.number().int().describe("Identifiant du menu")
+        id: external_exports.number().int().describe("Menu id")
       }
     },
     async (args) => toToolResult("menu/get", await client.post("/menu/get", args))
@@ -32702,10 +32713,10 @@ function registerMenu(server, client) {
   server.registerTool(
     "iawm_menu_create",
     {
-      title: "Cr\xE9er un menu",
-      description: "Cr\xE9e un menu de navigation.",
+      title: "Create a menu",
+      description: "Creates a navigation menu.",
       inputSchema: {
-        name: external_exports.string().describe("Nom du menu"),
+        name: external_exports.string().describe("Menu name"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32714,14 +32725,14 @@ function registerMenu(server, client) {
   server.registerTool(
     "iawm_menu_add_item",
     {
-      title: "Ajouter un \xE9l\xE9ment de menu",
-      description: "Ajoute un \xE9l\xE9ment \xE0 un menu. Fournir url pour un lien personnalis\xE9, ou object_id pour pointer vers une page ou un article.",
+      title: "Add a menu item",
+      description: "Adds an item to a menu. Provide `url` for a custom link, or `object_id` to point to a page or post.",
       inputSchema: {
-        menu_id: external_exports.number().int().describe("Identifiant du menu"),
-        title: external_exports.string().optional().describe("Libell\xE9 de l'\xE9l\xE9ment"),
-        url: external_exports.string().optional().describe("URL (pour un lien personnalis\xE9)"),
-        object_id: external_exports.number().int().optional().describe("ID d'une page/article (pour un lien interne)"),
-        parent_item: external_exports.number().int().optional().describe("ID de l'\xE9l\xE9ment parent"),
+        menu_id: external_exports.number().int().describe("Menu id"),
+        title: external_exports.string().optional().describe("Item label"),
+        url: external_exports.string().optional().describe("URL (for a custom link)"),
+        object_id: external_exports.number().int().optional().describe("Id of a page/post (for an internal link)"),
+        parent_item: external_exports.number().int().optional().describe("Parent item id"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32730,10 +32741,10 @@ function registerMenu(server, client) {
   server.registerTool(
     "iawm_menu_remove_item",
     {
-      title: "Retirer un \xE9l\xE9ment de menu",
-      description: "Supprime un \xE9l\xE9ment de menu.",
+      title: "Remove a menu item",
+      description: "Removes a menu item.",
       inputSchema: {
-        item_id: external_exports.number().int().describe("Identifiant de l'\xE9l\xE9ment de menu"),
+        item_id: external_exports.number().int().describe("Menu item id"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32742,11 +32753,11 @@ function registerMenu(server, client) {
   server.registerTool(
     "iawm_menu_assign_location",
     {
-      title: "Assigner un menu \xE0 un emplacement",
-      description: "Assigne un menu \xE0 un emplacement de menu du th\xE8me.",
+      title: "Assign a menu to a location",
+      description: "Assigns a menu to one of the theme's menu locations.",
       inputSchema: {
-        menu_id: external_exports.number().int().describe("Identifiant du menu"),
-        location: external_exports.string().describe("Slug de l'emplacement du th\xE8me"),
+        menu_id: external_exports.number().int().describe("Menu id"),
+        location: external_exports.string().describe("Theme location slug"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32757,34 +32768,34 @@ function registerDiagnostics(server, client) {
   server.registerTool(
     "iawm_diagnostics_system",
     {
-      title: "Diagnostic syst\xE8me",
-      description: "Versions (WordPress, PHP, MySQL), th\xE8me actif, \xE9tat du d\xE9bogage et limites PHP."
+      title: "System diagnostics",
+      description: "Versions (WordPress, PHP, MySQL), active theme, debug state and PHP limits."
     },
     async () => toToolResult("diagnostics/system", await client.post("/diagnostics/system", {}))
   );
   server.registerTool(
     "iawm_diagnostics_plugins",
     {
-      title: "\xC9tat des extensions",
-      description: "Liste les extensions install\xE9es : version, actif/inactif, mise \xE0 jour disponible."
+      title: "Plugin status",
+      description: "Lists installed plugins: version, active/inactive, available update."
     },
     async () => toToolResult("diagnostics/plugins", await client.post("/diagnostics/plugins", {}))
   );
   server.registerTool(
     "iawm_diagnostics_themes",
     {
-      title: "\xC9tat des th\xE8mes",
-      description: "Liste les th\xE8mes install\xE9s et indique celui qui est actif."
+      title: "Theme status",
+      description: "Lists installed themes and points out the active one."
     },
     async () => toToolResult("diagnostics/themes", await client.post("/diagnostics/themes", {}))
   );
   server.registerTool(
     "iawm_diagnostics_logs",
     {
-      title: "Lire le journal de d\xE9bogage",
-      description: "Renvoie les derni\xE8res lignes du debug.log de WordPress (s'il existe).",
+      title: "Read the debug log",
+      description: "Returns the last lines of the WordPress debug.log (if it exists).",
       inputSchema: {
-        lines: external_exports.number().int().min(1).max(1e3).optional().describe("Nombre de lignes (d\xE9faut : 100)")
+        lines: external_exports.number().int().min(1).max(1e3).optional().describe("Number of lines (default: 100)")
       }
     },
     async (args) => toToolResult("diagnostics/logs", await client.post("/diagnostics/logs", args))
@@ -32794,18 +32805,18 @@ function registerConfig(server, client) {
   server.registerTool(
     "iawm_config_settings_get",
     {
-      title: "Lire les r\xE9glages",
-      description: "Renvoie les r\xE9glages du site modifiables (titre, slogan, fuseau, lecture, permaliens\u2026)."
+      title: "Read site settings",
+      description: "Returns the mutable site settings (title, tagline, timezone, reading, permalinks, \u2026)."
     },
     async () => toToolResult("config/settings/get", await client.post("/config/settings/get", {}))
   );
   server.registerTool(
     "iawm_config_settings_update",
     {
-      title: "Modifier les r\xE9glages",
-      description: "Modifie des r\xE9glages du site. Seules les options d'une liste blanche sont accept\xE9es ; les autres sont rejet\xE9es. dry_run=true pr\xE9visualise.",
+      title: "Update site settings",
+      description: "Updates site settings. Only options on the allow-list are accepted; others are rejected. dry_run=true previews.",
       inputSchema: {
-        settings: external_exports.record(external_exports.string(), external_exports.unknown()).describe("Objet { cl\xE9: valeur } des r\xE9glages \xE0 modifier"),
+        settings: external_exports.record(external_exports.string(), external_exports.unknown()).describe("{ key: value } object of settings to update"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32814,8 +32825,8 @@ function registerConfig(server, client) {
   server.registerTool(
     "iawm_config_users_list",
     {
-      title: "Lister les utilisateurs",
-      description: "Liste les comptes utilisateurs (identifiant, e-mail, r\xF4les).",
+      title: "List users",
+      description: "Lists user accounts (login, e-mail, roles).",
       inputSchema: {
         search: external_exports.string().optional(),
         per_page: external_exports.number().int().min(1).max(100).optional(),
@@ -32827,13 +32838,13 @@ function registerConfig(server, client) {
   server.registerTool(
     "iawm_config_users_create",
     {
-      title: "Cr\xE9er un utilisateur",
-      description: "Cr\xE9e un compte utilisateur. R\xF4le \xAB subscriber \xBB par d\xE9faut. Sans mot de passe fourni, un mot de passe fort est g\xE9n\xE9r\xE9 et renvoy\xE9.",
+      title: "Create a user",
+      description: "Creates a user account. Defaults to the 'subscriber' role. With no password provided, a strong password is generated and returned.",
       inputSchema: {
-        login: external_exports.string().describe("Identifiant de connexion"),
-        email: external_exports.string().describe("Adresse e-mail"),
-        password: external_exports.string().optional().describe("Mot de passe (g\xE9n\xE9r\xE9 si absent)"),
-        role: external_exports.enum(["subscriber", "contributor", "author", "editor", "administrator"]).optional().describe("R\xF4le (d\xE9faut : subscriber)"),
+        login: external_exports.string().describe("Login name"),
+        email: external_exports.string().describe("E-mail address"),
+        password: external_exports.string().optional().describe("Password (generated if absent)"),
+        role: external_exports.enum(["subscriber", "contributor", "author", "editor", "administrator"]).optional().describe("Role (default: subscriber)"),
         display_name: external_exports.string().optional(),
         dry_run: external_exports.boolean().optional()
       }
@@ -32843,10 +32854,10 @@ function registerConfig(server, client) {
   server.registerTool(
     "iawm_config_users_update",
     {
-      title: "Modifier un utilisateur",
-      description: "Modifie un utilisateur (e-mail, nom affich\xE9, r\xF4le). L'utilisateur sous lequel l'agent op\xE8re ne peut pas \xEAtre modifi\xE9.",
+      title: "Update a user",
+      description: "Updates a user (e-mail, display name, role). The user under which the agent operates cannot be modified.",
       inputSchema: {
-        id: external_exports.number().int().describe("Identifiant de l'utilisateur"),
+        id: external_exports.number().int().describe("User id"),
         email: external_exports.string().optional(),
         display_name: external_exports.string().optional(),
         role: external_exports.enum(["subscriber", "contributor", "author", "editor", "administrator"]).optional(),
@@ -32860,10 +32871,10 @@ function registerPlugins(server, client) {
   server.registerTool(
     "iawm_plugins_info",
     {
-      title: "Informations sur un plugin WP.org",
-      description: "R\xE9cup\xE8re les m\xE9tadonn\xE9es d'un plugin du d\xE9p\xF4t WordPress.org \xE0 partir de son slug (version, auteur, compatibilit\xE9, derni\xE8re mise \xE0 jour).",
+      title: "Info on a WP.org plugin",
+      description: "Fetches metadata of a plugin from the WordPress.org repository from its slug (version, author, compatibility, last update).",
       inputSchema: {
-        slug: external_exports.string().describe("Slug WordPress.org (ex. rank-math-seo)")
+        slug: external_exports.string().describe("WordPress.org slug (e.g. rank-math-seo)")
       }
     },
     async (args) => toToolResult("plugins/info", await client.post("/plugins/info", args))
@@ -32871,11 +32882,11 @@ function registerPlugins(server, client) {
   server.registerTool(
     "iawm_plugins_install",
     {
-      title: "Installer un plugin",
-      description: "Installe un plugin depuis le d\xE9p\xF4t WordPress.org. Avec activate=true, l'active dans la foul\xE9e. Renvoie le chemin du fichier-plugin install\xE9.",
+      title: "Install a plugin",
+      description: "Installs a plugin from the WordPress.org repository. With activate=true, activates it right after. Returns the path to the installed plugin file.",
       inputSchema: {
-        slug: external_exports.string().describe("Slug WordPress.org du plugin \xE0 installer"),
-        activate: external_exports.boolean().optional().describe("Activer imm\xE9diatement apr\xE8s installation (d\xE9faut false)")
+        slug: external_exports.string().describe("WordPress.org slug of the plugin to install"),
+        activate: external_exports.boolean().optional().describe("Activate immediately after install (default false)")
       }
     },
     async (args) => toToolResult("plugins/install", await client.post("/plugins/install", args))
@@ -32883,10 +32894,10 @@ function registerPlugins(server, client) {
   server.registerTool(
     "iawm_plugins_activate",
     {
-      title: "Activer un plugin",
-      description: "Active un plugin d\xE9j\xE0 install\xE9. Le file est le chemin renvoy\xE9 par diagnostics/plugins (ex. rank-math-seo/rank-math.php).",
+      title: "Activate a plugin",
+      description: "Activates an already-installed plugin. `file` is the path returned by diagnostics/plugins (e.g. rank-math-seo/rank-math.php).",
       inputSchema: {
-        file: external_exports.string().describe("Fichier-plugin (ex. rank-math-seo/rank-math.php)")
+        file: external_exports.string().describe("Plugin file (e.g. rank-math-seo/rank-math.php)")
       }
     },
     async (args) => toToolResult("plugins/activate", await client.post("/plugins/activate", args))
@@ -32894,10 +32905,10 @@ function registerPlugins(server, client) {
   server.registerTool(
     "iawm_plugins_deactivate",
     {
-      title: "D\xE9sactiver un plugin",
-      description: "D\xE9sactive un plugin. Le plugin IA Webmaster Bridge ne peut pas \xEAtre d\xE9sactiv\xE9 via l'API (garde-fou).",
+      title: "Deactivate a plugin",
+      description: "Deactivates a plugin. The IA Webmaster Bridge plugin itself cannot be deactivated via the API (guardrail).",
       inputSchema: {
-        file: external_exports.string().describe("Fichier-plugin \xE0 d\xE9sactiver")
+        file: external_exports.string().describe("Plugin file to deactivate")
       }
     },
     async (args) => toToolResult("plugins/deactivate", await client.post("/plugins/deactivate", args))
@@ -32907,18 +32918,18 @@ function registerSeo(server, client) {
   server.registerTool(
     "iawm_seo_status",
     {
-      title: "\xC9tat du backend SEO",
-      description: "Indique quel plugin SEO est actif sur le site (Rank Math prioritaire, Yoast secondaire) et la liste des champs support\xE9s par l'API."
+      title: "SEO backend status",
+      description: "Indicates which SEO plugin is active on the site (Rank Math first, Yoast second) and the list of fields supported by the API."
     },
     async () => toToolResult("seo/status", await client.post("/seo/status", {}))
   );
   server.registerTool(
     "iawm_seo_page_get",
     {
-      title: "Lire le SEO d'une page",
-      description: "Renvoie les m\xE9ta-donn\xE9es SEO d'un post : meta_title, meta_description, focus_keyword, canonical_url, robots, Open Graph, Twitter.",
+      title: "Read a page's SEO",
+      description: "Returns the SEO metadata of a post: meta_title, meta_description, focus_keyword, canonical_url, robots, Open Graph, Twitter.",
       inputSchema: {
-        post_id: external_exports.number().int().describe("Identifiant du post/page")
+        post_id: external_exports.number().int().describe("Post/page id")
       }
     },
     async (args) => toToolResult("seo/page/get", await client.post("/seo/page/get", args))
@@ -32926,11 +32937,11 @@ function registerSeo(server, client) {
   server.registerTool(
     "iawm_seo_page_update",
     {
-      title: "Modifier le SEO d'une page",
-      description: "Met \xE0 jour les m\xE9ta-donn\xE9es SEO d'un post. Les noms de champs sont normalis\xE9s (ind\xE9pendants du backend) : meta_title, meta_description, focus_keyword, canonical_url, robots_noindex, robots_nofollow, og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id. dry_run=true pr\xE9visualise.",
+      title: "Update a page's SEO",
+      description: "Updates the SEO metadata of a post. Field names are normalised (backend-independent): meta_title, meta_description, focus_keyword, canonical_url, robots_noindex, robots_nofollow, og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id. dry_run=true previews.",
       inputSchema: {
-        post_id: external_exports.number().int().describe("Identifiant du post/page"),
-        fields: external_exports.record(external_exports.string(), external_exports.unknown()).describe('Champs \xE0 mettre \xE0 jour. Mettre null/"" pour supprimer un champ.'),
+        post_id: external_exports.number().int().describe("Post/page id"),
+        fields: external_exports.record(external_exports.string(), external_exports.unknown()).describe('Fields to update. Use null/"" to clear a field.'),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -32941,19 +32952,19 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_status",
     {
-      title: "\xC9tat de Divi 5",
-      description: "Indique si Divi 5 est actif sur le site, sa version, le th\xE8me courant, et la capacit\xE9 de parser des layouts au format Gutenberg."
+      title: "Divi 5 status",
+      description: "Indicates whether Divi 5 is active on the site, its version, the current theme, and the ability to parse Gutenberg-format layouts."
     },
     async () => toToolResult("divi/status", await client.post("/divi/status", {}))
   );
   server.registerTool(
     "iawm_divi_page_read",
     {
-      title: "Lire une page Divi 5",
-      description: "Lit une page Divi 5 et projette son contenu en arbre structur\xE9 (sections > rows > columns > modules) avec attributs normalis\xE9s. Trois modes : tree (d\xE9faut, hi\xE9rarchique), flat (liste lin\xE9aire avec chemins), raw (parse_blocks brut). Renvoie \xE9galement des statistiques (nb de sections, comptage par type de bloc).",
+      title: "Read a Divi 5 page",
+      description: "Reads a Divi 5 page and projects its content as a structured tree (sections > rows > columns > modules) with normalised attributes. Three modes: tree (default, hierarchical), flat (linear list with paths), raw (raw parse_blocks). Also returns stats (section count, count by block type).",
       inputSchema: {
-        post_id: external_exports.number().int().describe("Identifiant du post/page"),
-        mode: external_exports.enum(["tree", "flat", "raw"]).optional().describe("Format de sortie : tree (d\xE9faut) | flat | raw")
+        post_id: external_exports.number().int().describe("Post/page id"),
+        mode: external_exports.enum(["tree", "flat", "raw"]).optional().describe("Output format: tree (default) | flat | raw")
       }
     },
     async (args) => toToolResult("divi/page/read", await client.post("/divi/page/read", args))
@@ -32961,11 +32972,11 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_library_list",
     {
-      title: "Lister la biblioth\xE8que Divi",
-      description: "Liste les \xE9l\xE9ments disponibles dans la biblioth\xE8que Divi locale (et Cloud si connect\xE9) : layouts, sections, rows ou modules. Renvoie categories, packs, tags et items.",
+      title: "List the Divi library",
+      description: "Lists items available in the local Divi library (and Cloud if connected): layouts, sections, rows or modules. Returns categories, packs, tags and items.",
       inputSchema: {
-        type: external_exports.enum(["layout", "section", "row", "module"]).optional().describe("Type d'\xE9l\xE9ments \xE0 lister (d\xE9faut : layout)"),
-        exclude: external_exports.array(external_exports.string()).optional().describe("IDs \xE0 exclure")
+        type: external_exports.enum(["layout", "section", "row", "module"]).optional().describe("Item type to list (default: layout)"),
+        exclude: external_exports.array(external_exports.string()).optional().describe("Ids to exclude")
       }
     },
     async (args) => toToolResult("divi/library/list", await client.post("/divi/library/list", args))
@@ -32973,11 +32984,11 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_library_local",
     {
-      title: "Lister les layouts Divi sauvegard\xE9s localement",
-      description: "Liste les layouts Divi 5 sauvegard\xE9s dans la biblioth\xE8que locale (post_type et_pb_layout). Workflow hybride : quand l'utilisateur trouve un layout Divi Cloud int\xE9ressant dans le builder visuel, il clique 'Save to Library' \u2014 le layout devient accessible \xE0 l'API. Filtrage par cat\xE9gorie/recherche, indique si chaque layout est au format Divi 5.",
+      title: "List locally-saved Divi layouts",
+      description: "Lists Divi 5 layouts saved in the local library (post_type et_pb_layout). Hybrid workflow: when the user finds an interesting Divi Cloud layout in the visual builder, they click 'Save to Library' \u2014 the layout becomes accessible to the API. Filters by category/search, indicates whether each layout is in Divi 5 format.",
       inputSchema: {
-        search: external_exports.string().optional().describe("Recherche dans le titre"),
-        category: external_exports.string().optional().describe("Slug de cat\xE9gorie layout"),
+        search: external_exports.string().optional().describe("Title search"),
+        category: external_exports.string().optional().describe("Layout category slug"),
         per_page: external_exports.number().int().min(1).max(100).optional(),
         page: external_exports.number().int().min(1).optional()
       }
@@ -32987,13 +32998,13 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_library_item",
     {
-      title: "R\xE9cup\xE9rer un item de la biblioth\xE8que Divi",
-      description: "R\xE9cup\xE8re le contenu complet d'un item de la biblioth\xE8que Divi (layout, section, row, module) : balisage pr\xEAt \xE0 l'emploi + global colors + global variables du site.",
+      title: "Fetch a Divi library item",
+      description: "Fetches the full content of a Divi library item (layout, section, row, module): ready-to-use markup + site global colors + global variables.",
       inputSchema: {
-        id: external_exports.union([external_exports.number(), external_exports.string()]).describe("Identifiant de l'item"),
-        library_type: external_exports.string().optional().describe("Type (d\xE9faut : layout)"),
-        built_for: external_exports.string().optional().describe("Pour quel post type (d\xE9faut : page)"),
-        content_type: external_exports.string().optional().describe("Type de contenu (d\xE9faut : layout)")
+        id: external_exports.union([external_exports.number(), external_exports.string()]).describe("Item id"),
+        library_type: external_exports.string().optional().describe("Type (default: layout)"),
+        built_for: external_exports.string().optional().describe("Target post type (default: page)"),
+        content_type: external_exports.string().optional().describe("Content type (default: layout)")
       }
     },
     async (args) => toToolResult("divi/library/item", await client.post("/divi/library/item", args))
@@ -33001,24 +33012,24 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_cloud_status",
     {
-      title: "\xC9tat Divi Cloud",
-      description: "\xC9tat de la connexion \xE0 Divi Cloud : licence Elegant Themes pr\xE9sente, identifiant du compte, pr\xE9sence d'un cloudToken (sans exposer sa valeur)."
+      title: "Divi Cloud status",
+      description: "Status of the Divi Cloud connection: Elegant Themes license present, account id, presence of a cloudToken (without exposing its value)."
     },
     async () => toToolResult("divi/cloud/status", await client.post("/divi/cloud/status", {}))
   );
   server.registerTool(
     "iawm_divi_global_data",
     {
-      title: "Design system Divi (global data)",
-      description: "R\xE9cup\xE8re le design system Divi du site : global colors (gcid-*), global variables (variables CSS), global fonts. \xC0 utiliser AVANT de g\xE9n\xE9rer un layout pour r\xE9f\xE9rencer les couleurs/fontes globales."
+      title: "Divi design system (global data)",
+      description: "Fetches the site's Divi design system: global colors (gcid-*), global variables (CSS variables), global fonts. Call this BEFORE generating a layout to reference global colors/fonts."
     },
     async () => toToolResult("divi/global-data", await client.post("/divi/global-data", {}))
   );
   server.registerTool(
     "iawm_divi_theme_builder_list",
     {
-      title: "Lister les templates du Theme Builder",
-      description: "Liste les templates Theme Builder Divi (header/footer/body assign\xE9s \xE0 des conditions). Enrichi avec le titre des layouts physiques li\xE9s. live=true (d\xE9faut) = templates publi\xE9s.",
+      title: "List Theme Builder templates",
+      description: "Lists Divi Theme Builder templates (header/footer/body assigned to conditions). Enriched with the titles of the linked physical layouts. live=true (default) = published templates.",
       inputSchema: {
         live: external_exports.boolean().optional()
       }
@@ -33028,13 +33039,13 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_theme_builder_layout_create",
     {
-      title: "Cr\xE9er un layout Theme Builder (header/body/footer)",
-      description: "Cr\xE9e un layout physique (et_header_layout / et_body_layout / et_footer_layout) avec son contenu Divi 5. Accepte content (cha\xEEne s\xE9rialis\xE9e) OU blocks (tableau parse_blocks). Renvoie l'id, \xE0 utiliser ensuite dans theme_builder_template_update.",
+      title: "Create a Theme Builder layout (header/body/footer)",
+      description: "Creates a physical layout (et_header_layout / et_body_layout / et_footer_layout) with its Divi 5 content. Accepts `content` (serialised string) OR `blocks` (parse_blocks array). Returns the id, to be used afterwards in theme_builder_template_update.",
       inputSchema: {
-        zone: external_exports.enum(["header", "body", "footer"]).describe("Zone du layout"),
+        zone: external_exports.enum(["header", "body", "footer"]).describe("Layout zone"),
         title: external_exports.string().optional(),
-        content: external_exports.string().optional().describe("post_content s\xE9rialis\xE9 (alternative \xE0 blocks)"),
-        blocks: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional().describe("Tableau de blocs parse_blocks")
+        content: external_exports.string().optional().describe("Serialised post_content (alternative to blocks)"),
+        blocks: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional().describe("Array of parse_blocks blocks")
       }
     },
     async (args) => toToolResult("divi/theme-builder/layout/create", await client.post("/divi/theme-builder/layout/create", args))
@@ -33042,8 +33053,8 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_theme_builder_layout_read",
     {
-      title: "Lire un layout Theme Builder",
-      description: "Lit le contenu d'un layout Theme Builder (header/body/footer) en arbre Divi structur\xE9, identique \xE0 iawm_divi_page_read mais validant le post_type.",
+      title: "Read a Theme Builder layout",
+      description: "Reads the content of a Theme Builder layout (header/body/footer) as a structured Divi tree, identical to iawm_divi_page_read but validating the post_type.",
       inputSchema: {
         post_id: external_exports.number().int(),
         mode: external_exports.enum(["tree", "flat", "raw"]).optional()
@@ -33054,14 +33065,14 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_theme_builder_setup_site_defaults",
     {
-      title: "Configurer header/footer du site en une fois",
-      description: "Wrapper haut-niveau : cr\xE9e le conteneur Theme Builder + un template par d\xE9faut avec header/body/footer (selon ce qui est fourni) et l'assigne comme default du site (s'applique \xE0 tout post/page sans override). Refuse si un template default existe d\xE9j\xE0 sauf replace_existing=true. Chaque zone est un objet {title?, content? | blocks?}.",
+      title: "Set up site header/footer in one call",
+      description: "High-level wrapper: creates the Theme Builder container + a default template with header/body/footer (when provided) and assigns it as the site default (applies to any post/page without override). Refuses if a default template already exists unless replace_existing=true. Each zone is an object {title?, content? | blocks?}.",
       inputSchema: {
-        title: external_exports.string().optional().describe("Titre du template (d\xE9faut : Default Site Template)"),
+        title: external_exports.string().optional().describe("Template title (default: Default Site Template)"),
         header: external_exports.record(external_exports.string(), external_exports.unknown()).optional().describe("{title?, content?, blocks?}"),
         body: external_exports.record(external_exports.string(), external_exports.unknown()).optional(),
         footer: external_exports.record(external_exports.string(), external_exports.unknown()).optional(),
-        assign_default: external_exports.boolean().optional().describe("Marquer comme default du site (d\xE9faut true)"),
+        assign_default: external_exports.boolean().optional().describe("Mark as site default (default true)"),
         replace_existing: external_exports.boolean().optional()
       }
     },
@@ -33070,8 +33081,8 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_theme_builder_template_assign",
     {
-      title: "Assigner un template Theme Builder \xE0 des conditions",
-      description: "Pose les conditions use_on (o\xF9 le template s'applique) et exclude_from (exceptions). Exemples : 'default', 'singular:page', 'singular:post', 'page:123', 'archive:category'.",
+      title: "Assign a Theme Builder template to conditions",
+      description: "Sets the use_on (where the template applies) and exclude_from (exceptions) conditions. Examples: 'default', 'singular:page', 'singular:post', 'page:123', 'archive:category'.",
       inputSchema: {
         template_id: external_exports.number().int(),
         use_on: external_exports.array(external_exports.string()).optional(),
@@ -33084,8 +33095,8 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_theme_builder_template_delete",
     {
-      title: "Supprimer un template Theme Builder",
-      description: "Supprime un template (ne supprime PAS les layouts physiques associ\xE9s \u2014 utiliser content/get + delete sur les ids pour \xE7a).",
+      title: "Delete a Theme Builder template",
+      description: "Deletes a template (does NOT delete the linked physical layouts \u2014 use content/get + delete on the ids for that).",
       inputSchema: {
         template_id: external_exports.number().int(),
         live: external_exports.boolean().optional()
@@ -33096,11 +33107,12 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_page_compose",
     {
-      title: "Composer et \xE9crire une page Divi 5 (recommand\xE9)",
-      description: "VOIE PRINCIPALE pour g\xE9n\xE9rer une page Divi 5 : prend un tableau `sections` o\xF9 chaque section peut \xEAtre (1) un PATTERN param\xE9tr\xE9 { pattern: 'hero' | 'features3col' | 'ctaBanner' | 'imageTextSplit' | 'testimonials' | 'faqAccordion' | 'numbersBar' | 'videoSection' | 'contactSection' | 'pricing3col' | 'teamGrid' | 'headerSimple' | 'footerStandard', options: {...} }, OU (2) une SECTION FREE-FORM { section: { background?, spacing?, rows: [{ structure: '1_2,1_2', wrapMobile?: true, columns: [[{module:'text', html:'...'}, ...], ...] }] } }, OU (3) un BLOC BRUT { block: <GutenbergBlock JSON> }. Modules support\xE9s en free-form : text, blurb, cta, image, button, heading, number-counter, circle-counter, testimonial, team-member, gallery, video, audio, code, divider, icon, toggle, signup, map, menu, fullwidth-menu, search, breadcrumbs, post-title, post-content, post-navigation, comments, accordion, tabs, slider, contact-form, pricing-tables, icon-list, social-media-follow, counters. Le composeur assemble tout et \xE9crit via divi/page/write. JAMAIS utiliser de script interm\xE9diaire \u2014 appeler cet outil directement.",
+      title: "Compose and write a Divi 5 page (recommended)",
+      description: "PRIMARY ENTRY POINT to generate a Divi 5 page: takes a `sections` array where each section is either (1) a parametric PATTERN { pattern: 'hero' | 'features3col' | 'ctaBanner' | 'imageTextSplit' | 'testimonials' | 'faqAccordion' | 'numbersBar' | 'videoSection' | 'contactSection' | 'pricing3col' | 'teamGrid' | 'headerSimple' | 'footerStandard', options: {...} }, OR (2) a FREE-FORM SECTION { section: { background?, spacing?, rows: [{ structure: '1_2,1_2', wrapMobile?: true, columns: [[{module:'text', html:'...'}, ...], ...] }] } }, OR (3) a RAW BLOCK { block: <GutenbergBlock JSON> }. Free-form module names supported: text, blurb, cta, image, button, heading, number-counter, circle-counter, testimonial, team-member, gallery, video, audio, code, divider, icon, toggle, signup, map, menu, fullwidth-menu, search, breadcrumbs, post-title, post-content, post-navigation, comments, accordion, tabs, slider, contact-form, pricing-tables, icon-list, social-media-follow, counters. The composer assembles everything and writes via divi/page/write. NEVER use an intermediate script \u2014 call this tool directly.",
       inputSchema: {
-        post_id: external_exports.number().int().describe("Identifiant de la page cible"),
-        sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).describe("Tableau de sections (mix patterns / free-form / blocks)"),
+        post_id: external_exports.number().int().describe("Target page id"),
+        sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).describe("Sections array (mix of patterns / free-form / blocks)"),
+        language: LANGUAGE_HINT,
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -33125,13 +33137,14 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_theme_builder_compose",
     {
-      title: "Composer et appliquer un Theme Builder (recommand\xE9)",
-      description: "VOIE PRINCIPALE pour g\xE9n\xE9rer un Theme Builder : prend `header_sections`, `body_sections` et/ou `footer_sections` (tableau de SectionInput, m\xEAme grammaire que iawm_divi_page_compose : patterns, free-form ou blocks). Compose chaque zone et appelle theme-builder/setup-site-defaults. assign_default=true par d\xE9faut (template global). replace_existing=true pour \xE9craser un template default existant.",
+      title: "Compose and apply a Theme Builder template (recommended)",
+      description: "PRIMARY ENTRY POINT to generate a Theme Builder: takes `header_sections`, `body_sections` and/or `footer_sections` (arrays of SectionInput, same grammar as iawm_divi_page_compose: patterns, free-form or blocks). Composes each zone and calls theme-builder/setup-site-defaults. assign_default=true by default (global template). replace_existing=true to overwrite an existing default template.",
       inputSchema: {
-        title: external_exports.string().optional().describe("Titre du template (d\xE9faut : Default Site Template)"),
+        title: external_exports.string().optional().describe("Template title (default: Default Site Template)"),
         header_sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional(),
         body_sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional(),
         footer_sections: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional(),
+        language: LANGUAGE_HINT,
         assign_default: external_exports.boolean().optional(),
         replace_existing: external_exports.boolean().optional()
       }
@@ -33164,12 +33177,12 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_page_write",
     {
-      title: "\xC9crire un layout Divi 5",
-      description: "\xC9crit un layout Divi 5 dans un post. Deux formats accept\xE9s : content (cha\xEEne post_content d\xE9j\xE0 s\xE9rialis\xE9e avec les commentaires wp:divi/*) OU blocks (tableau de blocs au format parse_blocks). Si le wrapper racine wp:divi/placeholder manque, il est ajout\xE9 automatiquement. La meta _et_pb_use_builder est pos\xE9e si absente. dry_run=true pr\xE9visualise sans \xE9crire.",
+      title: "Write a Divi 5 layout",
+      description: "Writes a Divi 5 layout into a post. Two accepted formats: `content` (post_content string already serialised with the wp:divi/* comments) OR `blocks` (array of blocks in parse_blocks format). If the root wp:divi/placeholder wrapper is missing, it is added automatically. The `_et_pb_use_builder` meta is set when absent. dry_run=true previews without writing.",
       inputSchema: {
-        post_id: external_exports.number().int().describe("Identifiant du post/page cible"),
-        content: external_exports.string().optional().describe("Post_content d\xE9j\xE0 s\xE9rialis\xE9 (cha\xEEne avec commentaires wp:divi/*)"),
-        blocks: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional().describe("Tableau de blocs au format parse_blocks (alternatif \xE0 content)"),
+        post_id: external_exports.number().int().describe("Target post/page id"),
+        content: external_exports.string().optional().describe("Already-serialised post_content (string with wp:divi/* comments)"),
+        blocks: external_exports.array(external_exports.record(external_exports.string(), external_exports.unknown())).optional().describe("Array of blocks in parse_blocks format (alternative to content)"),
         dry_run: external_exports.boolean().optional()
       }
     },
@@ -33200,11 +33213,11 @@ async function main() {
   registerTools(server, client);
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  process.stderr.write("[iawm-mcp-gateway] pont MCP d\xE9marr\xE9.\n");
+  process.stderr.write("[iawm-mcp-gateway] MCP gateway started.\n");
 }
 main().catch((err) => {
   process.stderr.write(
-    `[iawm-mcp-gateway] erreur fatale : ${err.message}
+    `[iawm-mcp-gateway] fatal error: ${err.message}
 `
   );
   process.exit(1);

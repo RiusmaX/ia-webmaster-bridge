@@ -1,10 +1,10 @@
 /**
- * Pattern Team Grid — grille de membres d'équipe.
+ * Team Grid pattern — grid of team members.
  *
- * Structure :
+ * Structure:
  *   Section
- *     Row 4_4 (titre + sous-titre)
- *     Row (1/2/3/4 colonnes selon nb d'items)
+ *     Row 4_4 (title + subtitle)
+ *     Row (1/2/3/4 columns depending on item count)
  *       Column × N
  *         TeamMember
  */
@@ -17,7 +17,7 @@ export interface TeamGridOptions {
   sectionTitle?: string;
   sectionSubtitle?: string;
   members: TeamMemberOptions[];
-  /** Nombre de colonnes (1, 2, 3 ou 4). Défaut : auto selon members.length. */
+  /** Number of columns (1, 2, 3 or 4). Default: auto based on members.length. */
   columnsCount?: 1 | 2 | 3 | 4;
   backgroundColor?: DiviColor;
 }
@@ -55,12 +55,12 @@ export function teamGrid(options: TeamGridOptions): GutenbergBlock {
     );
   }
 
-  // Auto columns : 1 → 1col, 2 → 2col, 3 → 3col, 4+ → 4col (avec wrap).
+  // Auto columns: 1 → 1col, 2 → 2col, 3 → 3col, 4+ → 4col (with wrap).
   const explicitCount = options.columnsCount;
   const count = explicitCount ?? (Math.min(4, Math.max(1, options.members.length)) as 1 | 2 | 3 | 4);
   const { structure, colType } = COLUMN_STRUCTURES[count];
 
-  // Découpage en groupes de `count` items par row.
+  // Split into groups of `count` items per row.
   for (let i = 0; i < options.members.length; i += count) {
     const group = options.members.slice(i, i + count);
     rows.push(

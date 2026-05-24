@@ -1,95 +1,95 @@
-# Architecture technique
+# Technical architecture
 
-> Statut : En conception · Dernière mise à jour : 2026-05-21
+> Status: Under design · Last updated: 2026-05-21
 
-## Vue d'ensemble
+## Overview
 
-Le système relie **Claude Code** (le cerveau et le runtime de l'agent, sur la
-machine de l'utilisateur) à un **site WordPress 7.0** (la cible). Claude Code
-n'a pas besoin d'un orchestrateur séparé : il EST l'agent.
+The system connects **Claude Code** (the agent's brain and runtime, on the
+user's machine) to a **WordPress 7.0 site** (the target). Claude Code does not
+need a separate orchestrator: it IS the agent.
 
 ```
    Claude Code
         |
-        |  protocole MCP (stdio)
+        |  MCP protocol (stdio)
         v
-   Pont MCP local            <-- notre code (Node.js / TypeScript)
+   Local MCP bridge          <-- our code (Node.js / TypeScript)
         |
-        |  HTTPS — API REST custom + requêtes signées (HMAC)
+        |  HTTPS — custom REST API + signed requests (HMAC)
         v
-   Plugin "IA Webmaster Bridge"   <-- notre code (PHP, installé sur le site)
+   "IA Webmaster Bridge" plugin   <-- our code (PHP, installed on the site)
         |
-        +-- Plan contenu        (pages, articles, medias, menus, blocs)
-        +-- Plan Divi 5         (generation de layouts)
-        +-- Plan configuration  (reglages, theme, utilisateurs)
-        +-- Plan infrastructure (extensions, base de donnees, sauvegardes)
+        +-- Content plane         (pages, posts, media, menus, blocks)
+        +-- Divi 5 plane          (layout generation)
+        +-- Configuration plane   (settings, theme, users)
+        +-- Infrastructure plane  (plugins, database, backups)
         |
         v
    WordPress 7.0 + Divi 5
 ```
 
-## Composants à construire
+## Components to build
 
-### 1. Plugin « IA Webmaster Bridge » (PHP)
+### 1. "IA Webmaster Bridge" plugin (PHP)
 
-Installé sur le site cible. Expose une **API REST custom** sous le namespace
-`ia-webmaster/v1`. Rôles :
+Installed on the target site. Exposes a **custom REST API** under the
+`ia-webmaster/v1` namespace. Responsibilities:
 
-- Exposer des **capacités** (capabilities) regroupées par plan fonctionnel.
-- Appliquer l'**authentification** et la **journalisation d'audit**.
-- Implémenter les **garde-fous** (dry-run, brouillon, sauvegarde préalable).
-- Encapsuler les opérations d'infrastructure pour éviter d'ouvrir un shell.
+- Expose **capabilities** grouped by functional plane.
+- Enforce **authentication** and **audit logging**.
+- Implement **safeguards** (dry-run, draft, prior backup).
+- Encapsulate infrastructure operations to avoid opening a shell.
 
-C'est du WordPress REST classique : simple à sécuriser, tester et versionner.
+This is plain WordPress REST: easy to secure, test and version.
 
-### 2. Pont MCP local (Node.js / TypeScript)
+### 2. Local MCP bridge (Node.js / TypeScript)
 
-Tourne sur la machine de l'utilisateur (dossier `mcp-gateway/`). Rôles :
+Runs on the user's machine (folder `mcp-gateway/`). Responsibilities:
 
-- Présenter à Claude Code un **serveur MCP** (transport stdio) avec des outils
-  propres et bien typés.
-- Traduire chaque appel d'outil MCP en requête HTTPS signée vers le plugin.
-- Détenir les **secrets** (clé d'API, URL des sites) — jamais stockés dans le
-  dépôt, jamais exposés au site.
-- Gérer plusieurs cibles (local, petites prod, grosses prod) via des profils.
+- Present Claude Code with an **MCP server** (stdio transport) exposing clean,
+  well-typed tools.
+- Translate each MCP tool call into a signed HTTPS request to the plugin.
+- Hold the **secrets** (API key, site URLs) — never stored in the repo, never
+  exposed to the site.
+- Manage multiple targets (local, small prod, large prod) via profiles.
 
-### 3. Couche webmaster (skills + contexte)
+### 3. Webmaster layer (skills + context)
 
-Skills Claude Code et fichiers de contexte par site, qui donnent à Claude ses
-méthodes de travail (créer une landing page, auditer le SEO, mettre à jour les
-extensions en sécurité, etc.). Voir `specs/07-couche-webmaster.md`.
+Claude Code skills and per-site context files, giving Claude its working
+methods (create a landing page, audit SEO, safely update plugins, etc.). See
+`specs/07-webmaster-layer.md`.
 
-## Pourquoi un adaptateur maison
+## Why a custom adapter
 
-Le MCP Adapter officiel (`WordPress/mcp-adapter`) est en pré-1.0 (v0.5.0) :
-changements cassants attendus, et il ne comprend pas nativement Divi. Construire
-notre propre adaptateur garantit la maîtrise totale, l'absence de rupture due à
-un composant tiers, et un périmètre taillé pour nos besoins (Divi 5 en premier).
-On peut s'inspirer des concepts officiels (Abilities API du cœur WordPress) sans
-en dépendre. Voir `docs/decisions.md` (D-001, D-002).
+The official MCP Adapter (`WordPress/mcp-adapter`) is pre-1.0 (v0.5.0):
+breaking changes expected, and it has no native understanding of Divi.
+Building our own adapter guarantees full control, no breakage caused by a
+third-party component, and a scope tailored to our needs (Divi 5 first). We
+can take inspiration from the official concepts (the WordPress core Abilities
+API) without depending on them. See `docs/decisions.md` (D-001, D-002).
 
-## Les trois plans fonctionnels
+## The three functional planes
 
-| Plan | Périmètre | Spec |
+| Plane | Scope | Spec |
 |------|-----------|------|
-| Contenu | Pages, articles, médias, menus, taxonomies, blocs Gutenberg | `03-contenu.md` |
-| Divi 5 | Génération et édition de layouts Divi 5 | `04-divi5.md` |
-| Configuration | Réglages du site, thème, utilisateurs, rôles | `05-configuration.md` |
-| Infrastructure | Extensions, thèmes, base de données, sauvegardes, cron | `06-infrastructure.md` |
+| Content | Pages, posts, media, menus, taxonomies, Gutenberg blocks | `03-content.md` |
+| Divi 5 | Generation and editing of Divi 5 layouts | `04-divi5.md` |
+| Configuration | Site settings, theme, users, roles | `05-configuration.md` |
+| Infrastructure | Plugins, themes, database, backups, cron | `06-infrastructure.md` |
 
-La **sécurité** (`02-securite.md`) est transversale à tous les plans.
+**Security** (`02-security.md`) is cross-cutting across all planes.
 
-## Pourquoi MCP plutôt qu'un appel REST direct
+## Why MCP rather than a direct REST call
 
-Claude Code consomme nativement des **outils MCP** : c'est l'ergonomie agent la
-plus fiable (outils typés, découvrables, schémas d'entrée validés). Le pont MCP
-local nous laisse maîtriser les deux bouts tout en gardant le plugin comme une
-simple API REST WordPress. Alternative écartée pour l'instant : implémenter le
-protocole MCP directement en PHP dans le plugin (plus de travail, couplé à
-l'évolution du protocole).
+Claude Code natively consumes **MCP tools**: it's the most reliable agent
+ergonomics (typed tools, discoverable, validated input schemas). The local
+MCP bridge lets us own both ends while keeping the plugin as a plain
+WordPress REST API. Alternative ruled out for now: implementing the MCP
+protocol directly in PHP inside the plugin (more work, coupled to the
+evolution of the protocol).
 
-## Cycle de déploiement
+## Deployment cycle
 
-`Local (LocalWP)` → `petites prod` → `grosses prod`. Chaque cible est un profil
-du pont MCP. On ne valide une cible supérieure qu'après stabilité sur la
-précédente. Voir `docs/roadmap.md`.
+`Local (LocalWP)` → `small prod` → `large prod`. Each target is a profile in
+the MCP bridge. We only promote to a higher target after stability on the
+previous one. See `docs/roadmap.md`.

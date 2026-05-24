@@ -1,133 +1,132 @@
-# Spec 04 — Plan Divi 5 (prioritaire)
+# Spec 04 — Divi 5 plan (priority)
 
-- **Statut** : En cours (Phase 3.1 — rétro-ingénierie)
-- **Phase** : 3
-- **Priorité** : Prioritaire
-- **Dernière mise à jour** : 2026-05-23
+- **Status**: In progress (Phase 3.1 — reverse engineering)
+- **Phase**: 3
+- **Priority**: Top
+- **Last updated**: 2026-05-23
 
-## Objectif
+## Goal
 
-Permettre à Claude de **lire, créer et modifier des layouts Divi 5** : le cœur
-de la valeur du projet, puisque la majorité des sites visés sont sous Divi 5
-(décision D-003).
+Enable Claude to **read, create and modify Divi 5 layouts**: the core
+value of the project, since the majority of targeted sites run on Divi 5
+(decision D-003).
 
-## Contexte
+## Context
 
-Divi 5 (sorti le 26 février 2026) a réécrit son architecture : builder React,
-contenu stocké en **format JSON / blocs sérialisés** (proche du format
-Gutenberg), attributs hiérarchiques multi-breakpoints et multi-états. Les
-layouts Divi 4 sont migrés vers ce format.
+Divi 5 (released February 26, 2026) rewrote its architecture: React builder,
+content stored in **JSON / serialised blocks format** (close to the Gutenberg
+format), hierarchical multi-breakpoint and multi-state attributes. Divi 4
+layouts are migrated to this format.
 
-**Difficulté assumée** : il n'existe **pas d'API publique documentée** pour
-générer un layout Divi 5 complet par programme. Les ressources disponibles :
-- le format `.json` d'import/export « portability » (officiel, mais contraint
-  par le contexte d'export) ;
-- la nouvelle Builder API Divi 5 (orientée modules custom — périmètre à
-  explorer) ;
-- une documentation communautaire non officielle (à vérifier, jamais à supposer
-  exacte).
+**Acknowledged difficulty**: there is **no documented public API** to
+generate a complete Divi 5 layout programmatically. Available resources:
+- the "portability" import/export `.json` format (official, but constrained
+  by the export context);
+- the new Divi 5 Builder API (oriented towards custom modules — scope to be
+  explored);
+- unofficial community documentation (to be verified, never assumed
+  accurate).
 
-**Cartographie complète de `divi/v1` (2026-05-23)** — 102 routes uniques, 29
-groupes. Carte détaillée dans `docs/divi5-api-index.md` (source brute :
-`docs/divi5-api-map.json`). Routes les plus structurantes pour notre usage :
+**Full mapping of `divi/v1` (2026-05-23)** — 102 unique routes, 29
+groups. Detailed map in `docs/divi5-api-index.md` (raw source:
+`docs/divi5-api-map.json`). The most structuring routes for our usage:
 
 - **`page-manager/`** (9 routes) — create, update, duplicate, trash, search, show.
-  Voie haut niveau pour gérer les pages Divi sans passer par le VB.
-- **`sync-to-server`** — POST que le VB utilise pour persister le contenu :
+  High-level way to manage Divi pages without going through the VB.
+- **`sync-to-server`** — POST that the VB uses to persist content:
   `post_id`, `content`, `pageSettingsByLayout`, `off_canvas_data`,
-  `layout_post_ids`, `mainLoopType`, `mainLoopSettingsData`. **C'est le canal
-  d'écriture canonique de Divi 5.**
-- **`outside-vb/posts/set-layout`** — applique un layout (par contenu ou par
-  post source) à un post cible, sans VB.
-- **`outside-vb/export-layout`** — exporte le layout d'un post (lecture).
-- **`portability/export`** et **`portability/import`** — format JSON officiel,
-  utilisé pour la migration de layouts.
-- **`divi-library/`** (12 routes) — bibliothèque Divi : list, item, load,
-  create-item, save, split-item, convert-item, upload-image, item-location ;
-  **`cloud-token`** pour Divi Cloud.
-- **`global-data/`** (4 routes) — couleurs globales, fontes, variables,
-  presets (système design). **Critique** pour piloter le style site-wide.
-- **`module-render`** — rendu HTML d'un module à partir de son JSON
-  (preview programmatique).
-- **`dynamic-content/options`** — options de contenu dynamique disponibles
-  pour un post (titre, extrait, custom fields…).
-- **`breakpoints/update`** — paramètres responsive (mobile, tablette,
+  `layout_post_ids`, `mainLoopType`, `mainLoopSettingsData`. **This is the
+  canonical write channel for Divi 5.**
+- **`outside-vb/posts/set-layout`** — applies a layout (by content or by
+  source post) to a target post, without the VB.
+- **`outside-vb/export-layout`** — exports the layout of a post (read).
+- **`portability/export`** and **`portability/import`** — official JSON
+  format, used for layout migration.
+- **`divi-library/`** (12 routes) — Divi library: list, item, load,
+  create-item, save, split-item, convert-item, upload-image, item-location;
+  **`cloud-token`** for Divi Cloud.
+- **`global-data/`** (4 routes) — global colors, fonts, variables,
+  presets (design system). **Critical** to drive site-wide style.
+- **`module-render`** — HTML rendering of a module from its JSON
+  (programmatic preview).
+- **`dynamic-content/options`** — dynamic content options available
+  for a post (title, excerpt, custom fields…).
+- **`breakpoints/update`** — responsive settings (mobile, tablet,
   desktop, custom).
-- **`outside-vb/theme-builder/*`** (5 routes) — templates header/footer,
-  templates personnalisés.
-- **`menu-manager/`** (8 routes) — gestionnaire de menus Divi (distinct du
-  système menu WP standard).
-- **`module-data/`** (21 routes) — endpoints utilitaires par module
+- **`outside-vb/theme-builder/*`** (5 routes) — header/footer templates,
+  custom templates.
+- **`menu-manager/`** (8 routes) — Divi menu manager (distinct from
+  the standard WP menu system).
+- **`module-data/`** (21 routes) — per-module utility endpoints
   (gallery, video, audio, blog/posts, breadcrumbs, sidebar, shortcode…).
-- **`loop/`** (5 routes) — types de requête pour les boucles dynamiques.
-- **`ai_layout_save_defaults`** — Divi a déjà ses propres "AI layout
-  defaults" (fontes, couleurs primaire/secondaire, description site).
+- **`loop/`** (5 routes) — query types for dynamic loops.
+- **`ai_layout_save_defaults`** — Divi already has its own "AI layout
+  defaults" (fonts, primary/secondary colors, site description).
 
-Toutes ces routes sont **protégées par le nonce du Visual Builder** : un
-appel en pur server-to-server (sans cookie admin) reçoit 401/403. Trois
-voies pour les exploiter :
-1. **Appel interne en PHP** depuis notre plugin (`rest_do_request` après
-   `act_as_agent`) : on hérite des droits admin et on évite le nonce.
-2. **Appel direct aux fonctions PHP de Divi** : certaines routes ne sont
-   qu'un wrapper léger autour d'une fonction réutilisable (à confirmer cas
-   par cas).
-3. **Travail au niveau stockage** (`post_content`, post meta) sans passer
-   par les routes Divi — plus brut mais plus stable. À privilégier pour la
-   lecture ; à éviter pour l'écriture (déclencheurs/cache).
+All these routes are **protected by the Visual Builder nonce**: a pure
+server-to-server call (without an admin cookie) gets a 401/403. Three
+ways to exploit them:
+1. **Internal PHP call** from our plugin (`rest_do_request` after
+   `act_as_agent`): we inherit admin rights and avoid the nonce.
+2. **Direct call to Divi's PHP functions**: some routes are only a thin
+   wrapper around a reusable function (to be confirmed case by case).
+3. **Work at the storage level** (`post_content`, post meta) without going
+   through Divi's routes — rawer but more stable. To be preferred for
+   reading; to be avoided for writing (triggers/cache).
 
-Conséquence : la première brique reste une **rétro-ingénierie du format
-réel** sur le site local (création d'une page de référence dans le VB,
-extraction du `post_content` et des meta), pour ancrer toute la suite.
+Consequence: the first building block remains **reverse engineering the
+actual format** on the local site (creating a reference page in the VB,
+extracting `post_content` and meta), to anchor everything else.
 
-## Périmètre
+## Scope
 
-### Inclus
-- Lecture d'un layout Divi 5 existant (structure, modules, réglages).
-- Génération de layouts Divi 5 par programme.
-- Modification de layouts existants.
-- Bibliothèque de génération côté Claude (`lib/divi/`).
+### Included
+- Reading an existing Divi 5 layout (structure, modules, settings).
+- Programmatic Divi 5 layout generation.
+- Modification of existing layouts.
+- Generation library on the Claude side (`lib/divi/`).
 
-### Exclu (pour l'instant)
-- Divi 4 (sites encore en Divi 4 — à traiter plus tard si besoin).
-- Elementor (reporté, décision D-003).
-- La création de modules Divi custom (Builder API) — hors périmètre initial.
+### Excluded (for now)
+- Divi 4 (sites still on Divi 4 — to handle later if needed).
+- Elementor (postponed, decision D-003).
+- Creation of custom Divi modules (Builder API) — outside initial scope.
 
-## Approche technique (itérative)
+## Technical approach (iterative)
 
-1. **Observer le format réel.** Sur le site local : créer dans le builder Divi 5
-   plusieurs layouts de référence (section simple, colonnes, modules courants),
-   puis extraire et analyser leur stockage exact (`post_content` et/ou post
-   meta). C'est la source de vérité — pas la doc communautaire.
-2. **Lire avant d'écrire.** Une capacité de lecture qui restitue un layout Divi 5
-   dans une structure exploitable par Claude.
-3. **Aller-retour (round-trip).** Vérifier qu'un layout lu puis réécrit tel quel
-   reste identique et s'ouvre sans erreur dans le builder. Critère de fiabilité.
-4. **Génération incrémentale.** Construire `lib/divi/` : des aides qui produisent
-   un JSON Divi 5 valide à partir d'une intention de haut niveau (section →
-   lignes → colonnes → modules). Commencer par un sous-ensemble réduit de
-   modules, élargir au fur et à mesure.
-5. **Import contrôlé.** Capacité plugin qui applique un layout généré à une page,
-   en respectant les contraintes de contexte du format « portability ».
+1. **Observe the actual format.** On the local site: create several reference
+   layouts in the Divi 5 builder (simple section, columns, common modules),
+   then extract and analyse their exact storage (`post_content` and/or post
+   meta). This is the source of truth — not the community documentation.
+2. **Read before writing.** A read capability that returns a Divi 5 layout
+   in a structure usable by Claude.
+3. **Round-trip.** Verify that a layout read and then rewritten as-is
+   remains identical and opens without error in the builder. Reliability
+   criterion.
+4. **Incremental generation.** Build `lib/divi/`: helpers that produce
+   valid Divi 5 JSON from a high-level intent (section → rows → columns →
+   modules). Start with a reduced subset of modules, broaden gradually.
+5. **Controlled import.** Plugin capability that applies a generated layout
+   to a page, respecting the context constraints of the "portability" format.
 
-## Points ouverts
+## Open questions
 
-- Où Divi 5 stocke-t-il exactement le layout (post_content, post meta, table
-  dédiée) ? → à confirmer par l'observation (étape 1).
-- Faut-il, après écriture, déclencher une régénération de cache / d'assets Divi
-  (analogue au cache CSS d'Elementor) ? → à vérifier.
-- Le format « portability » est-il suffisant, ou faut-il écrire le stockage
-  natif directement ?
-- La Builder API Divi 5 offre-t-elle un point d'entrée pour la génération de
-  layouts, ou seulement pour les modules custom ?
-- Modèle des attributs multi-breakpoints / multi-états : structure exacte à
-  cartographier.
-- Stratégie pour les modules tiers (extensions Divi) présents sur les sites.
+- Where does Divi 5 exactly store the layout (post_content, post meta,
+  dedicated table)? → to be confirmed by observation (step 1).
+- After writing, should a regeneration of Divi cache/assets be triggered
+  (analogous to Elementor's CSS cache)? → to be checked.
+- Is the "portability" format sufficient, or do we need to write the
+  native storage directly?
+- Does the Divi 5 Builder API offer an entry point for layout
+  generation, or only for custom modules?
+- Multi-breakpoint / multi-state attribute model: exact structure to
+  be mapped.
+- Strategy for third-party modules (Divi extensions) present on sites.
 
-## Dépendances & risques
+## Dependencies & risks
 
-- Dépend des specs 01 (adaptateur) et 02 (sécurité).
-- **Risque principal** : format non documenté et susceptible d'évoluer entre
-  versions mineures de Divi 5 → d'où l'observation directe, l'épinglage de la
-  version de Divi testée, et le test d'aller-retour comme garde-fou.
-- Risque : un layout généré invalide peut casser l'affichage d'une page → tout
-  passe par le brouillon et le dry-run (spec 02) avant publication.
+- Depends on specs 01 (adapter) and 02 (security).
+- **Main risk**: undocumented format, liable to evolve between minor
+  versions of Divi 5 → hence direct observation, pinning the tested
+  Divi version, and round-trip testing as a guardrail.
+- Risk: an invalid generated layout can break a page's display → everything
+  goes through draft and dry-run (spec 02) before publication.

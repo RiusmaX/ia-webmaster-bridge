@@ -1,149 +1,149 @@
 ---
 name: seo-wordpress
-description: Optimiser le référencement naturel (SEO) d'un site WordPress géré via l'adaptateur IA Webmaster Bridge. À utiliser pour analyser, configurer et améliorer le SEO d'une page (titre, méta-description, structure sémantique, Open Graph, schema.org, intégration Rank Math / Yoast).
+description: Optimise the search engine ranking (SEO) of a WordPress site managed through the IA Webmaster Bridge adapter. Use it to analyse, configure and improve the SEO of a page (title, meta description, semantic structure, Open Graph, schema.org, Rank Math / Yoast integration).
 ---
 
-# SEO WordPress — méthode
+# WordPress SEO — method
 
-Le SEO n'est pas un module à plaquer en fin de page : c'est une discipline
-**transversale** qui structure le contenu dès sa rédaction. Sur les sites
-gérés par cet adaptateur, l'objectif est d'**indexer correctement chaque
-page, faciliter sa lecture par les moteurs, et la rendre attractive dans les
-SERP**.
+SEO is not a module to bolt on at the end of a page: it is a
+**cross-cutting** discipline that shapes the content from the moment it
+is written. On sites managed through this adapter, the goal is to
+**index every page correctly, make it easy for search engines to read,
+and make it attractive in the SERPs**.
 
-Ce skill suppose que tu disposes des outils `mcp__ia-webmaster__iawm_*` et
-que l'un des plugins SEO de référence est actif sur le site
-(**Rank Math** prioritaire, **Yoast** secondaire).
+This skill assumes you have the `mcp__ia-webmaster__iawm_*` tools and
+that one of the reference SEO plugins is active on the site
+(**Rank Math** first, **Yoast** second).
 
-## Détection du backend SEO actif
+## Detecting the active SEO backend
 
-Avant toute écriture SEO, déterminer quel plugin pilote les méta-données :
+Before any SEO write, determine which plugin drives the metadata:
 
-1. Appeler `iawm_diagnostics_plugins`.
-2. Chercher dans la liste, dans l'ordre :
-   - `seo-by-rank-math/rank-math.php` (Rank Math, **prioritaire**).
+1. Call `iawm_diagnostics_plugins`.
+2. Look in the list, in this order:
+   - `seo-by-rank-math/rank-math.php` (Rank Math, **first choice**).
    - `wordpress-seo/wp-seo.php` (Yoast).
-3. Si aucun n'est actif, proposer à l'utilisateur d'installer Rank Math
-   via `iawm_plugins_install` (slug `seo-by-rank-math`, `activate: true`).
-4. Si les deux sont actifs simultanément, alerter l'utilisateur — ces
-   plugins entrent en conflit et il faut désactiver l'un des deux.
+3. If neither is active, offer to install Rank Math via
+   `iawm_plugins_install` (slug `seo-by-rank-math`, `activate: true`).
+4. If both are active at the same time, warn the user — these plugins
+   conflict, deactivate one of them.
 
-## Audit SEO d'une page
+## Page SEO audit
 
-L'audit suit toujours la même grille (à restituer sous forme de tableau ou
-de checklist) :
+The audit always follows the same grid (output it as a table or
+checklist):
 
-### 1. Métadonnées de base (Rank Math / Yoast)
+### 1. Base metadata (Rank Math / Yoast)
 
-- **Titre SEO** (`<title>` final, distinct du H1) : 50–60 caractères,
-  contient le mot-clé principal, est accrocheur (pas juste descriptif).
-- **Méta-description** : 140–160 caractères, contient le mot-clé,
-  promet une valeur claire, **incite à cliquer** (verbe d'action).
-- **Slug** : court, en kebab-case, mots-clés essentiels uniquement, pas
-  de stop-words (le, la, de, du, à, des, …).
-- **Focus keyword** (Rank Math) : un mot-clé principal renseigné, repris
-  dans le titre SEO, l'URL, le H1, le premier paragraphe.
+- **SEO title** (final `<title>`, distinct from the H1): 50–60
+  characters, contains the focus keyword, catchy (not merely
+  descriptive).
+- **Meta description**: 140–160 characters, contains the keyword,
+  promises a clear value, **encourages clicks** (action verb).
+- **Slug**: short, kebab-case, essential keywords only, no stop words
+  (the, of, to, …).
+- **Focus keyword** (Rank Math): a single focus keyword, repeated in
+  the SEO title, the URL, the H1, the first paragraph.
 
-### 2. Structure sémantique de la page
+### 2. Semantic structure of the page
 
-- **Un seul H1**, qui correspond au sujet principal (peut différer du
-  titre SEO).
-- **Hiérarchie H2/H3** cohérente, sans saut de niveau (pas de H4 après un
-  H2 sans H3 intermédiaire).
-- **Mots-clés sémantiques** (cooccurrents) présents dans les H2.
-- **Longueur** ≥ 300 mots pour un article (≥ 600 pour viser le top 10).
-- **Premier paragraphe** : 50–100 mots, contient le focus keyword,
-  répond directement à l'intention de recherche.
-- **Listes** (`<ul>`, `<ol>`) pour les énumérations — Google les
-  remonte volontiers en featured snippet.
+- **A single H1**, matching the page subject (may differ from the SEO
+  title).
+- **Coherent H2/H3 hierarchy**, no level skipping (no H4 after a H2
+  without an H3 in between).
+- **Semantic keywords** (co-occurring) present in the H2s.
+- **Length** ≥ 300 words for an article (≥ 600 to aim for the top 10).
+- **First paragraph**: 50–100 words, contains the focus keyword,
+  directly answers the search intent.
+- **Lists** (`<ul>`, `<ol>`) for enumerations — Google often promotes
+  them as featured snippets.
 
-### 3. Médias et accessibilité
+### 3. Media and accessibility
 
-- **Attribut `alt`** sur toutes les images (descriptif, pas keyword
-  stuffing). Vérifier via `iawm_media_get`.
-- **Nom de fichier image** explicite (pas `IMG_1234.jpg`).
-- **Taille** : optimiser au-delà de 200 ko (proposer compression).
-- **Lazy loading** activé (WP le fait par défaut depuis 5.5).
+- **`alt` attribute** on all images (descriptive, not keyword
+  stuffing). Check via `iawm_media_get`.
+- **Explicit image filename** (not `IMG_1234.jpg`).
+- **Size**: optimise beyond 200 kB (suggest compression).
+- **Lazy loading** enabled (WP does this by default since 5.5).
 
-### 4. Maillage interne et externe
+### 4. Internal and external linking
 
-- Au moins **3 liens internes** vers d'autres pages du site, avec
-  ancres descriptives (pas « cliquez ici »).
-- **1–2 liens externes** vers des sources d'autorité (en `rel="noopener"`).
-- Vérifier qu'aucun lien n'est cassé (à terme : capacité dédiée).
+- At least **3 internal links** to other pages of the site, with
+  descriptive anchors (not "click here").
+- **1–2 external links** to authority sources (`rel="noopener"`).
+- Check that no link is broken (eventually: dedicated capability).
 
-### 5. Partage social (Open Graph / Twitter Cards)
+### 5. Social sharing (Open Graph / Twitter Cards)
 
-- Image OG dédiée (1200×630 px idéal), distincte de l'image vedette si
-  possible.
-- Titre OG distinct du titre SEO (plus émotionnel).
-- Description OG accrocheuse, 100–200 caractères.
+- Dedicated OG image (1200×630 px ideal), different from the featured
+  image when possible.
+- OG title distinct from the SEO title (more emotional).
+- Compelling OG description, 100–200 characters.
 
-### 6. Données structurées (schema.org)
+### 6. Structured data (schema.org)
 
-- Type schema cohérent avec le contenu :
-  - `Article` pour un article de blog.
-  - `LocalBusiness` pour une fiche entreprise locale.
-  - `Product` pour un produit e-commerce.
-  - `FAQPage` pour une page FAQ.
-  - `BreadcrumbList` partout.
-- Rank Math gère la plupart en automatique — vérifier qu'il est bien
-  configuré, ne pas tout réinventer.
+- Schema type consistent with the content:
+  - `Article` for a blog post.
+  - `LocalBusiness` for a local business page.
+  - `Product` for an e-commerce product.
+  - `FAQPage` for a FAQ page.
+  - `BreadcrumbList` everywhere.
+- Rank Math handles most of it automatically — check it is configured,
+  do not reinvent the wheel.
 
 ### 7. Performance
 
-- Charger `iawm_diagnostics_system` pour vérifier la version PHP, les
-  limites mémoire, le cache.
-- À terme : intégrer un outil de mesure Core Web Vitals.
+- Load `iawm_diagnostics_system` to check PHP version, memory limits,
+  cache.
+- Eventually: integrate a Core Web Vitals measurement tool.
 
-## Workflow standard d'optimisation d'une page
+## Standard page optimisation workflow
 
-1. **Comprendre l'intention** : que cherche réellement le visiteur ?
-   Demander à l'utilisateur le mot-clé visé et le type d'intention
-   (informationnel / transactionnel / navigationnel).
-2. **Audit avant écriture** : appliquer la grille ci-dessus si la page
-   existe déjà.
-3. **Plan d'amélioration** : présenter à l'utilisateur les problèmes
-   classés par impact (titre/méta = impact maximal ; alt-tags = impact
-   modéré). **Valider** avant toute modification.
-4. **Écriture / réécriture** : appliquer les changements via
-   `iawm_content_update` pour le contenu, et via l'API SEO (à venir :
-   `iawm_seo_page_*`) pour les méta-données.
-5. **Revérification** : refaire l'audit après modification.
+1. **Understand the intent**: what is the visitor really looking for?
+   Ask the user for the target keyword and the intent type
+   (informational / transactional / navigational).
+2. **Audit before writing**: apply the grid above if the page already
+   exists.
+3. **Improvement plan**: present the issues ranked by impact (title /
+   meta = maximum impact; alt tags = moderate impact). **Validate**
+   before any change.
+4. **Writing / rewriting**: apply the changes via `iawm_content_update`
+   for the body and via the SEO API (`iawm_seo_page_*`) for the
+   metadata.
+5. **Re-verification**: re-run the audit after the changes.
 
-## Garde-fous SEO
+## SEO guardrails
 
-- **Ne jamais sur-optimiser** un mot-clé (« keyword stuffing »). Densité
-  cible : 1 à 2 %.
-- **Ne jamais générer du contenu vide** uniquement pour augmenter la
-  longueur. Mieux vaut 400 mots utiles que 1200 mots dilués.
-- **Toujours conserver une voix éditoriale** humaine, naturelle ; pas
-  de phrases-clés robotiques.
-- **Respecter la cohérence sémantique** : le titre, l'URL, le H1, la
-  méta-description et le premier paragraphe doivent raconter la même
-  histoire.
-- **Pas de cloaking, pas de redirections trompeuses, pas de pages
-  satellites.** Black-hat = perte de positionnement à terme.
+- **Never over-optimise** a keyword ("keyword stuffing"). Target
+  density: 1 to 2 %.
+- **Never produce empty content** just to increase the length. 400
+  useful words beat 1200 diluted words.
+- **Always keep a human, natural editorial voice**; no robotic
+  keyphrases.
+- **Maintain semantic consistency**: title, URL, H1, meta description
+  and first paragraph must tell the same story.
+- **No cloaking, no misleading redirects, no doorway pages.** Black
+  hat = loss of ranking over time.
 
-## Sortie attendue
+## Expected output
 
-Quand on te demande un audit SEO, fournis :
+When asked for an SEO audit, return:
 
 ```
-## Audit SEO — [titre de la page]
+## SEO audit — [page title]
 
-### Score global : X/10
+### Overall score: X/10
 
-### Forces
-- (3 à 5 points)
+### Strengths
+- (3 to 5 points)
 
-### Faiblesses (par ordre d'impact)
-1. (impact maximal) ...
-2. (impact moyen) ...
+### Weaknesses (in impact order)
+1. (maximum impact) ...
+2. (medium impact) ...
 
-### Plan d'action proposé
-- [ ] Action 1 (impact, effort, outil utilisé)
+### Proposed action plan
+- [ ] Action 1 (impact, effort, tool used)
 - [ ] Action 2 ...
 ```
 
-Demande toujours validation avant d'appliquer les changements à la page.
+Always ask for validation before applying the changes to the page.

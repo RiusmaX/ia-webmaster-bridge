@@ -1,10 +1,10 @@
 <?php
 /**
- * Plan contenu : gestion des menus de navigation (menus WordPress classiques,
- * utilisés notamment par Divi).
+ * Content plane: navigation menu management (classic WordPress menus,
+ * used notably by Divi).
  *
- * Routes POST avec corps JSON. Lecture (list, get) en guard_read ; créations et
- * modifications (create, add-item, remove-item, assign-location) en guard_write.
+ * POST routes with JSON body. Reads (list, get) use guard_read; creations and
+ * modifications (create, add-item, remove-item, assign-location) use guard_write.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -14,12 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes des menus de navigation.
+ * Navigation menu routes.
  */
 class IAWM_Menu {
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -28,7 +28,7 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * Enregistre les routes des menus.
+	 * Registers menu routes.
 	 *
 	 * @return void
 	 */
@@ -56,9 +56,9 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * POST /menu/list — liste les menus et les emplacements du thème.
+	 * POST /menu/list — lists menus and the theme's menu locations.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_list( $request ) {
@@ -91,11 +91,11 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * POST /menu/get — détail d'un menu et de ses éléments.
+	 * POST /menu/get — detail of a menu and its items.
 	 *
-	 * Corps JSON : { id }
+	 * JSON body: { id }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_get( $request ) {
@@ -124,11 +124,11 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * POST /menu/create — crée un menu.
+	 * POST /menu/create — creates a menu.
 	 *
-	 * Corps JSON : { name, dry_run? }
+	 * JSON body: { name, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_create( $request ) {
@@ -136,7 +136,7 @@ class IAWM_Menu {
 		$name   = isset( $params['name'] ) ? sanitize_text_field( (string) $params['name'] ) : '';
 
 		if ( '' === $name ) {
-			return IAWM_Support::rest_error( 'iawm_missing_name', "Le paramètre 'name' est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_name', "The 'name' parameter is required.", 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -168,13 +168,12 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * POST /menu/add-item — ajoute un élément à un menu.
+	 * POST /menu/add-item — adds an item to a menu.
 	 *
-	 * Corps JSON : { menu_id, title?, url?, object_id?, parent_item?, dry_run? }
-	 * Fournir « url » pour un lien personnalisé, ou « object_id » pour pointer
-	 * vers une page ou un article.
+	 * JSON body: { menu_id, title?, url?, object_id?, parent_item?, dry_run? }
+	 * Provide "url" for a custom link, or "object_id" to point to a page or post.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_add_item( $request ) {
@@ -197,7 +196,7 @@ class IAWM_Menu {
 		if ( $object_id > 0 ) {
 			$object = get_post( $object_id );
 			if ( ! $object ) {
-				return IAWM_Support::rest_error( 'iawm_not_found', "Contenu introuvable : {$object_id}.", 404 );
+				return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$object_id}.", 404 );
 			}
 			$item_args['menu-item-type']      = 'post_type';
 			$item_args['menu-item-object']    = $object->post_type;
@@ -210,7 +209,7 @@ class IAWM_Menu {
 			$item_args['menu-item-url']   = $url;
 			$item_args['menu-item-title'] = '' !== $title ? $title : $url;
 		} else {
-			return IAWM_Support::rest_error( 'iawm_missing_target', "Fournir 'url' (lien) ou 'object_id' (contenu).", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_target', "Provide 'url' (link) or 'object_id' (content).", 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -244,11 +243,11 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * POST /menu/remove-item — retire un élément de menu.
+	 * POST /menu/remove-item — removes a menu item.
 	 *
-	 * Corps JSON : { item_id, dry_run? }
+	 * JSON body: { item_id, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_remove_item( $request ) {
@@ -257,7 +256,7 @@ class IAWM_Menu {
 
 		$item = $item_id > 0 ? get_post( $item_id ) : null;
 		if ( ! $item || 'nav_menu_item' !== $item->post_type ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Élément de menu introuvable : {$item_id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "Menu item not found: {$item_id}.", 404 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -274,7 +273,7 @@ class IAWM_Menu {
 		IAWM_Support::act_as_agent();
 
 		if ( ! wp_delete_post( $item_id, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_remove_failed', "Suppression de l'élément impossible.", 500 );
+			return IAWM_Support::rest_error( 'iawm_remove_failed', 'Could not delete the item.', 500 );
 		}
 
 		return new WP_REST_Response(
@@ -288,11 +287,11 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * POST /menu/assign-location — assigne un menu à un emplacement du thème.
+	 * POST /menu/assign-location — assigns a menu to a theme location.
 	 *
-	 * Corps JSON : { menu_id, location, dry_run? }
+	 * JSON body: { menu_id, location, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_assign_location( $request ) {
@@ -305,7 +304,7 @@ class IAWM_Menu {
 		$location   = isset( $params['location'] ) ? sanitize_key( (string) $params['location'] ) : '';
 		$registered = get_registered_nav_menus();
 		if ( '' === $location || ! isset( $registered[ $location ] ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_location', "Emplacement de menu inconnu : {$location}.", 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_location', "Unknown menu location: {$location}.", 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -340,23 +339,23 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * Récupère et valide un menu par son identifiant.
+	 * Retrieves and validates a menu by its ID.
 	 *
-	 * @param int $id Identifiant du menu.
+	 * @param int $id Menu ID.
 	 * @return WP_Term|WP_Error
 	 */
 	private static function resolve_menu( $id ) {
 		$menu = $id > 0 ? wp_get_nav_menu_object( $id ) : false;
 
 		if ( ! $menu ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Menu introuvable : {$id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "Menu not found: {$id}.", 404 );
 		}
 
 		return $menu;
 	}
 
 	/**
-	 * Représentation résumée d'un menu.
+	 * Summary representation of a menu.
 	 *
 	 * @param WP_Term $menu Menu.
 	 * @return array
@@ -371,9 +370,9 @@ class IAWM_Menu {
 	}
 
 	/**
-	 * Représentation d'un élément de menu.
+	 * Representation of a menu item.
 	 *
-	 * @param WP_Post $item Élément de menu (décoré par wp_get_nav_menu_items).
+	 * @param WP_Post $item Menu item (decorated by wp_get_nav_menu_items).
 	 * @return array
 	 */
 	private static function item_data( $item ) {

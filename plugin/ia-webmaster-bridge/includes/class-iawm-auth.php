@@ -1,10 +1,10 @@
 <?php
 /**
- * Authentification des requêtes de l'API IA Webmaster Bridge.
+ * Authentication of IA Webmaster Bridge API requests.
  *
- * Chaque requête (hors /ping) doit être signée en HMAC-SHA256 avec le secret
- * partagé. La signature couvre la méthode, la route, la query, un horodatage
- * et un nonce : cela garantit l'authenticité, l'intégrité, et protège du rejeu.
+ * Every request (except /ping) must be signed with HMAC-SHA256 using the shared
+ * secret. The signature covers the method, route, query, a timestamp
+ * and a nonce: this ensures authenticity, integrity, and replay protection.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -14,20 +14,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Vérification de signature et garde des routes REST.
+ * Signature verification and REST route guards.
  */
 class IAWM_Auth {
 
-	/** Tolérance, en secondes, sur l'horodatage des requêtes (anti-rejeu). */
+	/** Tolerance, in seconds, on the request timestamp (anti-replay). */
 	const TIMESTAMP_TOLERANCE = 300;
 
-	/** Préfixe du schéma de signature (séparateur de domaine). */
+	/** Signature scheme prefix (domain separator). */
 	const SIGNATURE_SCHEME = 'IAWM-HMAC-SHA256';
 
 	/**
-	 * Permission callback pour les routes en lecture.
+	 * Permission callback for read routes.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return true|WP_Error
 	 */
 	public static function guard_read( $request ) {
@@ -35,9 +35,9 @@ class IAWM_Auth {
 	}
 
 	/**
-	 * Permission callback pour les routes en écriture.
+	 * Permission callback for write routes.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return true|WP_Error
 	 */
 	public static function guard_write( $request ) {
@@ -45,10 +45,10 @@ class IAWM_Auth {
 	}
 
 	/**
-	 * Vérifie l'authentification d'une requête.
+	 * Verifies the authentication of a request.
 	 *
-	 * @param WP_REST_Request $request       Requête entrante.
-	 * @param bool            $require_write True si la requête modifie le site.
+	 * @param WP_REST_Request $request       Incoming request.
+	 * @param bool            $require_write True if the request modifies the site.
 	 * @return true|WP_Error
 	 */
 	public static function guard( $request, $require_write ) {
@@ -57,7 +57,7 @@ class IAWM_Auth {
 		if ( null === $creds ) {
 			return new WP_Error(
 				'iawm_not_configured',
-				"L'adaptateur n'est pas configuré : aucun identifiant d'API.",
+				'The adapter is not configured: no API credentials.',
 				array( 'status' => 503 )
 			);
 		}
@@ -68,44 +68,44 @@ class IAWM_Auth {
 		$signature = (string) $request->get_header( 'X-IAWM-Signature' );
 
 		if ( '' === $key_id || '' === $timestamp || '' === $nonce || '' === $signature ) {
-			return self::deny( "En-têtes d'authentification manquants." );
+			return self::deny( 'Missing authentication headers.' );
 		}
 
-		// Identifiant de clé (comparaison en temps constant).
+		// Key identifier (constant-time comparison).
 		if ( ! hash_equals( (string) $creds['key_id'], $key_id ) ) {
-			return self::deny( 'Identifiant de clé inconnu.' );
+			return self::deny( 'Unknown key identifier.' );
 		}
 
-		// Horodatage : la requête doit tomber dans la fenêtre de tolérance.
+		// Timestamp: the request must fall within the tolerance window.
 		if ( ! ctype_digit( $timestamp ) ) {
-			return self::deny( 'Horodatage invalide.' );
+			return self::deny( 'Invalid timestamp.' );
 		}
 		if ( abs( time() - (int) $timestamp ) > self::TIMESTAMP_TOLERANCE ) {
-			return self::deny( 'Requête expirée ou horodatage hors tolérance.' );
+			return self::deny( 'Request expired or timestamp out of tolerance.' );
 		}
 
-		// Nonce : usage unique, pour empêcher le rejeu d'une requête signée.
+		// Nonce: single-use, to prevent replay of a signed request.
 		$nonce_key = 'iawm_nonce_' . hash( 'sha256', $nonce );
 		if ( false !== get_transient( $nonce_key ) ) {
-			return self::deny( 'Nonce déjà utilisé (rejeu détecté).' );
+			return self::deny( 'Nonce already used (replay detected).' );
 		}
 
-		// Signature HMAC.
+		// HMAC signature.
 		$message  = self::build_message( $request, $timestamp, $nonce );
 		$expected = hash_hmac( 'sha256', $message, (string) $creds['secret'] );
 
 		if ( ! hash_equals( $expected, strtolower( $signature ) ) ) {
-			return self::deny( 'Signature invalide.' );
+			return self::deny( 'Invalid signature.' );
 		}
 
-		// Signature valide : on consomme le nonce (durée de vie > tolérance).
+		// Valid signature: consume the nonce (lifetime > tolerance).
 		set_transient( $nonce_key, time(), self::TIMESTAMP_TOLERANCE * 2 );
 
-		// Kill switch : bloque les requêtes en écriture.
+		// Kill switch: blocks write requests.
 		if ( $require_write && IAWM_Settings::is_kill_switch_on() ) {
 			return new WP_Error(
 				'iawm_kill_switch',
-				'Les écritures sont désactivées (kill switch actif).',
+				'Writes are disabled (kill switch on).',
 				array( 'status' => 403 )
 			);
 		}
@@ -114,22 +114,22 @@ class IAWM_Auth {
 	}
 
 	/**
-	 * Construit le message canonique signé.
+	 * Builds the canonical signed message.
 	 *
-	 * Format — sept éléments séparés par des sauts de ligne « \n » :
-	 *   1. IAWM-HMAC-SHA256        (préfixe de schéma)
-	 *   2. méthode HTTP            (majuscules)
-	 *   3. route REST              (ex. /ia-webmaster/v1/status)
-	 *   4. query canonique         (paramètres triés, ou chaîne vide)
-	 *   5. horodatage Unix
+	 * Format — seven elements separated by "\n" newlines:
+	 *   1. IAWM-HMAC-SHA256        (scheme prefix)
+	 *   2. HTTP method             (uppercase)
+	 *   3. REST route              (e.g. /ia-webmaster/v1/status)
+	 *   4. canonical query         (sorted parameters, or empty string)
+	 *   5. Unix timestamp
 	 *   6. nonce
-	 *   7. SHA-256 hexadécimal du corps brut (hash de "" si corps vide)
+	 *   7. hexadecimal SHA-256 of the raw body (hash of "" if body is empty)
 	 *
-	 * Le pont MCP doit reproduire ce message à l'identique pour signer.
+	 * The MCP bridge must reproduce this message identically to sign.
 	 *
-	 * @param WP_REST_Request $request   Requête entrante.
-	 * @param string          $timestamp Horodatage transmis.
-	 * @param string          $nonce     Nonce transmis.
+	 * @param WP_REST_Request $request   Incoming request.
+	 * @param string          $timestamp Transmitted timestamp.
+	 * @param string          $nonce     Transmitted nonce.
 	 * @return string
 	 */
 	public static function build_message( $request, $timestamp, $nonce ) {
@@ -153,9 +153,9 @@ class IAWM_Auth {
 	}
 
 	/**
-	 * Sérialise les paramètres de query de façon déterministe (triés par clé).
+	 * Serialises query parameters deterministically (sorted by key).
 	 *
-	 * @param array $params Paramètres de query.
+	 * @param array $params Query parameters.
 	 * @return string
 	 */
 	private static function canonical_query( $params ) {
@@ -176,9 +176,9 @@ class IAWM_Auth {
 	}
 
 	/**
-	 * Construit une erreur d'authentification (HTTP 401).
+	 * Builds an authentication error (HTTP 401).
 	 *
-	 * @param string $message Message lisible.
+	 * @param string $message Human-readable message.
 	 * @return WP_Error
 	 */
 	private static function deny( $message ) {

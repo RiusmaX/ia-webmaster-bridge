@@ -1,13 +1,13 @@
 /**
- * Chargement et validation de la configuration du pont MCP.
+ * Loading and validation of the MCP gateway configuration.
  *
- * La configuration (URL du site + secret HMAC) est cherchée, dans l'ordre :
- *   1. ~/.iawm/config.json  — emplacement utilisateur stable, recommandé : il
- *                             survit aux mises à jour du plugin.
- *   2. <pont>/config.json   — à côté du pont, pratique en développement.
+ * The configuration (site URL + HMAC secret) is looked up in this order:
+ *   1. ~/.iawm/config.json  — stable user-level location, recommended: it
+ *                             survives plugin updates.
+ *   2. <gateway>/config.json — next to the gateway, convenient in development.
  *
- * Ce fichier contient le secret partagé : il ne doit jamais être versionné.
- * Voir config.example.json.
+ * This file contains the shared secret: it must never be versioned.
+ * See config.example.json.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -16,18 +16,18 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 export interface GatewayConfig {
-  /** Racine du site WordPress, ex. https://votre-site.example */
+  /** WordPress site root, e.g. https://your-site.example */
   baseUrl: string;
-  /** Identifiant de clé d'API (en-tête X-IAWM-Key). */
+  /** API key identifier (X-IAWM-Key header). */
   keyId: string;
-  /** Secret partagé HMAC. */
+  /** Shared HMAC secret. */
   secret: string;
 }
 
 /**
- * Emplacements où chercher le fichier de configuration, par ordre de priorité.
+ * Locations where the configuration file is looked up, in priority order.
  *
- * @returns Liste de chemins absolus candidats.
+ * @returns List of candidate absolute paths.
  */
 function configCandidates(): string[] {
   const here = dirname(fileURLToPath(import.meta.url));
@@ -39,9 +39,9 @@ function configCandidates(): string[] {
 }
 
 /**
- * Charge la configuration depuis le premier emplacement candidat trouvé.
+ * Loads the configuration from the first candidate location that exists.
  *
- * @throws Si aucun fichier n'est trouvé, ou s'il est illisible / incomplet.
+ * @throws If no file is found, or if it is unreadable / incomplete.
  */
 export function loadConfig(): GatewayConfig {
   const candidates = configCandidates();
@@ -49,8 +49,8 @@ export function loadConfig(): GatewayConfig {
 
   if (!configPath) {
     throw new Error(
-      "Configuration introuvable. Créez le fichier " +
-        `${candidates[0]} à partir du modèle config.example.json.`,
+      "Configuration not found. Create the file " +
+        `${candidates[0]} from the config.example.json template.`,
     );
   }
 
@@ -58,13 +58,13 @@ export function loadConfig(): GatewayConfig {
   try {
     parsed = JSON.parse(readFileSync(configPath, "utf8")) as Partial<GatewayConfig>;
   } catch {
-    throw new Error(`Configuration illisible : ${configPath} n'est pas un JSON valide.`);
+    throw new Error(`Unreadable configuration: ${configPath} is not valid JSON.`);
   }
 
   if (!parsed.baseUrl || !parsed.keyId || !parsed.secret) {
     throw new Error(
-      `Configuration incomplète dans ${configPath} : ` +
-        "les champs baseUrl, keyId et secret sont requis.",
+      `Incomplete configuration in ${configPath}: ` +
+        "the baseUrl, keyId and secret fields are required.",
     );
   }
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Enregistrement des routes REST de l'adaptateur.
+ * Registration of the adapter's REST routes.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -10,12 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes du namespace ia-webmaster/v1.
+ * Routes in the ia-webmaster/v1 namespace.
  */
 class IAWM_REST {
 
 	/**
-	 * Branche l'enregistrement des routes sur rest_api_init.
+	 * Hooks route registration on rest_api_init.
 	 *
 	 * @return void
 	 */
@@ -24,12 +24,12 @@ class IAWM_REST {
 	}
 
 	/**
-	 * Enregistre toutes les routes du namespace.
+	 * Registers all routes in the namespace.
 	 *
 	 * @return void
 	 */
 	public static function register_routes() {
-		// /ping — diagnostic public, ne renvoie aucune donnée sensible.
+		// /ping — public diagnostic, returns no sensitive data.
 		register_rest_route(
 			IAWM_REST_NAMESPACE,
 			'/ping',
@@ -40,7 +40,7 @@ class IAWM_REST {
 			)
 		);
 
-		// /status — diagnostic authentifié : valide la signature HMAC.
+		// /status — authenticated diagnostic: validates the HMAC signature.
 		register_rest_route(
 			IAWM_REST_NAMESPACE,
 			'/status',
@@ -51,7 +51,7 @@ class IAWM_REST {
 			)
 		);
 
-		// /audit — consultation du journal d'audit (authentifié).
+		// /audit — read the audit log (authenticated).
 		register_rest_route(
 			IAWM_REST_NAMESPACE,
 			'/audit',
@@ -71,7 +71,7 @@ class IAWM_REST {
 	}
 
 	/**
-	 * GET /ping — confirme que l'adaptateur est joignable.
+	 * GET /ping — confirms that the adapter is reachable.
 	 *
 	 * @return WP_REST_Response
 	 */
@@ -91,7 +91,7 @@ class IAWM_REST {
 	}
 
 	/**
-	 * GET /status — diagnostic réservé aux requêtes authentifiées.
+	 * GET /status — diagnostic restricted to authenticated requests.
 	 *
 	 * @return WP_REST_Response
 	 */
@@ -114,15 +114,15 @@ class IAWM_REST {
 	}
 
 	/**
-	 * GET /audit — retourne les dernières entrées du journal d'audit.
+	 * GET /audit — returns the most recent audit log entries.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_audit( $request ) {
 		$entries = IAWM_Audit::get_recent( (int) $request->get_param( 'limit' ) );
 
-		// Décoder le champ detail (stocké en JSON) pour la réponse.
+		// Decode the detail field (stored as JSON) for the response.
 		foreach ( $entries as &$entry ) {
 			if ( isset( $entry['detail'] ) && is_string( $entry['detail'] ) ) {
 				$decoded         = json_decode( $entry['detail'], true );
@@ -142,7 +142,7 @@ class IAWM_REST {
 	}
 
 	/**
-	 * Versions de l'environnement (WordPress, PHP, Divi).
+	 * Environment versions (WordPress, PHP, Divi).
 	 *
 	 * @return array
 	 */
@@ -155,12 +155,12 @@ class IAWM_REST {
 	}
 
 	/**
-	 * Tente de détecter la version de Divi.
+	 * Tries to detect the Divi version.
 	 *
-	 * Vérifie le thème actif et son parent éventuel, puis se rabat sur la
-	 * constante de version définie par Divi.
+	 * Checks the active theme and its parent if any, then falls back to the
+	 * version constant defined by Divi.
 	 *
-	 * @return string|null Version de Divi, ou null si non détectée.
+	 * @return string|null Divi version, or null if not detected.
 	 */
 	private static function detect_divi_version() {
 		$theme = wp_get_theme();

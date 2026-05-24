@@ -1,11 +1,11 @@
 /**
- * Pattern Features 3 colonnes — section de bénéfices.
+ * Features 3-column pattern — benefits section.
  *
- * Structure :
+ * Structure:
  *   Section
- *     Row (1_3,1_3,1_3, wrap sur mobile)
+ *     Row (1_3,1_3,1_3, wrap on mobile)
  *       Column × 3
- *         Blurb (icône + titre + texte)
+ *         Blurb (icon + title + text)
  */
 
 import { section, row, column, blurb, text } from "../builders.js";
@@ -13,31 +13,31 @@ import { colors } from "../globals.js";
 import type { DiviColor, GutenbergBlock } from "../types.js";
 
 export interface FeatureItem {
-  /** Titre court (3-6 mots). */
+  /** Short title (3-6 words). */
   title: string;
-  /** Description (HTML autorisé, idéal 1-2 phrases). */
+  /** Description (HTML allowed, ideally 1-2 sentences). */
   contentHtml: string;
-  /** Code unicode d'une icône Divi, ex. "&#xe0e1;". */
+  /** Unicode code of a Divi icon, e.g. "&#xe0e1;". */
   iconUnicode?: string;
-  /** URL d'image en alternative (16:9 ou carré). */
+  /** Alternative image URL (16:9 or square). */
   imageUrl?: string;
 }
 
 export interface Features3ColOptions {
-  /** Optionnel : titre de section (devient un H2 au-dessus). */
+  /** Optional: section title (becomes an H2 on top). */
   sectionTitle?: string;
-  /** Sous-titre optionnel. */
+  /** Optional subtitle. */
   sectionSubtitle?: string;
-  /** Les 3 features. */
+  /** The 3 features. */
   items: [FeatureItem, FeatureItem, FeatureItem];
-  /** Couleur de fond de la section. Défaut : transparent (hérite). */
+  /** Section background color. Default: transparent (inherits). */
   backgroundColor?: DiviColor;
 }
 
 export function features3col(options: Features3ColOptions): GutenbergBlock {
   const rows: GutenbergBlock[] = [];
 
-  // Row de titre si fourni.
+  // Title row if provided.
   if (options.sectionTitle || options.sectionSubtitle) {
     const titleHtml =
       (options.sectionTitle ? `<h2>${escapeHtml(options.sectionTitle)}</h2>` : "") +
@@ -63,7 +63,7 @@ export function features3col(options: Features3ColOptions): GutenbergBlock {
     );
   }
 
-  // Row de features.
+  // Features row.
   const columns = options.items.map((item) =>
     column({ type: "1_3" }, [
       blurb({

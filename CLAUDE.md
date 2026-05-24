@@ -1,84 +1,89 @@
-# IA Webmaster Bridge — Contexte projet
+# IA Webmaster Bridge — Project context
 
-> Fichier de contexte chargé automatiquement par Claude Code à chaque session
-> ouverte dans ce dépôt. Indique le but du projet, sa structure et les règles
-> à suivre lors de toute modification.
+> Context file loaded automatically by Claude Code in every session
+> opened against this repository. States the project's purpose, its
+> layout and the rules to follow on any change.
 
-## En une phrase
+## In one sentence
 
-Système permettant à un agent Claude (Claude Code ou Claude Desktop) d'agir
-comme **webmaster WordPress full-compétence** sur des sites **WordPress 7.0 +
-Divi 5** : contenu, configuration, génération de pages et de templates de
-thème, SEO, opérations d'infrastructure — chaque action authentifiée,
-journalisée et encadrée par des garde-fous.
+A system that lets a Claude agent (Claude Code or Claude Desktop) act
+as a **full-stack WordPress webmaster** on **WordPress 7.0 + Divi 5**
+sites: content, configuration, page and theme template generation, SEO,
+infrastructure operations — every action authenticated, logged and
+fenced by guardrails.
 
-## Décisions structurantes
+## Key decisions
 
-Voir [`docs/decisions.md`](docs/decisions.md). En résumé :
+See [`docs/decisions.md`](docs/decisions.md). In short:
 
-- **Adaptateur 100 % maison.** Plugin WordPress + pont MCP propres. Pas de
-  dépendance à un adaptateur externe pré-1.0.
-- **Builder prioritaire : Divi 5.** Elementor reporté.
-- **Développement local d'abord** (LocalWP recommandé). Jamais d'itération
-  directe sur une production.
-- **Sécurité de premier ordre** (voir [`specs/02-securite.md`](specs/02-securite.md)) :
-  HMAC, audit, garde-fous, kill switch.
-- **Opérations d'infra via le plugin** plutôt que par SSH brut quand c'est
+- **100 % in-house adapter.** Our own WordPress plugin + MCP gateway.
+  No dependency on a pre-1.0 external adapter.
+- **Primary builder: Divi 5.** Elementor deferred.
+- **Local-first development** (LocalWP recommended). Never iterate
+  directly against production.
+- **First-class security** (see [`specs/02-security.md`](specs/02-security.md)):
+  HMAC, audit log, guardrails, kill switch.
+- **Infrastructure ops via the plugin** rather than raw SSH whenever
   possible.
 
-## Structure du dépôt
+## Repository layout
 
-| Chemin | Rôle |
-|--------|------|
-| `CLAUDE.md` | Ce fichier (contexte projet partagé, chargé à chaque session) |
-| `README.md` | Présentation publique du projet et installation |
+| Path | Role |
+|------|------|
+| `CLAUDE.md` | This file (shared project context, loaded each session) |
+| `README.md` | Public project description and install |
 | `LICENSE` | GPL-3.0-or-later |
-| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossaire.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md` |
-| `specs/` | Une spec par fonctionnalité (`01` à `07`) |
-| `plugin/ia-webmaster-bridge/` | Plugin WordPress (API REST `ia-webmaster/v1`) |
-| `claude-plugin/` | Plugin Claude Code (outils MCP + skills + pont MCP) |
-| `claude-plugin/mcp-gateway/` | Pont MCP (TypeScript bundled) |
-| `.claude-plugin/marketplace.json` | Catalogue marketplace Claude Code |
-| `tools/` | Outils de développement (voir `tools/README.md`) |
+| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossary.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md` |
+| `specs/` | One spec per feature (`01` to `07`) |
+| `plugin/ia-webmaster-bridge/` | WordPress plugin (REST API `ia-webmaster/v1`) |
+| `claude-plugin/` | Claude Code plugin (MCP tools + skills + MCP gateway) |
+| `claude-plugin/mcp-gateway/` | MCP gateway (TypeScript, bundled) |
+| `.claude-plugin/marketplace.json` | Claude Code marketplace catalogue |
+| `tools/` | Development tools (see `tools/README.md`) |
 
-## État du projet
+## Project status
 
-Phases 0 à 3 complètes — voir [`docs/roadmap.md`](docs/roadmap.md) pour le
-détail des sous-jalons atteints et restants.
+Phases 0 to 3 complete — see [`docs/roadmap.md`](docs/roadmap.md) for
+the detailed sub-milestones reached and remaining.
 
-Capacités actuelles (haut niveau) :
+Current high-level capabilities:
 
-- Gestion WordPress complète (contenu, médias, taxonomies, menus,
-  configuration, diagnostic, plugins).
-- Divi 5 : 41 modules natifs, 13 patterns paramétrables, Theme Builder
-  complet, round-trip fidèle au bit, composeur unifié déclaratif
+- Full WordPress management (content, media, taxonomies, menus,
+  configuration, diagnostics, plugins).
+- Divi 5: 41 native modules, 13 parametric patterns, full Theme
+  Builder, bit-faithful round-trip, unified declarative composer
   (`iawm_divi_page_compose`).
-- SEO Rank Math (Yoast prévu).
-- 7 skills Claude Code de méthode et de workflow.
+- Rank Math SEO (Yoast planned).
+- 7 Claude Code skills for method and workflow.
 
-## Règles de collaboration (à suivre par l'agent)
+## Collaboration rules (to be followed by the agent)
 
-- **Co-conception étape par étape.** Avancer par incréments testables ;
-  valider les engagements importants avec l'utilisateur avant de coder.
-- **Jamais d'opération destructrice sur une production sans confirmation
-  explicite ET sauvegarde préalable.**
-- **Brouillon par défaut.** Toute création de contenu commence en `draft` ;
-  la publication doit être explicite.
-- **Pas de scripts intermédiaires pour générer du contenu Divi.** Utiliser
-  directement les outils MCP `iawm_divi_page_compose` et
-  `iawm_divi_theme_builder_compose` (voir `docs/divi5-compose-dsl.md`).
-  Les scripts par projet (clients) vont dans un dossier **hors du dépôt**.
-- **Tenir `docs/decisions.md` et `docs/roadmap.md` à jour** à chaque décision
-  ou jalon franchi.
-- **Toute spec modifiée** : actualiser son champ « Statut » et sa date.
-- **Aucune fuite de données privées** dans le dépôt : pas de secrets, pas de
-  paths personnels, pas de contenu spécifique à un site client. Toute
-  configuration sensible reste dans `~/.iawm/config.json` (gitignoré).
+- **Step-by-step co-design.** Move in testable increments; validate
+  important commitments with the user before coding.
+- **Never run a destructive operation on production without explicit
+  confirmation AND a prior backup.**
+- **Draft by default.** Any content creation starts in `draft`;
+  publishing must be explicit.
+- **No intermediate scripts to generate Divi content.** Use the MCP
+  tools `iawm_divi_page_compose` and `iawm_divi_theme_builder_compose`
+  directly (see `docs/divi5-compose-dsl.md`). Per-project (client)
+  scripts live in a folder **outside the repository**.
+- **Keep `docs/decisions.md` and `docs/roadmap.md` up to date** for
+  every decision or milestone reached.
+- **Any modified spec**: refresh its "Status" field and date.
+- **No private data leaks** in the repository: no secrets, no personal
+  paths, no client-site-specific content. All sensitive configuration
+  stays in `~/.iawm/config.json` (gitignored).
+- **Codebase language is English.** Code, file names, comments,
+  identifiers, documentation, error messages and tool descriptions are
+  all in English so the project is usable by anyone worldwide. The
+  language of generated website content is independent — callers pass
+  an optional `language` parameter (BCP-47) to content-generation
+  tools.
 
-## Préférences personnelles
+## Personal preferences
 
-Les préférences propres au mainteneur courant (langue, style de
-communication, environnement de dev) sont dans `CLAUDE.local.md` —
-gitignoré — quand ce fichier existe. Si tu débutes sur ce dépôt, tu peux
-en créer un pour y consigner tes propres préférences sans polluer le
-dépôt public.
+The current maintainer's personal preferences (language, communication
+style, dev environment) live in `CLAUDE.local.md` — gitignored — when
+that file exists. If you are new to this repository, you can create
+one to record your own preferences without polluting the public repo.

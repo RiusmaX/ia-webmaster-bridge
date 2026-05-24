@@ -1,15 +1,15 @@
 /**
- * Pattern Hero — section d'ouverture d'une landing page.
+ * Hero pattern — opening section of a landing page.
  *
- * Structure :
- *   Section (bg color + padding généreux)
- *     Row (4_4, 1 colonne)
+ * Structure:
+ *   Section (bg color + generous padding)
+ *     Row (4_4, 1 column)
  *       Column (4_4)
- *         Text (H1 + sous-titre)
- *         CTA (titre+bouton secondaires) OU bouton seul + image
+ *         Text (H1 + subtitle)
+ *         CTA (secondary title+button) OR standalone button + image
  *
- * Variations futures possibles : hero 2-col (texte | image), hero
- * full-width image background, hero video background.
+ * Possible future variations: hero 2-col (text | image), hero with full-width
+ * image background, hero with video background.
  */
 
 import { section, row, column, text, cta } from "../builders.js";
@@ -17,17 +17,17 @@ import { colors } from "../globals.js";
 import type { DiviColor, GutenbergBlock } from "../types.js";
 
 export interface HeroOptions {
-  /** Titre principal (devient un H1). */
+  /** Main title (becomes an H1). */
   title: string;
-  /** Sous-titre / accroche secondaire (devient un paragraphe). */
+  /** Subtitle / secondary tagline (becomes a paragraph). */
   subtitle: string;
-  /** Texte du bouton d'action principal. */
+  /** Primary action button text. */
   ctaText: string;
-  /** URL du bouton. */
+  /** Button URL. */
   ctaUrl: string;
-  /** Couleur de fond. Défaut : couleur "body" du site. */
+  /** Background color. Default: site "body" color. */
   backgroundColor?: DiviColor;
-  /** URL d'une image de fond optionnelle (prime sur backgroundColor). */
+  /** Optional background image URL (takes precedence over backgroundColor). */
   backgroundImageUrl?: string;
 }
 

@@ -1,90 +1,90 @@
 # Roadmap
 
-> Statut : Phases 0-3 complètes · Dernière mise à jour : 2026-05-23
+> Status: Phases 0-3 complete · Last updated: 2026-05-23
 
-Plan d'action par phases. Les cases reflètent l'avancement réel. La sécurité
-(`specs/02-securite.md`) est transversale : construite dès la Phase 1 et durcie
-en continu, la Phase 5 étant la passe de durcissement formelle.
+Phased action plan. Boxes reflect real progress. Security
+(`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
+continuously, with Phase 5 being the formal hardening pass.
 
-## Phase 0 — Cadrage & environnement
+## Phase 0 — Scoping & environment
 
-- [x] Recherches (WordPress 7.0, écosystème IA, Divi 5)
-- [x] Architecture validée (3 composants, adaptateur maison)
-- [x] Contexte projet, mémoire et specs rédigés
-- [x] Site WordPress 7.0 local installé sous LocalWP
-- [x] Accès au site local fourni à Claude
-- [x] Divi 5 installé et activé sur le site local (Divi 5.5.2)
-- [x] Structure du dépôt initialisée (`plugin/`, `mcp-gateway/`)
+- [x] Research (WordPress 7.0, AI ecosystem, Divi 5)
+- [x] Architecture validated (3 components, in-house adapter)
+- [x] Project context, memory and specs written
+- [x] Local WordPress 7.0 site installed under LocalWP
+- [x] Local site access provided to Claude
+- [x] Divi 5 installed and active on the local site (Divi 5.5.2)
+- [x] Repo structure initialized (`plugin/`, `mcp-gateway/`)
 
-## Phase 1 — Connexion de base
+## Phase 1 — Basic connection
 
-- [x] Plugin minimal : namespace REST, capacité de test (`ping`, lecture seule)
-- [x] Authentification : clé d'API + signature HMAC
-- [x] Pont MCP local minimal connecté à Claude Code
-- [x] Validation bout en bout : 3 outils MCP testés (lecture de contenu réelle → Phase 2)
-- [x] Journal d'audit en place dès cette phase
+- [x] Minimal plugin: REST namespace, test capability (`ping`, read-only)
+- [x] Authentication: API key + HMAC signature
+- [x] Minimal local MCP bridge connected to Claude Code
+- [x] End-to-end validation: 3 MCP tools tested (real content read → Phase 2)
+- [x] Audit log in place from this phase
 
-## Phase 2 — Plan contenu & configuration
+## Phase 2 — Content & configuration plane
 
-- [x] Capacités contenu : CRUD pages/articles, médias, menus, taxonomies
-- [x] Génération de blocs Gutenberg valides (normalisation dans content/create)
-- [x] Capacités configuration : réglages du site, utilisateurs (options de thème → Phase 3)
-- [x] Capacités de diagnostic & accès aux logs (debug.log, Site Health, extensions)
-- [x] Garde-fous : mode dry-run, brouillon avant publication, kill switch
+- [x] Content capabilities: CRUD pages/posts, media, menus, taxonomies
+- [x] Generation of valid Gutenberg blocks (normalization in content/create)
+- [x] Configuration capabilities: site settings, users (theme options → Phase 3)
+- [x] Diagnostics capabilities & log access (debug.log, Site Health, plugins)
+- [x] Safeguards: dry-run mode, draft before publication, kill switch
 
-## Phase 3 — Plan Divi 5 *(complète)*
+## Phase 3 — Divi 5 plane *(complete)*
 
-- [x] **3.1** — Cartographie complète de l'API `divi/v1` (102 routes documentées dans `docs/divi5-api-index.md`)
-- [x] **3.1** — Rétro-ingénierie du format Divi 5 (3 pages de référence peuplées : id 19, 29, 53)
-- [x] **3.1** — Catalogue exhaustif des ~99 modules natifs (`docs/divi5-modules-catalog.md`)
-- [x] **3.2** — Endpoint `/divi/page/read` (lecture en arbre : tree / flat / raw)
-- [x] **3.2** — Endpoint `/divi/page/write` (écriture content + blocks)
-- [x] **3.2** — Round-trip fidèle au bit (bug `wp_slash` corrigé)
-- [x] **3.3** — Endpoint `/divi/library/list` + `/library/item` + `/library/local`
-- [x] **3.3** — Endpoint `/divi/cloud/status` + `/divi/global-data` (design system)
-- [x] **3.3** — Workflow hybride Divi Cloud documenté (Save to Library côté builder)
-- [x] **3.4** — Bibliothèque `lib/divi/` (builders + 11 patterns paramétrables)
-- [x] **3.4** — Skill `creer-page-divi-wordpress` (workflow prompt → page)
-- [x] **3.5** — 41 modules implémentés (modules avancés, structurels, dynamiques)
-- [x] **3.5** — 13 patterns : hero, features3col, ctaBanner, imageTextSplit, testimonials, faqAccordion, numbersBar, videoSection, contactSection, pricing3col, teamGrid, headerSimple, footerStandard
-- [x] **3.6** — Theme Builder : endpoints `/divi/theme-builder/*` (8 routes)
-- [x] **3.6** — Wrapper `setup-site-defaults` (header + footer + template default en 1 appel)
-- [x] **3.6** — Logique override Divi décodée (`enabled=true + id=0` pour rendu natif)
-- [x] **Test E2E réel** : page d'accueil complète (header + footer + 10 sections + SEO Rank Math) générée en draft sur le site de test à partir d'un brief — validation du workflow prompt → site
+- [x] **3.1** — Full mapping of the `divi/v1` API (102 routes documented in `docs/divi5-api-index.md`)
+- [x] **3.1** — Reverse-engineering of the Divi 5 format (3 reference pages populated: id 19, 29, 53)
+- [x] **3.1** — Exhaustive catalog of the ~99 native modules (`docs/divi5-modules-catalog.md`)
+- [x] **3.2** — Endpoint `/divi/page/read` (tree-based read: tree / flat / raw)
+- [x] **3.2** — Endpoint `/divi/page/write` (content + blocks write)
+- [x] **3.2** — Bit-faithful round-trip (`wp_slash` bug fixed)
+- [x] **3.3** — Endpoints `/divi/library/list` + `/library/item` + `/library/local`
+- [x] **3.3** — Endpoints `/divi/cloud/status` + `/divi/global-data` (design system)
+- [x] **3.3** — Divi Cloud hybrid workflow documented (Save to Library on the builder side)
+- [x] **3.4** — `lib/divi/` library (builders + 11 parameterizable patterns)
+- [x] **3.4** — `creer-page-divi-wordpress` skill (prompt → page workflow)
+- [x] **3.5** — 41 modules implemented (advanced, structural, dynamic modules)
+- [x] **3.5** — 13 patterns: hero, features3col, ctaBanner, imageTextSplit, testimonials, faqAccordion, numbersBar, videoSection, contactSection, pricing3col, teamGrid, headerSimple, footerStandard
+- [x] **3.6** — Theme Builder: `/divi/theme-builder/*` endpoints (8 routes)
+- [x] **3.6** — `setup-site-defaults` wrapper (header + footer + default template in 1 call)
+- [x] **3.6** — Divi override logic decoded (`enabled=true + id=0` for native rendering)
+- [x] **Real E2E test**: full homepage (header + footer + 10 sections + Rank Math SEO) generated as draft on the test site from a brief — validation of the prompt → site workflow
 
-## Phase 4 — Plan infrastructure
+## Phase 4 — Infrastructure plane
 
-- [x] Capacités extensions (install, activation, désactivation) — avancée Phase 3 pour intégrer Rank Math
-- [ ] Capacités thèmes (install, activation, mise à jour)
-- [ ] Mise à jour des extensions
-- [ ] Capacités base de données (export, requête, search-replace) contrôlées
-- [ ] Sauvegardes et restauration
-- [ ] Canal SSH/WP-CLI de secours documenté
+- [x] Plugin capabilities (install, activate, deactivate) — advanced in Phase 3 to integrate Rank Math
+- [ ] Theme capabilities (install, activate, update)
+- [ ] Plugin updates
+- [ ] Controlled database capabilities (export, query, search-replace)
+- [ ] Backups and restore
+- [ ] SSH/WP-CLI fallback channel documented
 
-## Phase 5 — Sécurité & garde-fous (durcissement)
+## Phase 5 — Security & safeguards (hardening)
 
-- [ ] Revue du modèle d'autorisation (scopes / capacités)
-- [ ] Sauvegarde automatique avant opération destructrice
-- [ ] Confirmations explicites pour les actions à risque
-- [ ] Kill switch et rotation des clés
-- [ ] Test d'intrusion léger du plugin
+- [ ] Authorization model review (scopes / capabilities)
+- [ ] Automatic backup before destructive operation
+- [ ] Explicit confirmations for risky actions
+- [ ] Kill switch and key rotation
+- [ ] Light penetration test of the plugin
 
-## Phase 6 — Couche webmaster
+## Phase 6 — Webmaster layer
 
-- [x] Skills Claude Code de base (webmaster, créer page, audit)
-- [x] Empaquetage en plugin Claude Code + diffusion open source (GitHub, GPL-3.0)
-- [x] Skill `design-frontend-wordpress` (hiérarchie, typo, couleurs, espacement, mobile-first)
-- [x] Skill `marketing-conversion-wordpress` (AIDA/PAS/FAB, preuve sociale, hiérarchie des CTA)
-- [x] Skill `seo-wordpress` (audit SEO, Rank Math, structure sémantique)
-- [x] Skill `creer-page-divi-wordpress` (workflow prompt → page Divi complète)
-- [x] API SEO normalisée avec backend Rank Math
-- [ ] Backend Yoast SEO en alternative (#33)
-- [ ] Fichier de contexte par site
-- [ ] Workflows webmaster documentés
-- [ ] Éventuelles routines planifiées
+- [x] Base Claude Code skills (webmaster, create page, audit)
+- [x] Packaged as a Claude Code plugin + open-source release (GitHub, GPL-3.0)
+- [x] `design-frontend-wordpress` skill (hierarchy, typography, colors, spacing, mobile-first)
+- [x] `marketing-conversion-wordpress` skill (AIDA/PAS/FAB, social proof, CTA hierarchy)
+- [x] `seo-wordpress` skill (SEO audit, Rank Math, semantic structure)
+- [x] `creer-page-divi-wordpress` skill (prompt → full Divi page workflow)
+- [x] Normalized SEO API with Rank Math backend
+- [ ] Yoast SEO backend as an alternative (#33)
+- [ ] Per-site context file
+- [ ] Documented webmaster workflows
+- [ ] Possible scheduled routines
 
-## Jalons de déploiement
+## Deployment milestones
 
-- [ ] Stable sur le site local
-- [ ] Validé sur une petite prod
-- [ ] Validé sur une grosse prod
+- [ ] Stable on the local site
+- [ ] Validated on a small prod
+- [ ] Validated on a large prod

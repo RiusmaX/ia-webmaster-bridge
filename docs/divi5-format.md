@@ -1,40 +1,40 @@
-# Format Divi 5 — rétro-ingénierie
+# Divi 5 format — reverse engineering
 
-> Source : pages de référence n°19 et n°29 sur le site local, peuplées
-> dans le Visual Builder Divi 5.5.2 puis lues via `iawm_content_get`.
-> **Catalogue complet des modules natifs** dans
-> [`divi5-modules-catalog.md`](divi5-modules-catalog.md) — ~99 modules
-> natifs inventoriés (21 implémentés côté builders TS).
-> Dernière mise à jour : 2026-05-23.
+> Source: reference pages #19 and #29 on the local site, populated in
+> the Divi 5.5.2 Visual Builder then read via `iawm_content_get`.
+> **Complete catalog of native modules** in
+> [`divi5-modules-catalog.md`](divi5-modules-catalog.md) — ~99 native
+> modules inventoried (21 implemented on the TS builders side).
+> Last updated: 2026-05-23.
 
-Cette doc fixe ce qu'on a **observé directement**, pas ce que la doc
-communautaire suppose. À chaque évolution majeure de Divi, refaire un
-round-trip sur cette page.
+This doc records what we **directly observed**, not what community
+documentation assumes. After each major Divi release, re-run a round-trip
+on this page.
 
 ## TL;DR
 
-Une page Divi 5 est stockée dans `post_content` au format **Gutenberg
-blocks Divi**, avec une hiérarchie de cinq niveaux :
+A Divi 5 page is stored in `post_content` as **Divi Gutenberg blocks**,
+with a five-level hierarchy:
 
 ```
-wp:divi/placeholder              ← wrapper racine (1 par page Divi)
-└── wp:divi/section              ← bloc « bande » pleine largeur
-    └── wp:divi/row              ← ligne dans la section
-        └── wp:divi/column       ← colonne (1, 2, 3 ou 4 dans la row)
+wp:divi/placeholder              ← root wrapper (1 per Divi page)
+└── wp:divi/section              ← full-width "band" block
+    └── wp:divi/row              ← row within the section
+        └── wp:divi/column       ← column (1, 2, 3 or 4 within the row)
             └── modules          ← text, blurb, cta, image, button…
 ```
 
-Chaque bloc Gutenberg contient un **JSON d'attributs** (encodé en
-JSON-escape `"` pour les `"`) avec deux racines récurrentes :
+Each Gutenberg block contains a **JSON attribute payload** (JSON-escaped
+`"` → `"`) with two recurring roots:
 
-- **`module`** — paramètres structurels et style (decoration, advanced, spacing, sizing…).
-- **`content`** (modules texte) / **`title`** / **`imageIcon`** / **`image`** / **`button`** — contenu et données spécifiques au module.
+- **`module`** — structural and style parameters (decoration, advanced, spacing, sizing…).
+- **`content`** (text modules) / **`title`** / **`imageIcon`** / **`image`** / **`button`** — module-specific content and data.
 
-Plus un `builderVersion` à la racine (ex. `"5.5.2"`).
+Plus a `builderVersion` at the root (e.g. `"5.5.2"`).
 
-## Wrapper racine `wp:divi/placeholder`
+## Root wrapper `wp:divi/placeholder`
 
-Toute page Divi 5 commence par :
+Every Divi 5 page starts with:
 
 ```html
 <!-- wp:divi/placeholder -->
@@ -42,35 +42,34 @@ Toute page Divi 5 commence par :
 <!-- /wp:divi/placeholder -->
 ```
 
-C'est ce wrapper qui signale à Divi qu'il faut prendre le contrôle du
-rendu de la page (à la place du thème WordPress par défaut). Sans lui,
-les blocs Divi peuvent ne pas s'afficher correctement.
+This wrapper is what tells Divi to take over rendering of the page (in
+place of the default WordPress theme). Without it, Divi blocks may not
+render correctly.
 
-> ⚠️ La meta `_et_pb_use_builder = 'on'` reste également nécessaire pour
-> que Divi reconnaisse la page comme « builderée ». Le wrapper seul ne
-> suffit pas.
+> ⚠️ The meta `_et_pb_use_builder = 'on'` is also still required for
+> Divi to recognize the page as "built". The wrapper alone is not enough.
 
-## Hiérarchie obligatoire
+## Mandatory hierarchy
 
-L'arbre **doit** respecter exactement cet ordre :
+The tree **must** follow this exact order:
 
-| Niveau | Bloc                      | Contraintes |
+| Level | Block                     | Constraints |
 |--------|---------------------------|-------------|
-| 1      | `wp:divi/placeholder`     | 1 unique, racine |
-| 2      | `wp:divi/section`         | N sections en séquence |
-| 3      | `wp:divi/row`             | 1 ou N rows dans une section |
-| 4      | `wp:divi/column`          | Dépend de `columnStructure` de la row |
-| 5      | Modules (`wp:divi/text`, …) | N modules par colonne |
+| 1      | `wp:divi/placeholder`     | 1 only, root |
+| 2      | `wp:divi/section`         | N sections in sequence |
+| 3      | `wp:divi/row`             | 1 or N rows inside a section |
+| 4      | `wp:divi/column`          | Depends on the row's `columnStructure` |
+| 5      | Modules (`wp:divi/text`, …) | N modules per column |
 
-Casser cet ordre = page non rendue ou avec erreurs visibles dans le VB.
+Breaking this order = page not rendered, or visible errors in the VB.
 
-## Format des attributs
+## Attribute format
 
-Le JSON d'attributs est encodé avec **`"` au lieu de `"`** dans les
-valeurs (échappement Gutenberg standard). Quand on parse côté PHP avec
-`parse_blocks()`, on récupère des structures associatives natives.
+The attribute JSON is encoded with **`"` instead of `"`** in values
+(standard Gutenberg escaping). When parsed on the PHP side with
+`parse_blocks()`, we get native associative structures.
 
-### Structure générale par bloc
+### Generic per-block structure
 
 ```json
 {
@@ -78,19 +77,19 @@ valeurs (échappement Gutenberg standard). Quand on parse côté PHP avec
     "advanced": { /* type, columnStructure, link, position… */ },
     "decoration": { /* background, spacing, layout, sizing, font… */ }
   },
-  "content": { "innerContent": { /* par breakpoint */ } },
-  "title":   { "innerContent": { /* par breakpoint */ } },
+  "content": { "innerContent": { /* per breakpoint */ } },
+  "title":   { "innerContent": { /* per breakpoint */ } },
   "builderVersion": "5.5.2"
 }
 ```
 
-Les blocs **structurels** (section/row/column) ont surtout `module`. Les
-blocs **contenu** (text/blurb/cta/image/button) ajoutent un ou plusieurs
-champs spécifiques (`content`, `title`, `image`, `imageIcon`, `button`).
+**Structural** blocks (section/row/column) mainly carry `module`.
+**Content** blocks (text/blurb/cta/image/button) add one or more
+specific fields (`content`, `title`, `image`, `imageIcon`, `button`).
 
 ### Multi-breakpoints
 
-Toutes les propriétés stylables suivent le pattern :
+All styleable properties follow the pattern:
 
 ```json
 {
@@ -103,32 +102,31 @@ Toutes les propriétés stylables suivent le pattern :
 }
 ```
 
-**Breakpoints observés** : `desktop`, `tablet`, `phoneWide`, `phone`.
-(Divi 5 supporte aussi des breakpoints custom — non rencontrés ici).
+**Observed breakpoints**: `desktop`, `tablet`, `phoneWide`, `phone`.
+(Divi 5 also supports custom breakpoints — not encountered here.)
 
-Si seul `desktop` est défini, Divi en hérite pour tous les autres.
+If only `desktop` is defined, Divi inherits it for all others.
 
-### Variables globales (design system)
+### Global variables (design system)
 
-Une valeur peut référencer une **variable globale** au lieu d'une
-constante :
+A value can reference a **global variable** instead of a constant:
 
 ```
 $variable({"type":"color","value":{"name":"gcid-heading-color","settings":{}}})$
 ```
 
-Le format : `$variable( <JSON> )$` où le JSON contient :
-- `type` : `color` (vu), probablement aussi `font`, etc.
-- `value.name` : identifiant de la variable (`gcid-*` = global color id).
-- `value.settings` : surcharges éventuelles.
+Format: `$variable( <JSON> )$` where the JSON contains:
+- `type`: `color` (seen), probably also `font`, etc.
+- `value.name`: variable identifier (`gcid-*` = global color id).
+- `value.settings`: optional overrides.
 
-Ces variables sont définies via `divi/v1/global-data/global-colors` /
-`global-fonts` / `global-variables`. **Toujours préférer la variable** à
-la valeur en dur : changer la palette globale propage le changement.
+These variables are defined via `divi/v1/global-data/global-colors` /
+`global-fonts` / `global-variables`. **Always prefer the variable** over
+a hardcoded value: changing the global palette propagates the change.
 
-### Icônes Divi
+### Divi icons
 
-Les modules type `blurb` peuvent afficher une icône Divi :
+`blurb`-type modules can display a Divi icon:
 
 ```json
 "icon": {
@@ -138,17 +136,17 @@ Les modules type `blurb` peuvent afficher une icône Divi :
 }
 ```
 
-Où `unicode` est le code-point de l'icône dans la police d'icônes Divi
+Where `unicode` is the icon code-point in the Divi icon font
 (format `&#xXXXX;`).
 
-### Couleurs et gradients
+### Colors and gradients
 
-Couleur unie :
+Solid color:
 ```json
 "background": { "desktop": { "value": { "color": "#2B87DA" } } }
 ```
 
-Gradient :
+Gradient:
 ```json
 "background": {
   "desktop": {
@@ -166,7 +164,7 @@ Gradient :
 }
 ```
 
-### Image de fond
+### Background image
 
 ```json
 "background": {
@@ -200,10 +198,10 @@ Gradient :
 }
 ```
 
-`syncVertical` / `syncHorizontal` lient top↔bottom / left↔right pour
-édition synchronisée dans le VB.
+`syncVertical` / `syncHorizontal` link top↔bottom / left↔right for
+synced editing in the VB.
 
-## Modules structurels
+## Structural modules
 
 ### `wp:divi/section`
 
@@ -219,7 +217,7 @@ Gradient :
 }
 ```
 
-Une section = une bande horizontale pleine largeur.
+A section = a full-width horizontal band.
 
 ### `wp:divi/row`
 
@@ -240,15 +238,15 @@ Une section = une bande horizontale pleine largeur.
 }
 ```
 
-**`columnStructure`** : décrit les colonnes en notation `a_b` où `a/b`
-est la fraction occupée. Combinaisons observées :
-- `"4_4"` — 1 colonne pleine largeur
-- `"1_2,1_2"` — 2 colonnes égales
-- `"1_3,1_3,1_3"` — 3 colonnes égales
-- (probablement `"1_4,1_4,1_4,1_4"`, `"1_2,1_4,1_4"`, etc.)
+**`columnStructure`**: describes the columns in `a_b` notation where
+`a/b` is the fraction occupied. Observed combinations:
+- `"4_4"` — 1 full-width column
+- `"1_2,1_2"` — 2 equal columns
+- `"1_3,1_3,1_3"` — 3 equal columns
+- (probably `"1_4,1_4,1_4,1_4"`, `"1_2,1_4,1_4"`, etc.)
 
-**`flexColumnStructure`** : redondance pour le moteur flex (Divi 5
-utilise flex en interne).
+**`flexColumnStructure`**: redundancy for the flex engine (Divi 5 uses
+flex internally).
 
 ### `wp:divi/column`
 
@@ -268,12 +266,11 @@ utilise flex en interne).
 }
 ```
 
-`type` correspond à la part dans `columnStructure`. `flexType` est la
-même chose en fraction sur 24 (ex. `8_24` = 1/3, `24_24` = pleine
-largeur). Sur mobile (`phone`), les colonnes basculent en pleine
-largeur via `flexType: 24_24`.
+`type` matches the share in `columnStructure`. `flexType` is the same
+thing as a fraction over 24 (e.g. `8_24` = 1/3, `24_24` = full width).
+On mobile (`phone`), columns switch to full width via `flexType: 24_24`.
 
-## Modules de contenu
+## Content modules
 
 ### `wp:divi/text`
 
@@ -282,7 +279,7 @@ largeur via `flexType: 24_24`.
   "content": {
     "innerContent": {
       "desktop": {
-        "value": "<h1><span>Bienvenue sur IAWM Reference</span></h1>"
+        "value": "<h1><span>Welcome to IAWM Reference</span></h1>"
       }
     },
     "decoration": {
@@ -305,8 +302,8 @@ largeur via `flexType: 24_24`.
 }
 ```
 
-Le contenu réel est du **HTML inline** dans `innerContent.{bp}.value`.
-La typo des H1–H6 se règle via `decoration.headingFont.{tag}.font`.
+The actual content is **inline HTML** in `innerContent.{bp}.value`.
+H1–H6 typography is set via `decoration.headingFont.{tag}.font`.
 
 ### `wp:divi/blurb`
 
@@ -328,8 +325,8 @@ La typo des H1–H6 se règle via `decoration.headingFont.{tag}.font`.
 }
 ```
 
-Le blurb a trois champs : `imageIcon` (visuel haut), `title`, `content`.
-`useIcon: "on"` fait basculer l'image en icône Divi.
+The blurb has three fields: `imageIcon` (top visual), `title`, `content`.
+`useIcon: "on"` switches the image to a Divi icon.
 
 ### `wp:divi/cta`
 
@@ -352,7 +349,7 @@ Le blurb a trois champs : `imageIcon` (visuel haut), `title`, `content`.
 }
 ```
 
-CTA = titre + texte + bouton, optionnellement lié.
+CTA = title + text + button, optionally linked.
 
 ### `wp:divi/image`
 
@@ -368,62 +365,62 @@ CTA = titre + texte + bouton, optionnellement lié.
 }
 ```
 
-Le module image est minimaliste — l'URL/source dans `image.innerContent`.
-Pour un asset WP réel, l'URL pointe vers `wp-content/uploads/...`.
+The image module is minimal — URL/source in `image.innerContent`.
+For a real WP asset, the URL points to `wp-content/uploads/...`.
 
-### `wp:divi/button` (présumé, non rencontré ici)
+### `wp:divi/button` (assumed, not encountered here)
 
-Vu via `wp:divi/cta` qui embarque un bouton, on suppose la même
-structure `innerContent.desktop.value.{text, linkUrl}`.
+Seen via `wp:divi/cta` which embeds a button, we assume the same
+`innerContent.desktop.value.{text, linkUrl}` structure.
 
-## Pièges identifiés
+## Identified pitfalls
 
-1. **JSON profond et redondant.** `module.decoration.background.desktop.value.color`
-   pour une simple couleur de fond. Toute manipulation programmatique doit
-   passer par un constructeur dédié, pas par concaténation manuelle.
+1. **Deep, redundant JSON.** `module.decoration.background.desktop.value.color`
+   for a simple background color. Any programmatic manipulation must go
+   through a dedicated constructor, not manual concatenation.
 
-2. **Échappement `"`.** Si on écrit du JSON Divi à la main et qu'on
-   le réinjecte dans `post_content`, ne **pas** échapper les `"` en
-   `"` — c'est `serialize_block()` côté WP qui s'en charge.
+2. **`"` escaping.** If you write Divi JSON by hand and re-inject it
+   into `post_content`, do **not** escape `"` to `"` — that's what
+   `serialize_block()` does on the WP side.
 
-3. **Placeholder racine obligatoire.** Une section seule, sans wrapper
-   `wp:divi/placeholder`, ne s'affichera pas correctement (ou cassera
-   le VB à l'ouverture).
+3. **Mandatory root placeholder.** A standalone section without a
+   `wp:divi/placeholder` wrapper will not render correctly (or will
+   break the VB on open).
 
-4. **Module + Row + Section = trio indissociable.** Pas de module
-   directement dans une row sans column ; pas de column directement
-   dans une section sans row. Le builder refuse le chargement sinon.
+4. **Module + Row + Section = inseparable trio.** No module directly
+   inside a row without a column; no column directly inside a section
+   without a row. Otherwise the builder refuses to load.
 
-5. **Variables globales > valeurs en dur.** Référencer systématiquement
-   les couleurs globales (`gcid-heading-color`, `gcid-body-color`, etc.)
-   plutôt que des valeurs en dur (`#000`). Sinon, le changement de
-   palette du site ne se propage pas.
+5. **Global variables > hardcoded values.** Systematically reference
+   global colors (`gcid-heading-color`, `gcid-body-color`, etc.)
+   instead of hardcoded values (`#000`). Otherwise a site palette
+   change won't propagate.
 
-6. **Versionning.** Chaque bloc porte un `builderVersion`. À chaque
-   évolution majeure de Divi 5, vérifier la compatibilité du format.
-   Tester en round-trip systématiquement.
+6. **Versioning.** Every block carries a `builderVersion`. After each
+   major Divi 5 update, verify format compatibility. Always test via
+   round-trip.
 
-7. **Builds Gutenberg.** `parse_blocks()` + `serialize_blocks()` côté
-   WP normalisent l'output. Un round-trip Divi → parse → serialize peut
-   **réordonner les clés** du JSON d'attributs (ce n'est pas un bug, c'est
-   un artefact de `json_encode`). Le builder accepte les deux ordres.
-   En pratique observée sur la page de référence : **round-trip identique
-   au bit près** (11438 octets, 24 blocs).
+7. **Gutenberg builds.** `parse_blocks()` + `serialize_blocks()` on the
+   WP side normalize the output. A Divi → parse → serialize round-trip
+   may **reorder the keys** of the attribute JSON (not a bug, an artifact
+   of `json_encode`). The builder accepts both orders. Observed in
+   practice on the reference page: **bit-identical round-trip** (11438
+   bytes, 24 blocks).
 
-8. **Piège `wp_unslash` (critique).** `wp_insert_post` et `wp_update_post`
-   appliquent `wp_unslash()` en interne sur les champs texte — ils
-   supposent que les données viennent slashed depuis `$_POST`. Si on leur
-   passe directement un `post_content` Divi déjà propre, **tous les
-   backslashes disparaissent silencieusement**. Or Divi 5 stocke ses
-   attributs avec des échappements Unicode `"`, `<`, `>`,
-   etc. — chaque backslash perdu corrompt un attribut. **Toujours appeler
-   `wp_slash()` sur le contenu avant `wp_insert_post` / `wp_update_post`.**
-   C'est le fix qui rend le round-trip fidèle au bit près.
+8. **`wp_unslash` pitfall (critical).** `wp_insert_post` and
+   `wp_update_post` internally apply `wp_unslash()` on text fields —
+   they assume the data comes slashed from `$_POST`. If you pass them
+   an already-clean Divi `post_content`, **all backslashes vanish
+   silently**. And Divi 5 stores its attributes with Unicode escapes
+   `"`, `<`, `>`, etc. — each lost backslash corrupts an
+   attribute. **Always call `wp_slash()` on the content before
+   `wp_insert_post` / `wp_update_post`.** That's the fix that makes the
+   round-trip bit-faithful.
 
-## Plan d'attaque (Phase 3.2)
+## Attack plan (Phase 3.2)
 
-1. **Constructeurs PHP côté plugin** (`lib/divi/` côté gateway TS, ou
-   `includes/divi/` côté plugin) :
+1. **PHP constructors on the plugin side** (`lib/divi/` on the TS gateway,
+   or `includes/divi/` on the plugin):
    - `make_section($attrs, $rows)`
    - `make_row($column_structure, $columns)`
    - `make_column($type, $modules)`
@@ -431,20 +428,20 @@ structure `innerContent.desktop.value.{text, linkUrl}`.
    - `make_blurb($title, $text, $icon)`
    - `make_cta($title, $text, $button_text, $button_link)`
    - `make_image($src, $alt)`
-2. **Sérialiseur** : prend une structure haut niveau (Page→Sections→…→Modules)
-   et produit le `post_content` valide, encadré par `wp:divi/placeholder`.
-3. **Endpoint `/divi/page/read`** : `parse_blocks` + projection en arbre
-   simplifié (sans le bruit `desktop.value`).
-4. **Round-trip** : lire la page 19, la réécrire ailleurs, comparer.
+2. **Serializer**: takes a high-level structure (Page→Sections→…→Modules)
+   and produces valid `post_content`, wrapped in `wp:divi/placeholder`.
+3. **`/divi/page/read` endpoint**: `parse_blocks` + projection to a
+   simplified tree (without the `desktop.value` noise).
+4. **Round-trip**: read page 19, rewrite it elsewhere, compare.
 
-## Modules avancés (page de référence n°29)
+## Advanced modules (reference page #29)
 
-Documentés à partir d'une 2e page de référence peuplée dans
-le builder Divi 5.5.2.
+Documented from a 2nd reference page populated in the Divi 5.5.2
+builder.
 
 ### `wp:divi/heading`
 
-Module dédié pour les titres (alternative au `<h1>` dans `wp:divi/text`).
+Dedicated module for titles (alternative to the `<h1>` in `wp:divi/text`).
 
 ```json
 {
@@ -452,12 +449,12 @@ Module dédié pour les titres (alternative au `<h1>` dans `wp:divi/text`).
 }
 ```
 
-Plus simple que `wp:divi/text` quand on veut juste un titre. La balise
-HTML produite (`<h1>`, `<h2>`…) se règle via `module.advanced.headingLevel`.
+Simpler than `wp:divi/text` when you only want a heading. The HTML tag
+produced (`<h1>`, `<h2>`…) is set via `module.advanced.headingLevel`.
 
 ### `wp:divi/button`
 
-Bouton seul (à distinguer du bouton intégré au CTA / slide).
+Standalone button (distinct from the button embedded in CTA / slide).
 
 ```json
 {
@@ -471,18 +468,18 @@ Bouton seul (à distinguer du bouton intégré au CTA / slide).
 }
 ```
 
-**Astuce** : `linkUrl` peut être une **variable de contenu Divi** :
+**Tip**: `linkUrl` can be a **Divi content variable**:
 
 ```
 $variable({"type":"content","value":{"name":"home_url","settings":{}}})$
 ```
 
-Variables de contenu connues : `home_url`, et probablement `page_url`,
-`site_url`, etc. Utile pour ne pas hardcoder les URLs.
+Known content variables: `home_url`, and likely `page_url`, `site_url`,
+etc. Useful to avoid hardcoding URLs.
 
 ### `wp:divi/number-counter`
 
-Chiffre animé au scroll (idéal pour les KPIs).
+Number animated on scroll (ideal for KPIs).
 
 ```json
 {
@@ -494,11 +491,11 @@ Chiffre animé au scroll (idéal pour les KPIs).
 }
 ```
 
-`enablePercentSign` ajoute un `%` automatique (utile pour les taux).
+`enablePercentSign` automatically adds a `%` (useful for rates).
 
 ### `wp:divi/testimonial`
 
-Citation avec photo + nom.
+Quote with photo + name.
 
 ```json
 {
@@ -512,11 +509,11 @@ Citation avec photo + nom.
 }
 ```
 
-Champ `job_title` (fonction) probablement aussi disponible — à vérifier.
+`job_title` field (position) likely also available — to confirm.
 
 ### `wp:divi/gallery`
 
-Galerie d'images, **liste d'IDs media en CSV**.
+Image gallery, **CSV list of media IDs**.
 
 ```json
 {
@@ -536,13 +533,12 @@ Galerie d'images, **liste d'IDs media en CSV**.
 }
 ```
 
-Les IDs renvoient à des attachments WP (post_type=attachment). À générer
-on uploade d'abord les images via `iawm_media_sideload` puis on
-récupère leurs IDs.
+IDs point to WP attachments (post_type=attachment). To generate, first
+upload the images via `iawm_media_sideload`, then retrieve their IDs.
 
 ### `wp:divi/video`
 
-Vidéo, **URL YouTube/Vimeo auto-détectée**.
+Video, **YouTube/Vimeo URL auto-detected**.
 
 ```json
 {
@@ -554,12 +550,12 @@ Vidéo, **URL YouTube/Vimeo auto-détectée**.
 }
 ```
 
-Pour une vidéo self-hosted, fournir l'URL `.mp4` directement.
+For a self-hosted video, provide the `.mp4` URL directly.
 
 ### `wp:divi/code`
 
-Bloc HTML brut. **À éviter sauf nécessité** — contourne la logique du
-builder et complique la maintenance.
+Raw HTML block. **Avoid unless necessary** — bypasses the builder's
+logic and complicates maintenance.
 
 ```json
 {
@@ -567,10 +563,10 @@ builder et complique la maintenance.
 }
 ```
 
-### Modules composés (nested)
+### Composed (nested) modules
 
-Quatre modules contiennent des enfants : `accordion`, `tabs`, `slider`,
-`contact-form`. Leurs enfants sont des blocs Divi à part entière dans
+Four modules contain children: `accordion`, `tabs`, `slider`,
+`contact-form`. Their children are first-class Divi blocks in
 `innerBlocks`.
 
 #### `wp:divi/accordion` + `wp:divi/accordion-item`
@@ -580,18 +576,18 @@ wp:divi/accordion
 └── wp:divi/accordion-item × N
 ```
 
-Item :
+Item:
 ```json
 {
-  "title":   { "innerContent": { "desktop": { "value": "Question ?" } } },
-  "content": { "innerContent": { "desktop": { "value": "<p>Réponse…</p>" } } },
+  "title":   { "innerContent": { "desktop": { "value": "Question?" } } },
+  "content": { "innerContent": { "desktop": { "value": "<p>Answer…</p>" } } },
   "module": {
-    "advanced": { "open": { "desktop": { "value": "on" } } }  // optionnel
+    "advanced": { "open": { "desktop": { "value": "on" } } }  // optional
   }
 }
 ```
 
-`open: "on"` ouvre l'item par défaut (souvent posé sur le premier).
+`open: "on"` opens the item by default (often set on the first one).
 
 #### `wp:divi/tabs` + `wp:divi/tab`
 
@@ -600,7 +596,7 @@ wp:divi/tabs
 └── wp:divi/tab × N
 ```
 
-Tab :
+Tab:
 ```json
 {
   "title":   { "innerContent": { "desktop": { "value": "Tab Title" } } },
@@ -615,7 +611,7 @@ wp:divi/slider
 └── wp:divi/slide × N
 ```
 
-Slide :
+Slide:
 ```json
 {
   "title":   { "innerContent": { "desktop": { "value": "Slide Title" } } },
@@ -635,8 +631,8 @@ wp:divi/contact-form
 └── wp:divi/contact-field × N
 ```
 
-Le form a un **uniqueId** UUID (auto-généré par le builder, à régénérer
-côté nous via `wp_generate_uuid4()` ou équivalent JS) :
+The form has a **uniqueId** UUID (auto-generated by the builder, to be
+regenerated on our side via `wp_generate_uuid4()` or equivalent JS):
 
 ```json
 {
@@ -648,7 +644,7 @@ côté nous via `wp_generate_uuid4()` ou équivalent JS) :
 }
 ```
 
-Field :
+Field:
 ```json
 {
   "fieldItem": {
@@ -667,21 +663,21 @@ Field :
 }
 ```
 
-**Types de field** : `input` (texte court), `email`, `text` (textarea),
-probablement aussi `select`, `checkbox`, `radio`, `phone`. `flexType`
-contrôle la largeur (12_24 = demi, 24_24 = pleine).
+**Field types**: `input` (short text), `email`, `text` (textarea),
+probably also `select`, `checkbox`, `radio`, `phone`. `flexType`
+controls width (12_24 = half, 24_24 = full).
 
-`id` est l'identifiant interne du champ (utilisé dans les notifications
-email reçues par le destinataire). À donner sans espaces.
+`id` is the field's internal identifier (used in the email
+notifications received by the recipient). Use no spaces.
 
-## Modules natifs prioritaires (page de référence n°53)
+## Priority native modules (reference page #53)
 
-Documentés à partir d'une 3e page de référence peuplée dans le builder.
+Documented from a 3rd reference page populated in the builder.
 
 ### `wp:divi/divider`
 
-Séparateur visuel. Avec valeurs par défaut, attributs minimaux. Options
-de style (couleur, hauteur, alignement) dans `module.decoration.divider`.
+Visual separator. With defaults, attributes are minimal. Style options
+(color, height, alignment) live in `module.decoration.divider`.
 
 ```json
 { "builderVersion": "5.5.2" }
@@ -689,8 +685,8 @@ de style (couleur, hauteur, alignement) dans `module.decoration.divider`.
 
 ### `wp:divi/icon`
 
-Icône Divi seule. Par défaut, attributs minimaux. La configuration
-(unicode + couleur + taille) est dans `icon.innerContent.desktop.value`.
+Standalone Divi icon. By default, attributes are minimal. The
+configuration (unicode + color + size) is in `icon.innerContent.desktop.value`.
 
 ```json
 {
@@ -704,7 +700,7 @@ Icône Divi seule. Par défaut, attributs minimaux. La configuration
 
 ### `wp:divi/toggle`
 
-Bloc révélable (équivalent à un accordion à 1 item).
+Reveal block (equivalent to a 1-item accordion).
 
 ```json
 {
@@ -715,15 +711,15 @@ Bloc révélable (équivalent à un accordion à 1 item).
 
 ### `wp:divi/pricing-tables` + `wp:divi/pricing-table` ⚠️
 
-**Convention de nommage spécifique** : le conteneur est *tables* (pluriel)
-et l'enfant est *table* (singulier), pas *table-item*.
+**Specific naming convention**: the container is *tables* (plural)
+and the child is *table* (singular), not *table-item*.
 
 ```
 wp:divi/pricing-tables
 └── wp:divi/pricing-table × N
 ```
 
-Item :
+Item:
 ```json
 {
   "title":    { "innerContent": { "desktop": { "value": "Table Title" } } },
@@ -737,22 +733,22 @@ Item :
   "content": {
     "innerContent": {
       "desktop": {
-        "value": "+ Inclus 1\n+ Inclus 2\n- Non inclus"
+        "value": "+ Included 1\n+ Included 2\n- Not included"
       }
     }
   }
 }
 ```
 
-`content` est un texte multi-lignes où chaque ligne commence par :
-- `+` pour une fonctionnalité **incluse**
-- `-` pour une fonctionnalité **non incluse**
+`content` is a multi-line text where each line starts with:
+- `+` for an **included** feature
+- `-` for a **non-included** feature
 
 ### `wp:divi/icon-list` + `wp:divi/icon-list-item`
 
-Liste à puces stylées (icône + texte par item).
+Styled bullet list (icon + text per item).
 
-Item :
+Item:
 ```json
 {
   "content": { "innerContent": { "desktop": { "value": "List item text" } } },
@@ -771,13 +767,13 @@ Item :
 }
 ```
 
-`target: "on"` ouvre le lien dans un nouvel onglet (si l'item est lié).
+`target: "on"` opens the link in a new tab (if the item is linked).
 
 ### `wp:divi/social-media-follow` + `wp:divi/social-media-follow-network` ⚠️
 
-**Convention** : l'enfant s'appelle `*-network` (pas `*-item`).
+**Convention**: the child is named `*-network` (not `*-item`).
 
-Item :
+Item:
 ```json
 {
   "socialNetwork": {
@@ -797,13 +793,13 @@ Item :
 }
 ```
 
-`title` = identifiant interne du réseau (`facebook`, `twitter`,
-`instagram`, `linkedin`, `youtube`, `tiktok`, etc.). `label` = texte
-affiché. La couleur de fond est typiquement celle de la marque.
+`title` = the network's internal identifier (`facebook`, `twitter`,
+`instagram`, `linkedin`, `youtube`, `tiktok`, etc.). `label` = displayed
+text. The background color is typically the brand's color.
 
 ### `wp:divi/team-member`
 
-Membre d'équipe (photo + nom + fonction + bio).
+Team member (photo + name + position + bio).
 
 ```json
 {
@@ -818,13 +814,13 @@ Membre d'équipe (photo + nom + fonction + bio).
 }
 ```
 
-⚠️ Note : l'image utilise `url` (pas `src` comme dans `wp:divi/image`).
-Le module gère aussi les profils sociaux du membre via des attributs
-avancés (facebook, twitter, …).
+⚠️ Note: the image uses `url` (not `src` like in `wp:divi/image`).
+The module also handles the member's social profiles via advanced
+attributes (facebook, twitter, …).
 
 ### `wp:divi/signup`
 
-Email opt-in (capture newsletter).
+Email opt-in (newsletter capture).
 
 ```json
 {
@@ -833,14 +829,14 @@ Email opt-in (capture newsletter).
 }
 ```
 
-Le provider (Mailchimp, ConvertKit, etc.) et la liste de destination
-sont configurés dans des attributs avancés non observés ici.
+The provider (Mailchimp, ConvertKit, etc.) and the destination list
+are configured in advanced attributes not observed here.
 
 ### `wp:divi/map`
 
-Google Maps. Avec valeurs par défaut, attributs minimaux. L'adresse,
-le zoom et les marqueurs (modules `wp:divi/map-item` enfants) se posent
-en attributs avancés.
+Google Maps. With defaults, attributes are minimal. The address, zoom
+and markers (child `wp:divi/map-item` modules) are set via advanced
+attributes.
 
 ```json
 { "builderVersion": "5.5.2" }
@@ -848,7 +844,7 @@ en attributs avancés.
 
 ### `wp:divi/circle-counter`
 
-Variation circulaire du number counter (pourcentage en cercle animé).
+Circular variation of the number counter (animated percentage circle).
 
 ```json
 {
@@ -857,15 +853,15 @@ Variation circulaire du number counter (pourcentage en cercle animé).
 }
 ```
 
-Par défaut affiché en pourcentage (de 0 à `number`).
+Displayed as a percentage by default (from 0 to `number`).
 
 ### `wp:divi/counters` + `wp:divi/counter` ⚠️
 
-**Bar counters** : le blockName est **`divi/counters`** (et non
-`divi/bar-counters` comme suggéré par le nom de classe `BarCounters`).
-Item = `divi/counter` (singulier).
+**Bar counters**: the blockName is **`divi/counters`** (not
+`divi/bar-counters` as suggested by the class name `BarCounters`).
+Item = `divi/counter` (singular).
 
-Conteneur :
+Container:
 ```json
 {
   "barProgress": {
@@ -876,7 +872,7 @@ Conteneur :
 }
 ```
 
-Item :
+Item:
 ```json
 {
   "title":      { "innerContent": { "desktop": { "value": "Skill" } } },
@@ -886,7 +882,7 @@ Item :
 
 ### `wp:divi/audio`
 
-Lecteur audio HTML5.
+HTML5 audio player.
 
 ```json
 {
@@ -895,18 +891,18 @@ Lecteur audio HTML5.
 }
 ```
 
-L'URL du fichier audio est dans un attribut `audio` ou similaire (à
-confirmer en peuplant l'URL dans le builder).
+The audio file URL lives in an `audio` or similar attribute (to
+confirm by populating the URL in the builder).
 
-## Variables Divi (au-delà des couleurs)
+## Divi variables (beyond colors)
 
-On a vu `$variable({"type":"color",...})$` pour les couleurs globales.
-**Le même mécanisme** sert pour d'autres types :
+We've seen `$variable({"type":"color",...})$` for global colors.
+**The same mechanism** is used for other types:
 
-| `type`     | Utilisation | Exemples de `name` observés |
+| `type`     | Usage | Observed `name` examples |
 |-----------|-------------|------------------------------|
-| `color`   | Couleur globale | `gcid-primary-color`, `gcid-heading-color`, … |
-| `content` | Contenu dynamique | `home_url`, probablement `page_url`, `post_title`, … |
+| `color`   | Global color | `gcid-primary-color`, `gcid-heading-color`, … |
+| `content` | Dynamic content | `home_url`, likely `page_url`, `post_title`, … |
 
-D'autres types possibles (à confirmer) : `font`, `text`, `image`,
-`number`, `link`.
+Other possible types (to confirm): `font`, `text`, `image`, `number`,
+`link`.

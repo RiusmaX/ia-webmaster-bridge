@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       IA Webmaster Bridge
- * Description:       Adaptateur permettant à une IA (Claude) d'agir comme webmaster sur ce site WordPress. Expose une API REST contrôlée et signée sous le namespace ia-webmaster/v1.
+ * Description:       Adapter that lets an AI (Claude) act as a webmaster on this WordPress site. Exposes a controlled, signed REST API under the ia-webmaster/v1 namespace.
  * Version:           0.18.3
  * Requires at least: 7.0
  * Requires PHP:      7.4
@@ -13,7 +13,7 @@
  * @package IA_Webmaster_Bridge
  */
 
-// Sécurité : empêcher tout accès direct au fichier.
+// Security: prevent any direct access to the file.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -40,10 +40,10 @@ require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-seo.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-divi.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-divi-theme-builder.php';
 
-// Création / migration du schéma de la base lors de l'activation du plugin.
+// Database schema creation / migration on plugin activation.
 register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Audit', 'maybe_upgrade' ) );
 
-// Initialisation des modules.
+// Module initialisation.
 IAWM_Audit::init();
 IAWM_REST::init();
 IAWM_Content::init();

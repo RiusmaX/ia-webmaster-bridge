@@ -1,20 +1,20 @@
 <?php
 /**
- * Plan infrastructure — gestion des extensions WordPress.
+ * Infrastructure plane — WordPress plugin management.
  *
- * Permet à l'IA d'installer, activer et désactiver des plugins depuis le
- * dépôt WordPress.org. La suppression n'est volontairement PAS exposée tant
- * que la phase de sauvegardes (Phase 4) n'est pas en place.
+ * Lets the AI install, activate and deactivate plugins from the
+ * WordPress.org repository. Deletion is intentionally NOT exposed until
+ * the backup phase (Phase 4) is in place.
  *
- * Garde-fous principaux :
- *  - On ne peut JAMAIS désactiver le plugin IA Webmaster Bridge lui-même
- *    (sinon l'IA se couperait l'accès au site).
- *  - Le slug est validé (regex stricte) pour éviter toute injection.
- *  - L'installation passe exclusivement par l'API officielle WordPress.org
- *    (plugins_api). Pas d'URL arbitraire pour l'instant.
- *  - Toute opération est journalisée par IAWM_Audit.
+ * Main safeguards:
+ *  - The IA Webmaster Bridge plugin can NEVER be deactivated by itself
+ *    (otherwise the AI would lock itself out of the site).
+ *  - The slug is validated (strict regex) to prevent any injection.
+ *  - Installation goes exclusively through the official WordPress.org API
+ *    (plugins_api). No arbitrary URLs for now.
+ *  - Every operation is logged by IAWM_Audit.
  *
- * Routes (toutes en POST, corps JSON) :
+ * Routes (all POST, JSON body):
  *  - /plugins/install   — install_plugin( slug, activate=false )
  *  - /plugins/activate  — activate_plugin( file )
  *  - /plugins/deactivate— deactivate_plugin( file )
@@ -28,15 +28,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes de gestion des plugins WordPress.
+ * WordPress plugin management routes.
  */
 class IAWM_Plugins {
 
-	/** Slug du plugin lui-même (jamais désactivable via l'API). */
+	/** Plugin file of this plugin itself (never deactivatable via the API). */
 	const SELF_PLUGIN_FILE = 'ia-webmaster-bridge/ia-webmaster-bridge.php';
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -45,7 +45,7 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * Enregistre les routes plugins.
+	 * Registers plugin routes.
 	 *
 	 * @return void
 	 */
@@ -71,9 +71,9 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * Valide un slug de plugin (lettres minuscules, chiffres, tirets).
+	 * Validates a plugin slug (lowercase letters, digits, hyphens).
 	 *
-	 * @param string $slug Slug à valider.
+	 * @param string $slug Slug to validate.
 	 * @return bool
 	 */
 	protected static function is_valid_slug( $slug ) {
@@ -81,9 +81,9 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * Vérifie qu'un fichier-plugin (`dir/file.php`) est plausible et présent.
+	 * Checks that a plugin file (`dir/file.php`) is plausible and present.
 	 *
-	 * @param string $file Chemin relatif au répertoire des plugins.
+	 * @param string $file Path relative to the plugins directory.
 	 * @return bool
 	 */
 	protected static function is_valid_file( $file ) {
@@ -94,9 +94,9 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * POST /plugins/info — récupère les métadonnées d'un plugin WP.org.
+	 * POST /plugins/info — retrieves a WP.org plugin's metadata.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_info( $request ) {
@@ -104,7 +104,7 @@ class IAWM_Plugins {
 		$slug   = isset( $params['slug'] ) ? (string) $params['slug'] : '';
 
 		if ( ! self::is_valid_slug( $slug ) ) {
-			return IAWM_Support::rest_error( 'invalid_slug', 'Slug invalide.', 400 );
+			return IAWM_Support::rest_error( 'invalid_slug', 'Invalid slug.', 400 );
 		}
 
 		if ( ! function_exists( 'plugins_api' ) ) {
@@ -158,14 +158,14 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * POST /plugins/install — installe (et optionnellement active) un plugin
-	 * depuis le dépôt WordPress.org.
+	 * POST /plugins/install — installs (and optionally activates) a plugin
+	 * from the WordPress.org repository.
 	 *
-	 * Paramètres :
-	 *   - slug (string, requis) — slug WP.org (ex. "rank-math-seo").
-	 *   - activate (bool, défaut false) — activer après install.
+	 * Parameters:
+	 *   - slug (string, required) — WP.org slug (e.g. "rank-math-seo").
+	 *   - activate (bool, default false) — activate after install.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_install( $request ) {
@@ -174,10 +174,10 @@ class IAWM_Plugins {
 		$activate = ! empty( $params['activate'] );
 
 		if ( ! self::is_valid_slug( $slug ) ) {
-			return IAWM_Support::rest_error( 'invalid_slug', 'Slug invalide.', 400 );
+			return IAWM_Support::rest_error( 'invalid_slug', 'Invalid slug.', 400 );
 		}
 
-		// Chargement des dépendances WP admin.
+		// Load WP admin dependencies.
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/misc.php';
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -186,7 +186,7 @@ class IAWM_Plugins {
 
 		IAWM_Support::act_as_agent();
 
-		// Récupération des métadonnées (download_link signé) via plugins_api.
+		// Fetch metadata (signed download_link) via plugins_api.
 		$info = plugins_api(
 			'plugin_information',
 			array(
@@ -200,10 +200,10 @@ class IAWM_Plugins {
 		}
 
 		if ( empty( $info->download_link ) ) {
-			return IAWM_Support::rest_error( 'no_download_link', 'Pas de lien de téléchargement.', 502 );
+			return IAWM_Support::rest_error( 'no_download_link', 'No download link.', 502 );
 		}
 
-		// Vérifier si le plugin est déjà installé (par slug → on cherche un fichier dans WP_PLUGIN_DIR/{slug}/*).
+		// Check whether the plugin is already installed (by slug -> look for a file in WP_PLUGIN_DIR/{slug}/*).
 		$existing = self::find_plugin_file_by_slug( $slug );
 		$result   = array(
 			'ok'         => true,
@@ -228,7 +228,7 @@ class IAWM_Plugins {
 			}
 			if ( false === $res ) {
 				$messages = $skin->get_error_messages();
-				return IAWM_Support::rest_error( 'install_failed', $messages ? implode( ' ; ', $messages ) : 'Installation échouée.', 500 );
+				return IAWM_Support::rest_error( 'install_failed', $messages ? implode( ' ; ', $messages ) : 'Installation failed.', 500 );
 			}
 
 			$result['installed'] = true;
@@ -238,7 +238,7 @@ class IAWM_Plugins {
 			}
 		}
 
-		// Activation optionnelle.
+		// Optional activation.
 		if ( $activate && ! empty( $result['file'] ) ) {
 			if ( ! is_plugin_active( $result['file'] ) ) {
 				$act = activate_plugin( $result['file'], '', false, true );
@@ -255,9 +255,9 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * POST /plugins/activate — active un plugin déjà installé.
+	 * POST /plugins/activate — activates an already-installed plugin.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_activate( $request ) {
@@ -265,7 +265,7 @@ class IAWM_Plugins {
 		$file   = isset( $params['file'] ) ? (string) $params['file'] : '';
 
 		if ( ! self::is_valid_file( $file ) ) {
-			return IAWM_Support::rest_error( 'invalid_file', 'Fichier-plugin invalide ou introuvable.', 400 );
+			return IAWM_Support::rest_error( 'invalid_file', 'Invalid or missing plugin file.', 400 );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -290,11 +290,11 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * POST /plugins/deactivate — désactive un plugin.
+	 * POST /plugins/deactivate — deactivates a plugin.
 	 *
-	 * Refuse explicitement la désactivation du plugin IA Webmaster Bridge.
+	 * Explicitly refuses to deactivate the IA Webmaster Bridge plugin.
 	 *
-	 * @param WP_REST_Request $request Requête.
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
 	public static function handle_deactivate( $request ) {
@@ -302,13 +302,13 @@ class IAWM_Plugins {
 		$file   = isset( $params['file'] ) ? (string) $params['file'] : '';
 
 		if ( ! self::is_valid_file( $file ) ) {
-			return IAWM_Support::rest_error( 'invalid_file', 'Fichier-plugin invalide ou introuvable.', 400 );
+			return IAWM_Support::rest_error( 'invalid_file', 'Invalid or missing plugin file.', 400 );
 		}
 
 		if ( $file === self::SELF_PLUGIN_FILE ) {
 			return IAWM_Support::rest_error(
 				'cannot_disable_self',
-				'Le plugin IA Webmaster Bridge ne peut pas être désactivé via l\'API.',
+				'The IA Webmaster Bridge plugin cannot be deactivated via the API.',
 				403
 			);
 		}
@@ -332,10 +332,10 @@ class IAWM_Plugins {
 	}
 
 	/**
-	 * Cherche un fichier-plugin par slug (i.e. par nom de répertoire).
+	 * Looks for a plugin file by slug (i.e. by directory name).
 	 *
 	 * @param string $slug Slug.
-	 * @return string|null Fichier-plugin (ex. "rank-math-seo/rank-math.php") ou null.
+	 * @return string|null Plugin file (e.g. "rank-math-seo/rank-math.php") or null.
 	 */
 	protected static function find_plugin_file_by_slug( $slug ) {
 		if ( ! function_exists( 'get_plugins' ) ) {

@@ -1,14 +1,14 @@
 /**
- * Pattern Contact Section — section de contact avec formulaire.
+ * Contact Section pattern — contact section with form.
  *
- * Structure (variante 1, simple) :
+ * Structure (variant 1, simple):
  *   Section
- *     Row 4_4 (titre + sous-titre)
+ *     Row 4_4 (title + subtitle)
  *     Row 4_4
  *       Column 4_4
- *         Contact Form (Nom, Email, Message par défaut)
+ *         Contact Form (Name, Email, Message by default)
  *
- * Variante 2 (à venir) : split image | formulaire.
+ * Variant 2 (coming): split image | form.
  */
 
 import { section, row, column, text, contactForm } from "../builders.js";
@@ -18,15 +18,15 @@ import type { DiviColor, GutenbergBlock } from "../types.js";
 export interface ContactSectionOptions {
   sectionTitle?: string;
   sectionSubtitle?: string;
-  /** Si omis, utilise les 3 champs standards (Nom, Email, Message). */
+  /** If omitted, uses the 3 standard fields (Name, Email, Message). */
   fields?: ContactFieldOptions[];
   backgroundColor?: DiviColor;
 }
 
 const DEFAULT_FIELDS: ContactFieldOptions[] = [
-  { id: "Name", label: "Nom", type: "input", fullwidth: false },
-  { id: "Email", label: "Adresse email", type: "email", fullwidth: false },
-  { id: "Message", label: "Votre message", type: "text", fullwidth: true },
+  { id: "Name", label: "Name", type: "input", fullwidth: false },
+  { id: "Email", label: "Email address", type: "email", fullwidth: false },
+  { id: "Message", label: "Your message", type: "text", fullwidth: true },
 ];
 
 export function contactSection(options: ContactSectionOptions): GutenbergBlock {

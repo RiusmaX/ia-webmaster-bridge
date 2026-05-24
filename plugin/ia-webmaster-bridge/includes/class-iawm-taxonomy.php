@@ -1,10 +1,9 @@
 <?php
 /**
- * Plan contenu : gestion des taxonomies (catégories, étiquettes, taxonomies
- * personnalisées).
+ * Content plane: taxonomy management (categories, tags, custom taxonomies).
  *
- * Routes POST avec corps JSON. Lecture (list) en guard_read ; création de terme
- * et assignation (create, assign) en guard_write — donc soumis au kill switch.
+ * POST routes with JSON body. Reads (list) use guard_read; term creation
+ * and assignment (create, assign) use guard_write — therefore subject to the kill switch.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -14,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Routes des taxonomies.
+ * Taxonomy routes.
  */
 class IAWM_Taxonomy {
 
 	/**
-	 * Branche l'enregistrement des routes.
+	 * Hooks up route registration.
 	 *
 	 * @return void
 	 */
@@ -28,7 +27,7 @@ class IAWM_Taxonomy {
 	}
 
 	/**
-	 * Enregistre les routes des taxonomies.
+	 * Registers taxonomy routes.
 	 *
 	 * @return void
 	 */
@@ -53,11 +52,11 @@ class IAWM_Taxonomy {
 	}
 
 	/**
-	 * POST /taxonomy/list — liste les termes d'une taxonomie.
+	 * POST /taxonomy/list — lists the terms of a taxonomy.
 	 *
-	 * Corps JSON : { taxonomy, search?, per_page?, page? }
+	 * JSON body: { taxonomy, search?, per_page?, page? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_list( $request ) {
@@ -113,11 +112,11 @@ class IAWM_Taxonomy {
 	}
 
 	/**
-	 * POST /taxonomy/create — crée un terme.
+	 * POST /taxonomy/create — creates a term.
 	 *
-	 * Corps JSON : { taxonomy, name, slug?, description?, parent?, dry_run? }
+	 * JSON body: { taxonomy, name, slug?, description?, parent?, dry_run? }
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_create( $request ) {
@@ -129,7 +128,7 @@ class IAWM_Taxonomy {
 
 		$name = isset( $params['name'] ) ? sanitize_text_field( (string) $params['name'] ) : '';
 		if ( '' === $name ) {
-			return IAWM_Support::rest_error( 'iawm_missing_name', "Le paramètre 'name' est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_name', "The 'name' parameter is required.", 400 );
 		}
 
 		$args = array();
@@ -172,12 +171,12 @@ class IAWM_Taxonomy {
 	}
 
 	/**
-	 * POST /taxonomy/assign — assigne des termes à un contenu.
+	 * POST /taxonomy/assign — assigns terms to a content item.
 	 *
-	 * Corps JSON : { id, taxonomy, terms, append?, dry_run? }
-	 * Les termes peuvent être des identifiants (recommandé) ou des noms.
+	 * JSON body: { id, taxonomy, terms, append?, dry_run? }
+	 * Terms may be IDs (recommended) or names.
 	 *
-	 * @param WP_REST_Request $request Requête entrante.
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_assign( $request ) {
@@ -185,7 +184,7 @@ class IAWM_Taxonomy {
 
 		$post_id = isset( $params['id'] ) ? (int) $params['id'] : 0;
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Contenu introuvable : {$post_id}.", 404 );
+			return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$post_id}.", 404 );
 		}
 
 		$taxonomy = self::resolve_taxonomy( $params );
@@ -195,10 +194,10 @@ class IAWM_Taxonomy {
 
 		$terms = ( isset( $params['terms'] ) && is_array( $params['terms'] ) ) ? $params['terms'] : array();
 		if ( empty( $terms ) ) {
-			return IAWM_Support::rest_error( 'iawm_missing_terms', "Le paramètre 'terms' (tableau) est requis.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_terms', "The 'terms' parameter (array) is required.", 400 );
 		}
 
-		// Entiers -> identifiants de termes ; chaînes -> noms.
+		// Integers -> term IDs; strings -> names.
 		$clean = array();
 		foreach ( $terms as $term ) {
 			if ( is_int( $term ) || ( is_string( $term ) && ctype_digit( $term ) ) ) {
@@ -254,25 +253,25 @@ class IAWM_Taxonomy {
 	}
 
 	/**
-	 * Valide et retourne la taxonomie demandée.
+	 * Validates and returns the requested taxonomy.
 	 *
-	 * @param array $params Paramètres de la requête.
-	 * @return string|WP_Error Slug de taxonomie, ou erreur.
+	 * @param array $params Request parameters.
+	 * @return string|WP_Error Taxonomy slug, or error.
 	 */
 	private static function resolve_taxonomy( $params ) {
 		$taxonomy = isset( $params['taxonomy'] ) ? sanitize_key( (string) $params['taxonomy'] ) : '';
 
 		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_taxonomy', "Taxonomie inconnue : {$taxonomy}.", 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_taxonomy', "Unknown taxonomy: {$taxonomy}.", 400 );
 		}
 
 		return $taxonomy;
 	}
 
 	/**
-	 * Représentation d'un terme.
+	 * Representation of a term.
 	 *
-	 * @param WP_Term $term Terme.
+	 * @param WP_Term $term Term.
 	 * @return array
 	 */
 	private static function term_data( $term ) {

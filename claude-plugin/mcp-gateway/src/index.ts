@@ -1,11 +1,11 @@
 /**
- * Pont MCP IA Webmaster Bridge.
+ * IA Webmaster Bridge MCP gateway.
  *
- * Serveur MCP local (transport stdio) lancé par Claude Code. Il expose les
- * routes de l'adaptateur WordPress comme outils MCP, en signant chaque appel.
+ * Local MCP server (stdio transport) launched by Claude Code. It exposes the
+ * WordPress adapter routes as MCP tools, signing every call.
  *
- * Important : stdout est réservé au protocole MCP. Tout message de log doit
- * passer par stderr.
+ * Important: stdout is reserved for the MCP protocol. Any log message must go
+ * through stderr.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -28,12 +28,12 @@ async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  process.stderr.write("[iawm-mcp-gateway] pont MCP démarré.\n");
+  process.stderr.write("[iawm-mcp-gateway] MCP gateway started.\n");
 }
 
 main().catch((err: unknown) => {
   process.stderr.write(
-    `[iawm-mcp-gateway] erreur fatale : ${(err as Error).message}\n`,
+    `[iawm-mcp-gateway] fatal error: ${(err as Error).message}\n`,
   );
   process.exit(1);
 });

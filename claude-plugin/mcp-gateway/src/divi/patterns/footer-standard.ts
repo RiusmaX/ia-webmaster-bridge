@@ -1,14 +1,14 @@
 /**
- * Pattern Footer Standard — footer de site multi-colonnes.
+ * Footer Standard pattern — multi-column site footer.
  *
- * Structure :
- *   Section (bg sombre, padding 60px)
- *     Row N colonnes (par défaut 4 : about, links, contact, social)
+ * Structure:
+ *   Section (dark bg, 60px padding)
+ *     Row N columns (4 by default: about, links, contact, social)
  *       Column × N
- *         Modules variés
- *     Row 4_4 (copyright + mentions légales)
+ *         Mixed modules
+ *     Row 4_4 (copyright + legal notice)
  *       Column 4_4
- *         Text H6 centré
+ *         Centered H6 text
  */
 
 import {
@@ -21,26 +21,26 @@ import { colors } from "../globals.js";
 import type { DiviColor, GutenbergBlock } from "../types.js";
 
 export interface FooterColumn {
-  /** Titre H4 de la colonne. */
+  /** Column H4 title. */
   title: string;
-  /** Contenu HTML libre (peut être complété par menuId ou items). */
+  /** Free HTML content (may be supplemented by menuId or items). */
   contentHtml?: string;
-  /** ID d'un menu WP à afficher dans cette colonne. */
+  /** ID of a WP menu to display in this column. */
   menuId?: number;
-  /** Items de liste (alternative au menu/contentHtml). */
+  /** List items (alternative to menu/contentHtml). */
   listItems?: IconListItemOptions[];
 }
 
 export interface FooterStandardOptions {
-  /** Colonnes du footer (2 à 4 idéal). */
+  /** Footer columns (2 to 4 is ideal). */
   columns?: FooterColumn[];
-  /** Réseaux sociaux à afficher dans la dernière colonne ou en bas. */
+  /** Social networks to display in the last column or at the bottom. */
   socialNetworks?: SocialNetworkOptions[];
-  /** Texte de copyright (ex. "© 2026 Mon Site. Tous droits réservés."). */
+  /** Copyright text (e.g. "© 2026 My Site. All rights reserved."). */
   copyright?: string;
-  /** Couleur de fond. Défaut : couleur "heading" (sombre). */
+  /** Background color. Default: "heading" color (dark). */
   backgroundColor?: DiviColor;
-  /** Couleur du texte. */
+  /** Text color. */
   textColor?: DiviColor;
 }
 
@@ -49,7 +49,7 @@ export function footerStandard(options: FooterStandardOptions = {}): GutenbergBl
   const columns = options.columns ?? [];
   const colCount = columns.length;
 
-  // Row principale (colonnes thématiques).
+  // Main row (thematic columns).
   if (colCount > 0) {
     let structure: string;
     let colType: string;
@@ -67,7 +67,7 @@ export function footerStandard(options: FooterStandardOptions = {}): GutenbergBl
     const cols = columns.map((col) => {
       const modules: GutenbergBlock[] = [];
 
-      // Titre de colonne.
+      // Column title.
       modules.push(
         text({
           html: `<h4>${escapeHtml(col.title)}</h4>`,
@@ -75,7 +75,7 @@ export function footerStandard(options: FooterStandardOptions = {}): GutenbergBl
         }),
       );
 
-      // Contenu : priorité à listItems, sinon menu, sinon contentHtml.
+      // Content: priority to listItems, otherwise menu, otherwise contentHtml.
       if (col.listItems && col.listItems.length > 0) {
         modules.push(iconList(col.listItems));
       } else if (col.menuId !== undefined) {
@@ -90,7 +90,7 @@ export function footerStandard(options: FooterStandardOptions = {}): GutenbergBl
     rows.push(row({ columnStructure: structure, flexWrapMobile: "wrap" }, cols));
   }
 
-  // Row réseaux sociaux + copyright.
+  // Social networks + copyright row.
   const bottomModules: GutenbergBlock[] = [];
   if (options.socialNetworks && options.socialNetworks.length > 0) {
     bottomModules.push(socialMediaFollow(options.socialNetworks));

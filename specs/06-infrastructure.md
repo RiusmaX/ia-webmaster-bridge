@@ -1,64 +1,63 @@
-# Spec 06 — Plan infrastructure
+# Spec 06 — Infrastructure plan
 
-- **Statut** : Ébauche
-- **Phase** : 4
-- **Priorité** : Moyenne
-- **Dernière mise à jour** : 2026-05-21
+- **Status**: Draft
+- **Phase**: 4
+- **Priority**: Medium
+- **Last updated**: 2026-05-21
 
-## Objectif
+## Goal
 
-Permettre à Claude de conduire les opérations d'infrastructure du site :
-extensions, thèmes, base de données, sauvegardes, tâches planifiées,
-mises à jour.
+Enable Claude to carry out the site's infrastructure operations:
+plugins, themes, database, backups, scheduled tasks, updates.
 
-## Périmètre
+## Scope
 
-### Inclus
-- Extensions : installation, activation/désactivation, mise à jour.
-- Thèmes : installation, activation, mise à jour.
-- Base de données : export, requêtes contrôlées, `search-replace`.
-- Sauvegardes et restauration.
-- Tâches planifiées (cron WordPress).
-- Mise à jour du cœur WordPress.
+### Included
+- Plugins: installation, activation/deactivation, update.
+- Themes: installation, activation, update.
+- Database: export, controlled queries, `search-replace`.
+- Backups and restoration.
+- Scheduled tasks (WordPress cron).
+- WordPress core update.
 
-### Exclu (pour l'instant)
-- L'administration système hors WordPress (configuration serveur, DNS, etc.).
-- La modification de `wp-config.php` au-delà de réglages explicitement exposés.
+### Excluded (for now)
+- System administration beyond WordPress (server configuration, DNS, etc.).
+- Modification of `wp-config.php` beyond settings explicitly exposed.
 
-## Approche technique
+## Technical approach
 
-- Conformément à la décision **D-006**, ces opérations passent par des
-  **endpoints contrôlés du plugin**, pas par un shell ouvert à l'agent.
-- Le plugin, tournant en PHP avec les droits de WordPress, peut réaliser la
-  plupart de ces opérations (installation d'extensions, options, cron). Pour ce
-  qui dépasse PHP, le plugin pourra encapsuler des appels WP-CLI précis et
-  validés (jamais une commande arbitraire).
-- **Canal SSH/WP-CLI de secours** : réservé à l'opérateur humain, ou aux
-  situations où le plugin est indisponible (ex. plugin lui-même cassé).
-  Documenté, non exposé à l'agent par défaut.
-- **Toutes ces opérations sont classées « à risque »** : sauvegarde préalable,
-  confirmation explicite, dry-run quand c'est possible (spec 02).
-- Sources d'extensions/thèmes : restreindre aux sources de confiance (dépôt
-  officiel, archives validées) — pas d'installation depuis une URL arbitraire.
+- In line with decision **D-006**, these operations go through
+  **controlled plugin endpoints**, not through a shell open to the agent.
+- The plugin, running in PHP with WordPress rights, can perform most of
+  these operations (plugin install, options, cron). For what goes beyond
+  PHP, the plugin may wrap precise, validated WP-CLI calls (never an
+  arbitrary command).
+- **Backup SSH/WP-CLI channel**: reserved for the human operator, or for
+  situations where the plugin is unavailable (e.g. plugin itself broken).
+  Documented, not exposed to the agent by default.
+- **All these operations are classified "at risk"**: prior backup,
+  explicit confirmation, dry-run where possible (spec 02).
+- Plugin/theme sources: restrict to trusted sources (official repository,
+  validated archives) — no install from an arbitrary URL.
 
-## Points ouverts
+## Open questions
 
-- Mécanisme de sauvegarde : s'appuyer sur une extension de sauvegarde existante,
-  ou implémenter une sauvegarde minimale dans le plugin ?
-- Quelles commandes WP-CLI encapsuler, et lesquelles laisser strictement à
-  l'opérateur humain ?
-- `search-replace` est puissant et dangereux (sérialisation) → garde-fous
-  spécifiques, dry-run obligatoire.
-- Mises à jour : faut-il un environnement de pré-production pour tester une mise
-  à jour avant la prod ?
-- Comment l'agent vérifie-t-il qu'un site est sain après une opération
-  (smoke test) ?
+- Backup mechanism: rely on an existing backup plugin, or implement a
+  minimal backup in the plugin?
+- Which WP-CLI commands to wrap, and which to leave strictly to the
+  human operator?
+- `search-replace` is powerful and dangerous (serialisation) → specific
+  guardrails, mandatory dry-run.
+- Updates: do we need a pre-production environment to test an update
+  before production?
+- How does the agent verify that a site is healthy after an operation
+  (smoke test)?
 
-## Dépendances & risques
+## Dependencies & risks
 
-- Dépend des specs 01 (adaptateur) et 02 (sécurité).
-- **Risque élevé** : ce plan contient les opérations les plus destructrices du
-  projet (mises à jour, base de données). Garde-fous non négociables ;
-  déploiement sur prod seulement après forte stabilité sur le local.
-- Risque : une mise à jour casse le site → sauvegarde préalable + procédure de
-  restauration testée avant tout usage en prod.
+- Depends on specs 01 (adapter) and 02 (security).
+- **High risk**: this plan contains the most destructive operations in the
+  project (updates, database). Non-negotiable guardrails; production
+  rollout only after strong stability on local.
+- Risk: an update breaks the site → prior backup + restoration procedure
+  tested before any production use.

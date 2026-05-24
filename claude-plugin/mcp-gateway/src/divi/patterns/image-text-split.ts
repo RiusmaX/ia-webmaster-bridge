@@ -1,9 +1,9 @@
 /**
- * Pattern Image + Texte côte à côte — section 2 colonnes 50/50.
+ * Image + Text side-by-side pattern — 2-column 50/50 section.
  *
- * Structure :
+ * Structure:
  *   Section
- *     Row (1_2,1_2, wrap mobile)
+ *     Row (1_2,1_2, mobile wrap)
  *       Column (1_2) - imageOnLeft ? image : text
  *       Column (1_2) - imageOnLeft ? text : image
  */
@@ -12,16 +12,16 @@ import { section, row, column, text, image } from "../builders.js";
 import type { DiviColor, GutenbergBlock } from "../types.js";
 
 export interface ImageTextSplitOptions {
-  /** URL de l'image. */
+  /** Image URL. */
   imageUrl: string;
   imageAlt?: string;
-  /** Titre du bloc texte (devient un H2). */
+  /** Title of the text block (becomes an H2). */
   title: string;
-  /** Description (HTML autorisé). */
+  /** Description (HTML allowed). */
   contentHtml: string;
-  /** Image à gauche (défaut) ou à droite ? */
+  /** Image on the left (default) or on the right? */
   imageOnLeft?: boolean;
-  /** Couleur de fond. */
+  /** Background color. */
   backgroundColor?: DiviColor;
 }
 

@@ -1,11 +1,11 @@
 /**
- * Pattern CTA Banner — bandeau d'appel à l'action en fin de page.
+ * CTA Banner pattern — call-to-action band at the end of a page.
  *
- * Structure :
- *   Section (bg color = primary, padding généreux)
+ * Structure:
+ *   Section (bg color = primary, generous padding)
  *     Row (4_4)
  *       Column (4_4)
- *         CTA (titre + texte + bouton)
+ *         CTA (title + text + button)
  */
 
 import { section, row, column, cta } from "../builders.js";
@@ -13,15 +13,15 @@ import { colors } from "../globals.js";
 import type { DiviColor, GutenbergBlock } from "../types.js";
 
 export interface CtaBannerOptions {
-  /** Titre fort (idéal 5-10 mots). */
+  /** Strong title (ideally 5-10 words). */
   title: string;
-  /** Texte secondaire (1-2 phrases). */
+  /** Secondary text (1-2 sentences). */
   contentHtml: string;
-  /** Texte du bouton (verbe d'action + bénéfice). */
+  /** Button text (action verb + benefit). */
   buttonText: string;
-  /** URL du bouton. */
+  /** Button URL. */
   buttonUrl: string;
-  /** Couleur de fond. Défaut : couleur primaire du site. */
+  /** Background color. Default: site primary color. */
   backgroundColor?: DiviColor;
 }
 

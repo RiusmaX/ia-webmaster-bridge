@@ -1,48 +1,48 @@
 /**
- * Client HTTP signé pour l'API de l'adaptateur IA Webmaster Bridge.
+ * Signed HTTP client for the IA Webmaster Bridge adapter API.
  *
- * Chaque requête est signée en HMAC-SHA256 selon le schéma attendu par le
- * plugin (voir includes/class-iawm-auth.php, méthode build_message).
+ * Each request is signed with HMAC-SHA256 following the scheme expected by the
+ * plugin (see includes/class-iawm-auth.php, build_message method).
  */
 
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import type { GatewayConfig } from "./config.js";
 
-/** Namespace REST exposé par le plugin. */
+/** REST namespace exposed by the plugin. */
 const NAMESPACE = "ia-webmaster/v1";
 
-/** Préfixe de schéma de signature (doit correspondre au plugin). */
+/** Signature scheme prefix (must match the plugin). */
 const SIGNATURE_SCHEME = "IAWM-HMAC-SHA256";
 
 export interface ApiResult {
-  /** True si le code HTTP est 2xx. */
+  /** True if the HTTP status code is 2xx. */
   ok: boolean;
-  /** Code HTTP de la réponse. */
+  /** HTTP status code of the response. */
   status: number;
-  /** Corps de la réponse (objet JSON décodé, ou texte brut à défaut). */
+  /** Response body (decoded JSON object, or raw text as a fallback). */
   data: unknown;
 }
 
 /**
- * Client minimal vers l'API de l'adaptateur.
+ * Minimal client for the adapter API.
  */
 export class IawmClient {
   constructor(private readonly config: GatewayConfig) {}
 
   /**
-   * Appelle une route GET de l'adaptateur.
+   * Calls a GET route on the adapter.
    *
-   * @param path Chemin relatif au namespace, ex. "/status".
+   * @param path Path relative to the namespace, e.g. "/status".
    */
   async get(path: string): Promise<ApiResult> {
     return this.request("GET", path);
   }
 
   /**
-   * Appelle une route POST de l'adaptateur avec un corps JSON.
+   * Calls a POST route on the adapter with a JSON body.
    *
-   * @param path    Chemin relatif au namespace, ex. "/content/list".
-   * @param payload Objet sérialisé en JSON et signé.
+   * @param path    Path relative to the namespace, e.g. "/content/list".
+   * @param payload Object serialized to JSON and signed.
    */
   async post(path: string, payload: unknown): Promise<ApiResult> {
     return this.request("POST", path, payload);
@@ -59,12 +59,12 @@ export class IawmClient {
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const nonce = randomBytes(16).toString("hex");
 
-    // Message canonique — sept lignes, identique à la construction côté plugin.
+    // Canonical message — seven lines, identical to the plugin-side construction.
     const message = [
       SIGNATURE_SCHEME,
       method.toUpperCase(),
       route,
-      "", // query canonique vide : tous les paramètres passent par le corps
+      "", // empty canonical query: all parameters go through the body
       timestamp,
       nonce,
       createHash("sha256").update(body).digest("hex"),
@@ -98,7 +98,7 @@ export class IawmClient {
       response = await fetch(url, init);
     } catch (err) {
       throw new Error(
-        `Échec de la connexion à ${url} : ${(err as Error).message}`,
+        `Failed to connect to ${url}: ${(err as Error).message}`,
       );
     }
 
@@ -107,7 +107,7 @@ export class IawmClient {
     try {
       data = JSON.parse(text);
     } catch {
-      // Réponse non-JSON : on conserve le texte brut.
+      // Non-JSON response: keep the raw text.
     }
 
     return { ok: response.ok, status: response.status, data };

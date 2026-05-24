@@ -1,12 +1,12 @@
 /**
- * Pattern FAQ Accordion — section de questions/réponses.
+ * FAQ Accordion pattern — questions/answers section.
  *
- * Structure :
+ * Structure:
  *   Section
- *     Row 4_4 (titre + sous-titre optionnels)
- *     Row 4_4 (accordion avec items)
+ *     Row 4_4 (optional title + subtitle)
+ *     Row 4_4 (accordion with items)
  *
- * Bonus SEO : ajouter le schema FAQPage via le module SEO (Rank Math).
+ * SEO bonus: add the FAQPage schema via the SEO module (Rank Math).
  */
 
 import { section, row, column, text, accordion } from "../builders.js";
@@ -21,7 +21,7 @@ export interface FaqAccordionOptions {
   sectionTitle?: string;
   sectionSubtitle?: string;
   items: FaqItem[];
-  /** Ouvrir le premier item par défaut ? Défaut : true. */
+  /** Open the first item by default? Default: true. */
   openFirst?: boolean;
   backgroundColor?: DiviColor;
 }

@@ -1,8 +1,8 @@
 <?php
 /**
- * Interface d'administration du plugin IA Webmaster Bridge.
+ * Admin interface for the IA Webmaster Bridge plugin.
  *
- * Page « Réglages → IA Webmaster Bridge » : gestion du secret d'API et du
+ * "Settings -> IA Webmaster Bridge" page: management of the API secret and the
  * kill switch.
  *
  * @package IA_Webmaster_Bridge
@@ -13,18 +13,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Page de réglages et traitement des actions d'administration.
+ * Settings page and admin action handling.
  */
 class IAWM_Admin {
 
-	/** Slug de la page de réglages. */
+	/** Slug of the settings page. */
 	const PAGE_SLUG = 'iawm-settings';
 
-	/** Action admin-post traitant le formulaire. */
+	/** admin-post action that processes the form. */
 	const ACTION = 'iawm_action';
 
 	/**
-	 * Branche les hooks d'administration.
+	 * Hooks up admin actions.
 	 *
 	 * @return void
 	 */
@@ -34,7 +34,7 @@ class IAWM_Admin {
 	}
 
 	/**
-	 * Ajoute la page sous le menu « Réglages ».
+	 * Adds the page under the "Settings" menu.
 	 *
 	 * @return void
 	 */
@@ -49,13 +49,13 @@ class IAWM_Admin {
 	}
 
 	/**
-	 * Traite les actions du formulaire (générer / révoquer / kill switch).
+	 * Handles form actions (generate / revoke / kill switch).
 	 *
 	 * @return void
 	 */
 	public static function handle_post() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html( 'Accès refusé.' ) );
+			wp_die( esc_html( 'Access denied.' ) );
 		}
 
 		check_admin_referer( self::ACTION );
@@ -95,13 +95,13 @@ class IAWM_Admin {
 	}
 
 	/**
-	 * Affiche la page de réglages.
+	 * Renders the settings page.
 	 *
 	 * @return void
 	 */
 	public static function render_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html( 'Accès refusé.' ) );
+			wp_die( esc_html( 'Access denied.' ) );
 		}
 
 		$creds       = IAWM_Settings::get_credentials();
@@ -111,80 +111,80 @@ class IAWM_Admin {
 		?>
 		<div class="wrap">
 			<h1>IA Webmaster Bridge</h1>
-			<p>Adaptateur version <?php echo esc_html( IAWM_VERSION ); ?>. Cette page gère le secret d'authentification de l'agent IA et le kill switch.</p>
+			<p>Adapter version <?php echo esc_html( IAWM_VERSION ); ?>. This page manages the AI agent's authentication secret and the kill switch.</p>
 
 			<?php self::render_notice( $notice ); ?>
 
-			<h2>Identifiants d'API</h2>
+			<h2>API credentials</h2>
 			<?php if ( $creds ) : ?>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row">URL de base de l'API</th>
+						<th scope="row">API base URL</th>
 						<td><input type="text" class="large-text code" readonly value="<?php echo esc_attr( $api_base ); ?>"></td>
 					</tr>
 					<tr>
-						<th scope="row">Identifiant de clé</th>
+						<th scope="row">Key identifier</th>
 						<td><input type="text" class="large-text code" readonly value="<?php echo esc_attr( $creds['key_id'] ); ?>"></td>
 					</tr>
 					<tr>
 						<th scope="row">Secret</th>
 						<td>
 							<input type="text" class="large-text code" readonly value="<?php echo esc_attr( $creds['secret'] ); ?>">
-							<p class="description">À copier dans la configuration du pont MCP. Ne jamais le partager ni le versionner.</p>
+							<p class="description">To be copied into the MCP bridge configuration. Never share or commit it.</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Créé le</th>
+						<th scope="row">Created on</th>
 						<td><?php echo esc_html( $creds['created_at'] ); ?></td>
 					</tr>
 				</table>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 					<?php wp_nonce_field( self::ACTION ); ?>
-					<button type="submit" name="iawm_op" value="generate" class="button">Régénérer le secret</button>
-					<button type="submit" name="iawm_op" value="revoke" class="button button-link-delete">Révoquer les identifiants</button>
-					<p class="description">Régénérer ou révoquer invalide immédiatement le secret actuel : le pont MCP devra être reconfiguré.</p>
+					<button type="submit" name="iawm_op" value="generate" class="button">Regenerate secret</button>
+					<button type="submit" name="iawm_op" value="revoke" class="button button-link-delete">Revoke credentials</button>
+					<p class="description">Regenerating or revoking immediately invalidates the current secret: the MCP bridge will need to be reconfigured.</p>
 				</form>
 			<?php else : ?>
-				<p>Aucun identifiant configuré. L'API authentifiée est inaccessible tant qu'un secret n'a pas été généré.</p>
+				<p>No credentials configured. The authenticated API is unreachable until a secret has been generated.</p>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 					<?php wp_nonce_field( self::ACTION ); ?>
-					<button type="submit" name="iawm_op" value="generate" class="button button-primary">Générer un secret</button>
+					<button type="submit" name="iawm_op" value="generate" class="button button-primary">Generate a secret</button>
 				</form>
 			<?php endif; ?>
 
 			<h2>Kill switch</h2>
 			<p>
-				État actuel :
-				<strong><?php echo $kill_switch ? 'ACTIF — écritures coupées' : 'inactif — écritures autorisées'; ?></strong>
+				Current state:
+				<strong><?php echo $kill_switch ? 'ON - writes blocked' : 'off - writes allowed'; ?></strong>
 			</p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<?php wp_nonce_field( self::ACTION ); ?>
 				<?php if ( $kill_switch ) : ?>
-					<button type="submit" name="iawm_op" value="kill_off" class="button button-primary">Réactiver les écritures</button>
+					<button type="submit" name="iawm_op" value="kill_off" class="button button-primary">Re-enable writes</button>
 				<?php else : ?>
-					<button type="submit" name="iawm_op" value="kill_on" class="button">Couper les écritures</button>
+					<button type="submit" name="iawm_op" value="kill_on" class="button">Block writes</button>
 				<?php endif; ?>
-				<p class="description">Le kill switch bloque toutes les requêtes en écriture de l'agent. Les lectures restent autorisées.</p>
+				<p class="description">The kill switch blocks all write requests from the agent. Reads remain allowed.</p>
 			</form>
 		</div>
 		<?php
 	}
 
 	/**
-	 * Affiche le message de confirmation correspondant à une action.
+	 * Renders the confirmation message corresponding to an action.
 	 *
-	 * @param string $notice Clé du message.
+	 * @param string $notice Message key.
 	 * @return void
 	 */
 	private static function render_notice( $notice ) {
 		$messages = array(
-			'generated' => array( 'success', "Nouveau secret généré. Copiez-le dans la configuration du pont MCP." ),
-			'revoked'   => array( 'warning', "Identifiants révoqués : l'agent ne peut plus s'authentifier." ),
-			'kill_on'   => array( 'warning', 'Kill switch activé : toutes les écritures sont coupées.' ),
-			'kill_off'  => array( 'success', 'Kill switch désactivé : les écritures sont de nouveau autorisées.' ),
+			'generated' => array( 'success', 'New secret generated. Copy it into the MCP bridge configuration.' ),
+			'revoked'   => array( 'warning', 'Credentials revoked: the agent can no longer authenticate.' ),
+			'kill_on'   => array( 'warning', 'Kill switch enabled: all writes are blocked.' ),
+			'kill_off'  => array( 'success', 'Kill switch disabled: writes are allowed again.' ),
 		);
 
 		if ( ! isset( $messages[ $notice ] ) ) {

@@ -1,12 +1,20 @@
 /**
- * Déclaration des outils MCP exposés par le pont.
+ * Declaration of the MCP tools exposed by the gateway.
  *
- * Chaque outil correspond à une route de l'adaptateur. Les outils GET
- * (diagnostic système) n'ont pas de corps ; tous les autres envoient leurs
- * paramètres dans le corps JSON de la requête signée.
+ * Each tool maps to a route on the adapter. GET tools (system diagnostics)
+ * have no body; all others send their parameters in the JSON body of the
+ * signed request.
  *
- * Organisation par domaine : système, contenu, médias, taxonomies, menus,
- * diagnostic, configuration.
+ * Grouped by domain: system, content, media, taxonomies, menus,
+ * diagnostics, configuration.
+ *
+ * Tooling language: this file (titles, descriptions, parameter hints) is
+ * in English so the project is usable worldwide. Generated *website*
+ * content can be in any language: tools that produce textual content
+ * accept an optional `language` parameter (BCP-47 tag, e.g. "en-US",
+ * "fr-FR", "es-ES", "de-DE"). When omitted, the WordPress site locale is
+ * used. This parameter is a hint to the AI agent (Claude); it is not
+ * enforced server-side.
  */
 
 import { z } from "zod";
@@ -14,7 +22,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { IawmClient, type ApiResult } from "./client.js";
 import { composePage, composeThemeZone, type SectionInput } from "./divi/compose.js";
 
-/** Met en forme un résultat d'API en réponse d'outil MCP. */
+/** Formats an API result as an MCP tool response. */
 function toToolResult(label: string, result: ApiResult) {
   return {
     content: [
@@ -27,20 +35,28 @@ function toToolResult(label: string, result: ApiResult) {
   };
 }
 
-/** Statuts d'écriture acceptés (doivent correspondre au plugin). */
+/** Accepted write statuses (must match the plugin). */
 const WRITE_STATUS = z.enum(["draft", "publish", "pending", "private", "future"]);
 
+/** Optional BCP-47 language tag for generated website content. */
+const LANGUAGE_HINT = z
+  .string()
+  .optional()
+  .describe(
+    "Optional BCP-47 language tag for the website content to generate (e.g. en-US, fr-FR, es-ES, de-DE, pt-BR, ja-JP). Hint only — defaults to the WordPress site locale. Affects the language of the produced page, NOT the tooling language.",
+  );
+
 /* ------------------------------------------------------------------ */
-/* Système (diagnostic de connexion)                                  */
+/* System (connection diagnostics)                                     */
 /* ------------------------------------------------------------------ */
 
 function registerSystem(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_ping",
     {
-      title: "Diagnostic public",
+      title: "Public diagnostics",
       description:
-        "Vérifie que l'adaptateur est joignable et renvoie les versions de l'environnement (WordPress, PHP, Divi). Aucune authentification requise.",
+        "Checks that the adapter is reachable and returns environment versions (WordPress, PHP, Divi). No authentication required.",
     },
     async () => toToolResult("ping", await client.get("/ping")),
   );
@@ -48,9 +64,9 @@ function registerSystem(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_status",
     {
-      title: "État authentifié",
+      title: "Authenticated status",
       description:
-        "Diagnostic authentifié : valide la connexion signée HMAC et renvoie l'état de l'adaptateur (identité de la clé, kill switch, environnement).",
+        "Authenticated diagnostics: validates the HMAC-signed connection and returns the adapter state (key identity, kill switch, environment).",
     },
     async () => toToolResult("status", await client.get("/status")),
   );
@@ -58,30 +74,30 @@ function registerSystem(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_audit",
     {
-      title: "Journal d'audit",
+      title: "Audit log",
       description:
-        "Renvoie les dernières entrées du journal d'audit : chaque appel de l'API y est tracé (date, route, résultat, identité, IP).",
+        "Returns the latest entries in the audit log: every API call is recorded (timestamp, route, outcome, identity, IP).",
     },
     async () => toToolResult("audit", await client.get("/audit")),
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Contenu (pages et articles)                                        */
+/* Content (pages and posts)                                           */
 /* ------------------------------------------------------------------ */
 
 function registerContent(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_content_list",
     {
-      title: "Lister le contenu",
-      description: "Liste les pages ou articles du site, avec pagination, recherche et filtre par statut.",
+      title: "List content",
+      description: "Lists pages or posts on the site, with pagination, search and status filter.",
       inputSchema: {
-        type: z.enum(["post", "page"]).optional().describe("Type de contenu (défaut : post)"),
-        status: z.string().optional().describe("Statuts inclus, séparés par des virgules (ex. publish,draft)"),
-        search: z.string().optional().describe("Terme de recherche"),
-        per_page: z.number().int().min(1).max(100).optional().describe("Résultats par page (défaut : 20)"),
-        page: z.number().int().min(1).optional().describe("Numéro de page (défaut : 1)"),
+        type: z.enum(["post", "page"]).optional().describe("Content type (default: post)"),
+        status: z.string().optional().describe("Statuses to include, comma-separated (e.g. publish,draft)"),
+        search: z.string().optional().describe("Search term"),
+        per_page: z.number().int().min(1).max(100).optional().describe("Results per page (default: 20)"),
+        page: z.number().int().min(1).optional().describe("Page number (default: 1)"),
       },
     },
     async (args) => toToolResult("content/list", await client.post("/content/list", args)),
@@ -90,10 +106,10 @@ function registerContent(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_content_get",
     {
-      title: "Lire un contenu",
-      description: "Renvoie le contenu détaillé d'une page ou d'un article : corps complet, métadonnées, builder détecté.",
+      title: "Read a content item",
+      description: "Returns the detail of a page or post: full body, metadata, detected builder.",
       inputSchema: {
-        id: z.number().int().describe("Identifiant du contenu"),
+        id: z.number().int().describe("Content id"),
       },
     },
     async (args) => toToolResult("content/get", await client.post("/content/get", args)),
@@ -102,63 +118,71 @@ function registerContent(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_content_create",
     {
-      title: "Créer un contenu",
+      title: "Create a content item",
       description:
-        "Crée une page ou un article. Statut « draft » par défaut (publication explicite). Le balisage de blocs Gutenberg est normalisé sauf si raw_content=true. dry_run=true simule sans rien créer.",
+        "Creates a page or a post. Status defaults to 'draft' (publishing is explicit). Gutenberg block markup is normalised unless raw_content=true. dry_run=true simulates without creating.",
       inputSchema: {
-        type: z.enum(["post", "page"]).describe("Type de contenu à créer"),
-        title: z.string().optional().describe("Titre"),
-        content: z.string().optional().describe("Contenu (HTML ou balisage de blocs Gutenberg)"),
-        status: WRITE_STATUS.optional().describe("Statut (défaut : draft)"),
+        type: z.enum(["post", "page"]).describe("Content type to create"),
+        title: z.string().optional().describe("Title"),
+        content: z.string().optional().describe("Body (HTML or Gutenberg block markup)"),
+        status: WRITE_STATUS.optional().describe("Status (default: draft)"),
         slug: z.string().optional(),
         excerpt: z.string().optional(),
-        parent: z.number().int().optional().describe("ID du contenu parent"),
+        parent: z.number().int().optional().describe("Parent content id"),
         menu_order: z.number().int().optional(),
-        template: z.string().optional().describe("Slug de gabarit de page"),
-        raw_content: z.boolean().optional().describe("True pour ne pas normaliser le contenu"),
-        dry_run: z.boolean().optional().describe("True pour simuler sans rien créer"),
+        template: z.string().optional().describe("Page template slug"),
+        language: LANGUAGE_HINT,
+        raw_content: z.boolean().optional().describe("True to skip content normalisation"),
+        dry_run: z.boolean().optional().describe("True to simulate without creating"),
       },
     },
-    async (args) => toToolResult("content/create", await client.post("/content/create", args)),
+    async (args) => {
+      const { language: _language, ...payload } = args as Record<string, unknown>;
+      return toToolResult("content/create", await client.post("/content/create", payload));
+    },
   );
 
   server.registerTool(
     "iawm_content_update",
     {
-      title: "Modifier un contenu",
+      title: "Update a content item",
       description:
-        "Modifie une page ou un article existant. Seuls les champs fournis sont changés. dry_run=true prévisualise sans appliquer.",
+        "Updates an existing page or post. Only provided fields are changed. dry_run=true previews without applying.",
       inputSchema: {
-        id: z.number().int().describe("Identifiant du contenu à modifier"),
+        id: z.number().int().describe("Id of the content to update"),
         title: z.string().optional(),
-        content: z.string().optional().describe("Nouveau contenu (HTML ou blocs Gutenberg)"),
+        content: z.string().optional().describe("New body (HTML or Gutenberg blocks)"),
         status: WRITE_STATUS.optional(),
         slug: z.string().optional(),
         excerpt: z.string().optional(),
         parent: z.number().int().optional(),
         menu_order: z.number().int().optional(),
         template: z.string().optional(),
-        raw_content: z.boolean().optional().describe("True pour ne pas normaliser le contenu"),
-        dry_run: z.boolean().optional().describe("True pour prévisualiser sans appliquer"),
+        language: LANGUAGE_HINT,
+        raw_content: z.boolean().optional().describe("True to skip content normalisation"),
+        dry_run: z.boolean().optional().describe("True to preview without applying"),
       },
     },
-    async (args) => toToolResult("content/update", await client.post("/content/update", args)),
+    async (args) => {
+      const { language: _language, ...payload } = args as Record<string, unknown>;
+      return toToolResult("content/update", await client.post("/content/update", payload));
+    },
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Médias                                                             */
+/* Media                                                               */
 /* ------------------------------------------------------------------ */
 
 function registerMedia(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_media_list",
     {
-      title: "Lister les médias",
-      description: "Liste la médiathèque, avec pagination, recherche et filtre par type MIME.",
+      title: "List media",
+      description: "Lists the media library, with pagination, search and MIME-type filter.",
       inputSchema: {
-        search: z.string().optional().describe("Terme de recherche"),
-        mime_type: z.string().optional().describe("Filtre par type MIME (ex. image)"),
+        search: z.string().optional().describe("Search term"),
+        mime_type: z.string().optional().describe("MIME-type filter (e.g. image)"),
         per_page: z.number().int().min(1).max(100).optional(),
         page: z.number().int().min(1).optional(),
       },
@@ -169,10 +193,10 @@ function registerMedia(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_media_get",
     {
-      title: "Lire un média",
-      description: "Renvoie le détail d'un média : URL, type MIME, texte alternatif, dimensions.",
+      title: "Read a media item",
+      description: "Returns the detail of a media item: URL, MIME type, alternative text, dimensions.",
       inputSchema: {
-        id: z.number().int().describe("Identifiant du média"),
+        id: z.number().int().describe("Media id"),
       },
     },
     async (args) => toToolResult("media/get", await client.post("/media/get", args)),
@@ -181,16 +205,16 @@ function registerMedia(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_media_sideload",
     {
-      title: "Importer un média depuis une URL",
+      title: "Sideload a media item from a URL",
       description:
-        "Télécharge un fichier depuis une URL et l'ajoute à la médiathèque. dry_run=true simule sans rien importer.",
+        "Downloads a file from a URL and adds it to the media library. dry_run=true simulates without importing.",
       inputSchema: {
-        url: z.string().describe("URL du fichier à importer"),
+        url: z.string().describe("URL of the file to import"),
         title: z.string().optional(),
-        alt: z.string().optional().describe("Texte alternatif"),
-        caption: z.string().optional().describe("Légende"),
+        alt: z.string().optional().describe("Alternative text"),
+        caption: z.string().optional().describe("Caption"),
         description: z.string().optional(),
-        attached_to: z.number().int().optional().describe("ID du contenu auquel rattacher le média"),
+        attached_to: z.number().int().optional().describe("Id of the content to attach the media to"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -200,10 +224,10 @@ function registerMedia(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_media_update",
     {
-      title: "Modifier un média",
-      description: "Met à jour les métadonnées d'un média (titre, texte alternatif, légende, description).",
+      title: "Update a media item",
+      description: "Updates the metadata of a media item (title, alt text, caption, description).",
       inputSchema: {
-        id: z.number().int().describe("Identifiant du média"),
+        id: z.number().int().describe("Media id"),
         title: z.string().optional(),
         alt: z.string().optional(),
         caption: z.string().optional(),
@@ -223,10 +247,10 @@ function registerTaxonomy(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_taxonomy_list",
     {
-      title: "Lister les termes",
-      description: "Liste les termes d'une taxonomie (category, post_tag ou taxonomie personnalisée).",
+      title: "List terms",
+      description: "Lists the terms of a taxonomy (category, post_tag or a custom taxonomy).",
       inputSchema: {
-        taxonomy: z.string().describe("Slug de la taxonomie (ex. category, post_tag)"),
+        taxonomy: z.string().describe("Taxonomy slug (e.g. category, post_tag)"),
         search: z.string().optional(),
         per_page: z.number().int().min(1).max(200).optional(),
         page: z.number().int().min(1).optional(),
@@ -238,14 +262,14 @@ function registerTaxonomy(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_taxonomy_create",
     {
-      title: "Créer un terme",
-      description: "Crée un terme (catégorie, étiquette…) dans une taxonomie.",
+      title: "Create a term",
+      description: "Creates a term (category, tag, …) in a taxonomy.",
       inputSchema: {
-        taxonomy: z.string().describe("Slug de la taxonomie"),
-        name: z.string().describe("Nom du terme"),
+        taxonomy: z.string().describe("Taxonomy slug"),
+        name: z.string().describe("Term name"),
         slug: z.string().optional(),
         description: z.string().optional(),
-        parent: z.number().int().optional().describe("ID du terme parent"),
+        parent: z.number().int().optional().describe("Parent term id"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -255,14 +279,14 @@ function registerTaxonomy(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_taxonomy_assign",
     {
-      title: "Assigner des termes",
+      title: "Assign terms",
       description:
-        "Assigne des termes à un contenu. terms accepte des identifiants (recommandé) ou des noms. append=true ajoute sans remplacer.",
+        "Assigns terms to a content item. `terms` accepts ids (recommended) or names. append=true adds without replacing.",
       inputSchema: {
-        id: z.number().int().describe("Identifiant du contenu"),
-        taxonomy: z.string().describe("Slug de la taxonomie"),
-        terms: z.array(z.union([z.string(), z.number()])).describe("Termes (identifiants ou noms)"),
-        append: z.boolean().optional().describe("True pour ajouter aux termes existants"),
+        id: z.number().int().describe("Content id"),
+        taxonomy: z.string().describe("Taxonomy slug"),
+        terms: z.array(z.union([z.string(), z.number()])).describe("Terms (ids or names)"),
+        append: z.boolean().optional().describe("True to add to existing terms"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -271,15 +295,15 @@ function registerTaxonomy(server: McpServer, client: IawmClient): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Menus de navigation                                                 */
+/* Navigation menus                                                    */
 /* ------------------------------------------------------------------ */
 
 function registerMenu(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_menu_list",
     {
-      title: "Lister les menus",
-      description: "Liste les menus de navigation et les emplacements de menu du thème.",
+      title: "List menus",
+      description: "Lists navigation menus and the theme's menu locations.",
     },
     async () => toToolResult("menu/list", await client.post("/menu/list", {})),
   );
@@ -287,10 +311,10 @@ function registerMenu(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_menu_get",
     {
-      title: "Lire un menu",
-      description: "Renvoie un menu et ses éléments.",
+      title: "Read a menu",
+      description: "Returns a menu and its items.",
       inputSchema: {
-        id: z.number().int().describe("Identifiant du menu"),
+        id: z.number().int().describe("Menu id"),
       },
     },
     async (args) => toToolResult("menu/get", await client.post("/menu/get", args)),
@@ -299,10 +323,10 @@ function registerMenu(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_menu_create",
     {
-      title: "Créer un menu",
-      description: "Crée un menu de navigation.",
+      title: "Create a menu",
+      description: "Creates a navigation menu.",
       inputSchema: {
-        name: z.string().describe("Nom du menu"),
+        name: z.string().describe("Menu name"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -312,15 +336,15 @@ function registerMenu(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_menu_add_item",
     {
-      title: "Ajouter un élément de menu",
+      title: "Add a menu item",
       description:
-        "Ajoute un élément à un menu. Fournir url pour un lien personnalisé, ou object_id pour pointer vers une page ou un article.",
+        "Adds an item to a menu. Provide `url` for a custom link, or `object_id` to point to a page or post.",
       inputSchema: {
-        menu_id: z.number().int().describe("Identifiant du menu"),
-        title: z.string().optional().describe("Libellé de l'élément"),
-        url: z.string().optional().describe("URL (pour un lien personnalisé)"),
-        object_id: z.number().int().optional().describe("ID d'une page/article (pour un lien interne)"),
-        parent_item: z.number().int().optional().describe("ID de l'élément parent"),
+        menu_id: z.number().int().describe("Menu id"),
+        title: z.string().optional().describe("Item label"),
+        url: z.string().optional().describe("URL (for a custom link)"),
+        object_id: z.number().int().optional().describe("Id of a page/post (for an internal link)"),
+        parent_item: z.number().int().optional().describe("Parent item id"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -330,10 +354,10 @@ function registerMenu(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_menu_remove_item",
     {
-      title: "Retirer un élément de menu",
-      description: "Supprime un élément de menu.",
+      title: "Remove a menu item",
+      description: "Removes a menu item.",
       inputSchema: {
-        item_id: z.number().int().describe("Identifiant de l'élément de menu"),
+        item_id: z.number().int().describe("Menu item id"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -343,11 +367,11 @@ function registerMenu(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_menu_assign_location",
     {
-      title: "Assigner un menu à un emplacement",
-      description: "Assigne un menu à un emplacement de menu du thème.",
+      title: "Assign a menu to a location",
+      description: "Assigns a menu to one of the theme's menu locations.",
       inputSchema: {
-        menu_id: z.number().int().describe("Identifiant du menu"),
-        location: z.string().describe("Slug de l'emplacement du thème"),
+        menu_id: z.number().int().describe("Menu id"),
+        location: z.string().describe("Theme location slug"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -356,15 +380,15 @@ function registerMenu(server: McpServer, client: IawmClient): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Diagnostic (lecture seule)                                          */
+/* Diagnostics (read-only)                                             */
 /* ------------------------------------------------------------------ */
 
 function registerDiagnostics(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_diagnostics_system",
     {
-      title: "Diagnostic système",
-      description: "Versions (WordPress, PHP, MySQL), thème actif, état du débogage et limites PHP.",
+      title: "System diagnostics",
+      description: "Versions (WordPress, PHP, MySQL), active theme, debug state and PHP limits.",
     },
     async () => toToolResult("diagnostics/system", await client.post("/diagnostics/system", {})),
   );
@@ -372,8 +396,8 @@ function registerDiagnostics(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_diagnostics_plugins",
     {
-      title: "État des extensions",
-      description: "Liste les extensions installées : version, actif/inactif, mise à jour disponible.",
+      title: "Plugin status",
+      description: "Lists installed plugins: version, active/inactive, available update.",
     },
     async () => toToolResult("diagnostics/plugins", await client.post("/diagnostics/plugins", {})),
   );
@@ -381,8 +405,8 @@ function registerDiagnostics(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_diagnostics_themes",
     {
-      title: "État des thèmes",
-      description: "Liste les thèmes installés et indique celui qui est actif.",
+      title: "Theme status",
+      description: "Lists installed themes and points out the active one.",
     },
     async () => toToolResult("diagnostics/themes", await client.post("/diagnostics/themes", {})),
   );
@@ -390,10 +414,10 @@ function registerDiagnostics(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_diagnostics_logs",
     {
-      title: "Lire le journal de débogage",
-      description: "Renvoie les dernières lignes du debug.log de WordPress (s'il existe).",
+      title: "Read the debug log",
+      description: "Returns the last lines of the WordPress debug.log (if it exists).",
       inputSchema: {
-        lines: z.number().int().min(1).max(1000).optional().describe("Nombre de lignes (défaut : 100)"),
+        lines: z.number().int().min(1).max(1000).optional().describe("Number of lines (default: 100)"),
       },
     },
     async (args) => toToolResult("diagnostics/logs", await client.post("/diagnostics/logs", args)),
@@ -401,15 +425,15 @@ function registerDiagnostics(server: McpServer, client: IawmClient): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Configuration (réglages et utilisateurs)                            */
+/* Configuration (settings and users)                                  */
 /* ------------------------------------------------------------------ */
 
 function registerConfig(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_config_settings_get",
     {
-      title: "Lire les réglages",
-      description: "Renvoie les réglages du site modifiables (titre, slogan, fuseau, lecture, permaliens…).",
+      title: "Read site settings",
+      description: "Returns the mutable site settings (title, tagline, timezone, reading, permalinks, …).",
     },
     async () => toToolResult("config/settings/get", await client.post("/config/settings/get", {})),
   );
@@ -417,11 +441,11 @@ function registerConfig(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_config_settings_update",
     {
-      title: "Modifier les réglages",
+      title: "Update site settings",
       description:
-        "Modifie des réglages du site. Seules les options d'une liste blanche sont acceptées ; les autres sont rejetées. dry_run=true prévisualise.",
+        "Updates site settings. Only options on the allow-list are accepted; others are rejected. dry_run=true previews.",
       inputSchema: {
-        settings: z.record(z.string(), z.unknown()).describe("Objet { clé: valeur } des réglages à modifier"),
+        settings: z.record(z.string(), z.unknown()).describe("{ key: value } object of settings to update"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -431,8 +455,8 @@ function registerConfig(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_config_users_list",
     {
-      title: "Lister les utilisateurs",
-      description: "Liste les comptes utilisateurs (identifiant, e-mail, rôles).",
+      title: "List users",
+      description: "Lists user accounts (login, e-mail, roles).",
       inputSchema: {
         search: z.string().optional(),
         per_page: z.number().int().min(1).max(100).optional(),
@@ -445,17 +469,17 @@ function registerConfig(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_config_users_create",
     {
-      title: "Créer un utilisateur",
+      title: "Create a user",
       description:
-        "Crée un compte utilisateur. Rôle « subscriber » par défaut. Sans mot de passe fourni, un mot de passe fort est généré et renvoyé.",
+        "Creates a user account. Defaults to the 'subscriber' role. With no password provided, a strong password is generated and returned.",
       inputSchema: {
-        login: z.string().describe("Identifiant de connexion"),
-        email: z.string().describe("Adresse e-mail"),
-        password: z.string().optional().describe("Mot de passe (généré si absent)"),
+        login: z.string().describe("Login name"),
+        email: z.string().describe("E-mail address"),
+        password: z.string().optional().describe("Password (generated if absent)"),
         role: z
           .enum(["subscriber", "contributor", "author", "editor", "administrator"])
           .optional()
-          .describe("Rôle (défaut : subscriber)"),
+          .describe("Role (default: subscriber)"),
         display_name: z.string().optional(),
         dry_run: z.boolean().optional(),
       },
@@ -466,11 +490,11 @@ function registerConfig(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_config_users_update",
     {
-      title: "Modifier un utilisateur",
+      title: "Update a user",
       description:
-        "Modifie un utilisateur (e-mail, nom affiché, rôle). L'utilisateur sous lequel l'agent opère ne peut pas être modifié.",
+        "Updates a user (e-mail, display name, role). The user under which the agent operates cannot be modified.",
       inputSchema: {
-        id: z.number().int().describe("Identifiant de l'utilisateur"),
+        id: z.number().int().describe("User id"),
         email: z.string().optional(),
         display_name: z.string().optional(),
         role: z
@@ -484,18 +508,18 @@ function registerConfig(server: McpServer, client: IawmClient): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Plugins (infrastructure — installation/activation)                 */
+/* Plugins (infrastructure — install/activation)                       */
 /* ------------------------------------------------------------------ */
 
 function registerPlugins(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_plugins_info",
     {
-      title: "Informations sur un plugin WP.org",
+      title: "Info on a WP.org plugin",
       description:
-        "Récupère les métadonnées d'un plugin du dépôt WordPress.org à partir de son slug (version, auteur, compatibilité, dernière mise à jour).",
+        "Fetches metadata of a plugin from the WordPress.org repository from its slug (version, author, compatibility, last update).",
       inputSchema: {
-        slug: z.string().describe("Slug WordPress.org (ex. rank-math-seo)"),
+        slug: z.string().describe("WordPress.org slug (e.g. rank-math-seo)"),
       },
     },
     async (args) => toToolResult("plugins/info", await client.post("/plugins/info", args)),
@@ -504,12 +528,12 @@ function registerPlugins(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_plugins_install",
     {
-      title: "Installer un plugin",
+      title: "Install a plugin",
       description:
-        "Installe un plugin depuis le dépôt WordPress.org. Avec activate=true, l'active dans la foulée. Renvoie le chemin du fichier-plugin installé.",
+        "Installs a plugin from the WordPress.org repository. With activate=true, activates it right after. Returns the path to the installed plugin file.",
       inputSchema: {
-        slug: z.string().describe("Slug WordPress.org du plugin à installer"),
-        activate: z.boolean().optional().describe("Activer immédiatement après installation (défaut false)"),
+        slug: z.string().describe("WordPress.org slug of the plugin to install"),
+        activate: z.boolean().optional().describe("Activate immediately after install (default false)"),
       },
     },
     async (args) => toToolResult("plugins/install", await client.post("/plugins/install", args)),
@@ -518,11 +542,11 @@ function registerPlugins(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_plugins_activate",
     {
-      title: "Activer un plugin",
+      title: "Activate a plugin",
       description:
-        "Active un plugin déjà installé. Le file est le chemin renvoyé par diagnostics/plugins (ex. rank-math-seo/rank-math.php).",
+        "Activates an already-installed plugin. `file` is the path returned by diagnostics/plugins (e.g. rank-math-seo/rank-math.php).",
       inputSchema: {
-        file: z.string().describe("Fichier-plugin (ex. rank-math-seo/rank-math.php)"),
+        file: z.string().describe("Plugin file (e.g. rank-math-seo/rank-math.php)"),
       },
     },
     async (args) => toToolResult("plugins/activate", await client.post("/plugins/activate", args)),
@@ -531,11 +555,11 @@ function registerPlugins(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_plugins_deactivate",
     {
-      title: "Désactiver un plugin",
+      title: "Deactivate a plugin",
       description:
-        "Désactive un plugin. Le plugin IA Webmaster Bridge ne peut pas être désactivé via l'API (garde-fou).",
+        "Deactivates a plugin. The IA Webmaster Bridge plugin itself cannot be deactivated via the API (guardrail).",
       inputSchema: {
-        file: z.string().describe("Fichier-plugin à désactiver"),
+        file: z.string().describe("Plugin file to deactivate"),
       },
     },
     async (args) => toToolResult("plugins/deactivate", await client.post("/plugins/deactivate", args)),
@@ -543,16 +567,16 @@ function registerPlugins(server: McpServer, client: IawmClient): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* SEO (Rank Math / Yoast)                                            */
+/* SEO (Rank Math / Yoast)                                             */
 /* ------------------------------------------------------------------ */
 
 function registerSeo(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_seo_status",
     {
-      title: "État du backend SEO",
+      title: "SEO backend status",
       description:
-        "Indique quel plugin SEO est actif sur le site (Rank Math prioritaire, Yoast secondaire) et la liste des champs supportés par l'API.",
+        "Indicates which SEO plugin is active on the site (Rank Math first, Yoast second) and the list of fields supported by the API.",
     },
     async () => toToolResult("seo/status", await client.post("/seo/status", {})),
   );
@@ -560,11 +584,11 @@ function registerSeo(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_seo_page_get",
     {
-      title: "Lire le SEO d'une page",
+      title: "Read a page's SEO",
       description:
-        "Renvoie les méta-données SEO d'un post : meta_title, meta_description, focus_keyword, canonical_url, robots, Open Graph, Twitter.",
+        "Returns the SEO metadata of a post: meta_title, meta_description, focus_keyword, canonical_url, robots, Open Graph, Twitter.",
       inputSchema: {
-        post_id: z.number().int().describe("Identifiant du post/page"),
+        post_id: z.number().int().describe("Post/page id"),
       },
     },
     async (args) => toToolResult("seo/page/get", await client.post("/seo/page/get", args)),
@@ -573,14 +597,14 @@ function registerSeo(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_seo_page_update",
     {
-      title: "Modifier le SEO d'une page",
+      title: "Update a page's SEO",
       description:
-        "Met à jour les méta-données SEO d'un post. Les noms de champs sont normalisés (indépendants du backend) : meta_title, meta_description, focus_keyword, canonical_url, robots_noindex, robots_nofollow, og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id. dry_run=true prévisualise.",
+        "Updates the SEO metadata of a post. Field names are normalised (backend-independent): meta_title, meta_description, focus_keyword, canonical_url, robots_noindex, robots_nofollow, og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id. dry_run=true previews.",
       inputSchema: {
-        post_id: z.number().int().describe("Identifiant du post/page"),
+        post_id: z.number().int().describe("Post/page id"),
         fields: z
           .record(z.string(), z.unknown())
-          .describe("Champs à mettre à jour. Mettre null/\"\" pour supprimer un champ."),
+          .describe("Fields to update. Use null/\"\" to clear a field."),
         dry_run: z.boolean().optional(),
       },
     },
@@ -589,16 +613,16 @@ function registerSeo(server: McpServer, client: IawmClient): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Divi 5 (lecture + manipulation de layouts)                         */
+/* Divi 5 (layout read + manipulation)                                 */
 /* ------------------------------------------------------------------ */
 
 function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_status",
     {
-      title: "État de Divi 5",
+      title: "Divi 5 status",
       description:
-        "Indique si Divi 5 est actif sur le site, sa version, le thème courant, et la capacité de parser des layouts au format Gutenberg.",
+        "Indicates whether Divi 5 is active on the site, its version, the current theme, and the ability to parse Gutenberg-format layouts.",
     },
     async () => toToolResult("divi/status", await client.post("/divi/status", {})),
   );
@@ -606,15 +630,15 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_page_read",
     {
-      title: "Lire une page Divi 5",
+      title: "Read a Divi 5 page",
       description:
-        "Lit une page Divi 5 et projette son contenu en arbre structuré (sections > rows > columns > modules) avec attributs normalisés. Trois modes : tree (défaut, hiérarchique), flat (liste linéaire avec chemins), raw (parse_blocks brut). Renvoie également des statistiques (nb de sections, comptage par type de bloc).",
+        "Reads a Divi 5 page and projects its content as a structured tree (sections > rows > columns > modules) with normalised attributes. Three modes: tree (default, hierarchical), flat (linear list with paths), raw (raw parse_blocks). Also returns stats (section count, count by block type).",
       inputSchema: {
-        post_id: z.number().int().describe("Identifiant du post/page"),
+        post_id: z.number().int().describe("Post/page id"),
         mode: z
           .enum(["tree", "flat", "raw"])
           .optional()
-          .describe("Format de sortie : tree (défaut) | flat | raw"),
+          .describe("Output format: tree (default) | flat | raw"),
       },
     },
     async (args) => toToolResult("divi/page/read", await client.post("/divi/page/read", args)),
@@ -623,15 +647,15 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_library_list",
     {
-      title: "Lister la bibliothèque Divi",
+      title: "List the Divi library",
       description:
-        "Liste les éléments disponibles dans la bibliothèque Divi locale (et Cloud si connecté) : layouts, sections, rows ou modules. Renvoie categories, packs, tags et items.",
+        "Lists items available in the local Divi library (and Cloud if connected): layouts, sections, rows or modules. Returns categories, packs, tags and items.",
       inputSchema: {
         type: z
           .enum(["layout", "section", "row", "module"])
           .optional()
-          .describe("Type d'éléments à lister (défaut : layout)"),
-        exclude: z.array(z.string()).optional().describe("IDs à exclure"),
+          .describe("Item type to list (default: layout)"),
+        exclude: z.array(z.string()).optional().describe("Ids to exclude"),
       },
     },
     async (args) => toToolResult("divi/library/list", await client.post("/divi/library/list", args)),
@@ -640,12 +664,12 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_library_local",
     {
-      title: "Lister les layouts Divi sauvegardés localement",
+      title: "List locally-saved Divi layouts",
       description:
-        "Liste les layouts Divi 5 sauvegardés dans la bibliothèque locale (post_type et_pb_layout). Workflow hybride : quand l'utilisateur trouve un layout Divi Cloud intéressant dans le builder visuel, il clique 'Save to Library' — le layout devient accessible à l'API. Filtrage par catégorie/recherche, indique si chaque layout est au format Divi 5.",
+        "Lists Divi 5 layouts saved in the local library (post_type et_pb_layout). Hybrid workflow: when the user finds an interesting Divi Cloud layout in the visual builder, they click 'Save to Library' — the layout becomes accessible to the API. Filters by category/search, indicates whether each layout is in Divi 5 format.",
       inputSchema: {
-        search: z.string().optional().describe("Recherche dans le titre"),
-        category: z.string().optional().describe("Slug de catégorie layout"),
+        search: z.string().optional().describe("Title search"),
+        category: z.string().optional().describe("Layout category slug"),
         per_page: z.number().int().min(1).max(100).optional(),
         page: z.number().int().min(1).optional(),
       },
@@ -656,14 +680,14 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_library_item",
     {
-      title: "Récupérer un item de la bibliothèque Divi",
+      title: "Fetch a Divi library item",
       description:
-        "Récupère le contenu complet d'un item de la bibliothèque Divi (layout, section, row, module) : balisage prêt à l'emploi + global colors + global variables du site.",
+        "Fetches the full content of a Divi library item (layout, section, row, module): ready-to-use markup + site global colors + global variables.",
       inputSchema: {
-        id: z.union([z.number(), z.string()]).describe("Identifiant de l'item"),
-        library_type: z.string().optional().describe("Type (défaut : layout)"),
-        built_for: z.string().optional().describe("Pour quel post type (défaut : page)"),
-        content_type: z.string().optional().describe("Type de contenu (défaut : layout)"),
+        id: z.union([z.number(), z.string()]).describe("Item id"),
+        library_type: z.string().optional().describe("Type (default: layout)"),
+        built_for: z.string().optional().describe("Target post type (default: page)"),
+        content_type: z.string().optional().describe("Content type (default: layout)"),
       },
     },
     async (args) => toToolResult("divi/library/item", await client.post("/divi/library/item", args)),
@@ -672,9 +696,9 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_cloud_status",
     {
-      title: "État Divi Cloud",
+      title: "Divi Cloud status",
       description:
-        "État de la connexion à Divi Cloud : licence Elegant Themes présente, identifiant du compte, présence d'un cloudToken (sans exposer sa valeur).",
+        "Status of the Divi Cloud connection: Elegant Themes license present, account id, presence of a cloudToken (without exposing its value).",
     },
     async () => toToolResult("divi/cloud/status", await client.post("/divi/cloud/status", {})),
   );
@@ -682,9 +706,9 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_global_data",
     {
-      title: "Design system Divi (global data)",
+      title: "Divi design system (global data)",
       description:
-        "Récupère le design system Divi du site : global colors (gcid-*), global variables (variables CSS), global fonts. À utiliser AVANT de générer un layout pour référencer les couleurs/fontes globales.",
+        "Fetches the site's Divi design system: global colors (gcid-*), global variables (CSS variables), global fonts. Call this BEFORE generating a layout to reference global colors/fonts.",
     },
     async () => toToolResult("divi/global-data", await client.post("/divi/global-data", {})),
   );
@@ -694,9 +718,9 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_theme_builder_list",
     {
-      title: "Lister les templates du Theme Builder",
+      title: "List Theme Builder templates",
       description:
-        "Liste les templates Theme Builder Divi (header/footer/body assignés à des conditions). Enrichi avec le titre des layouts physiques liés. live=true (défaut) = templates publiés.",
+        "Lists Divi Theme Builder templates (header/footer/body assigned to conditions). Enriched with the titles of the linked physical layouts. live=true (default) = published templates.",
       inputSchema: {
         live: z.boolean().optional(),
       },
@@ -707,14 +731,14 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_theme_builder_layout_create",
     {
-      title: "Créer un layout Theme Builder (header/body/footer)",
+      title: "Create a Theme Builder layout (header/body/footer)",
       description:
-        "Crée un layout physique (et_header_layout / et_body_layout / et_footer_layout) avec son contenu Divi 5. Accepte content (chaîne sérialisée) OU blocks (tableau parse_blocks). Renvoie l'id, à utiliser ensuite dans theme_builder_template_update.",
+        "Creates a physical layout (et_header_layout / et_body_layout / et_footer_layout) with its Divi 5 content. Accepts `content` (serialised string) OR `blocks` (parse_blocks array). Returns the id, to be used afterwards in theme_builder_template_update.",
       inputSchema: {
-        zone: z.enum(["header", "body", "footer"]).describe("Zone du layout"),
+        zone: z.enum(["header", "body", "footer"]).describe("Layout zone"),
         title: z.string().optional(),
-        content: z.string().optional().describe("post_content sérialisé (alternative à blocks)"),
-        blocks: z.array(z.record(z.string(), z.unknown())).optional().describe("Tableau de blocs parse_blocks"),
+        content: z.string().optional().describe("Serialised post_content (alternative to blocks)"),
+        blocks: z.array(z.record(z.string(), z.unknown())).optional().describe("Array of parse_blocks blocks"),
       },
     },
     async (args) => toToolResult("divi/theme-builder/layout/create", await client.post("/divi/theme-builder/layout/create", args)),
@@ -723,9 +747,9 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_theme_builder_layout_read",
     {
-      title: "Lire un layout Theme Builder",
+      title: "Read a Theme Builder layout",
       description:
-        "Lit le contenu d'un layout Theme Builder (header/body/footer) en arbre Divi structuré, identique à iawm_divi_page_read mais validant le post_type.",
+        "Reads the content of a Theme Builder layout (header/body/footer) as a structured Divi tree, identical to iawm_divi_page_read but validating the post_type.",
       inputSchema: {
         post_id: z.number().int(),
         mode: z.enum(["tree", "flat", "raw"]).optional(),
@@ -737,15 +761,15 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_theme_builder_setup_site_defaults",
     {
-      title: "Configurer header/footer du site en une fois",
+      title: "Set up site header/footer in one call",
       description:
-        "Wrapper haut-niveau : crée le conteneur Theme Builder + un template par défaut avec header/body/footer (selon ce qui est fourni) et l'assigne comme default du site (s'applique à tout post/page sans override). Refuse si un template default existe déjà sauf replace_existing=true. Chaque zone est un objet {title?, content? | blocks?}.",
+        "High-level wrapper: creates the Theme Builder container + a default template with header/body/footer (when provided) and assigns it as the site default (applies to any post/page without override). Refuses if a default template already exists unless replace_existing=true. Each zone is an object {title?, content? | blocks?}.",
       inputSchema: {
-        title: z.string().optional().describe("Titre du template (défaut : Default Site Template)"),
+        title: z.string().optional().describe("Template title (default: Default Site Template)"),
         header: z.record(z.string(), z.unknown()).optional().describe("{title?, content?, blocks?}"),
         body: z.record(z.string(), z.unknown()).optional(),
         footer: z.record(z.string(), z.unknown()).optional(),
-        assign_default: z.boolean().optional().describe("Marquer comme default du site (défaut true)"),
+        assign_default: z.boolean().optional().describe("Mark as site default (default true)"),
         replace_existing: z.boolean().optional(),
       },
     },
@@ -755,9 +779,9 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_theme_builder_template_assign",
     {
-      title: "Assigner un template Theme Builder à des conditions",
+      title: "Assign a Theme Builder template to conditions",
       description:
-        "Pose les conditions use_on (où le template s'applique) et exclude_from (exceptions). Exemples : 'default', 'singular:page', 'singular:post', 'page:123', 'archive:category'.",
+        "Sets the use_on (where the template applies) and exclude_from (exceptions) conditions. Examples: 'default', 'singular:page', 'singular:post', 'page:123', 'archive:category'.",
       inputSchema: {
         template_id: z.number().int(),
         use_on: z.array(z.string()).optional(),
@@ -771,8 +795,8 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_theme_builder_template_delete",
     {
-      title: "Supprimer un template Theme Builder",
-      description: "Supprime un template (ne supprime PAS les layouts physiques associés — utiliser content/get + delete sur les ids pour ça).",
+      title: "Delete a Theme Builder template",
+      description: "Deletes a template (does NOT delete the linked physical layouts — use content/get + delete on the ids for that).",
       inputSchema: {
         template_id: z.number().int(),
         live: z.boolean().optional(),
@@ -781,19 +805,20 @@ function registerDivi(server: McpServer, client: IawmClient): void {
     async (args) => toToolResult("divi/theme-builder/template/delete", await client.post("/divi/theme-builder/template/delete", args)),
   );
 
-  // -------- Composeurs (recommandés pour générer des pages) --------
+  // -------- Composers (recommended way to generate pages) --------
 
   server.registerTool(
     "iawm_divi_page_compose",
     {
-      title: "Composer et écrire une page Divi 5 (recommandé)",
+      title: "Compose and write a Divi 5 page (recommended)",
       description:
-        "VOIE PRINCIPALE pour générer une page Divi 5 : prend un tableau `sections` où chaque section peut être (1) un PATTERN paramétré { pattern: 'hero' | 'features3col' | 'ctaBanner' | 'imageTextSplit' | 'testimonials' | 'faqAccordion' | 'numbersBar' | 'videoSection' | 'contactSection' | 'pricing3col' | 'teamGrid' | 'headerSimple' | 'footerStandard', options: {...} }, OU (2) une SECTION FREE-FORM { section: { background?, spacing?, rows: [{ structure: '1_2,1_2', wrapMobile?: true, columns: [[{module:'text', html:'...'}, ...], ...] }] } }, OU (3) un BLOC BRUT { block: <GutenbergBlock JSON> }. Modules supportés en free-form : text, blurb, cta, image, button, heading, number-counter, circle-counter, testimonial, team-member, gallery, video, audio, code, divider, icon, toggle, signup, map, menu, fullwidth-menu, search, breadcrumbs, post-title, post-content, post-navigation, comments, accordion, tabs, slider, contact-form, pricing-tables, icon-list, social-media-follow, counters. Le composeur assemble tout et écrit via divi/page/write. JAMAIS utiliser de script intermédiaire — appeler cet outil directement.",
+        "PRIMARY ENTRY POINT to generate a Divi 5 page: takes a `sections` array where each section is either (1) a parametric PATTERN { pattern: 'hero' | 'features3col' | 'ctaBanner' | 'imageTextSplit' | 'testimonials' | 'faqAccordion' | 'numbersBar' | 'videoSection' | 'contactSection' | 'pricing3col' | 'teamGrid' | 'headerSimple' | 'footerStandard', options: {...} }, OR (2) a FREE-FORM SECTION { section: { background?, spacing?, rows: [{ structure: '1_2,1_2', wrapMobile?: true, columns: [[{module:'text', html:'...'}, ...], ...] }] } }, OR (3) a RAW BLOCK { block: <GutenbergBlock JSON> }. Free-form module names supported: text, blurb, cta, image, button, heading, number-counter, circle-counter, testimonial, team-member, gallery, video, audio, code, divider, icon, toggle, signup, map, menu, fullwidth-menu, search, breadcrumbs, post-title, post-content, post-navigation, comments, accordion, tabs, slider, contact-form, pricing-tables, icon-list, social-media-follow, counters. The composer assembles everything and writes via divi/page/write. NEVER use an intermediate script — call this tool directly.",
       inputSchema: {
-        post_id: z.number().int().describe("Identifiant de la page cible"),
+        post_id: z.number().int().describe("Target page id"),
         sections: z
           .array(z.record(z.string(), z.unknown()))
-          .describe("Tableau de sections (mix patterns / free-form / blocks)"),
+          .describe("Sections array (mix of patterns / free-form / blocks)"),
+        language: LANGUAGE_HINT,
         dry_run: z.boolean().optional(),
       },
     },
@@ -819,14 +844,15 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_theme_builder_compose",
     {
-      title: "Composer et appliquer un Theme Builder (recommandé)",
+      title: "Compose and apply a Theme Builder template (recommended)",
       description:
-        "VOIE PRINCIPALE pour générer un Theme Builder : prend `header_sections`, `body_sections` et/ou `footer_sections` (tableau de SectionInput, même grammaire que iawm_divi_page_compose : patterns, free-form ou blocks). Compose chaque zone et appelle theme-builder/setup-site-defaults. assign_default=true par défaut (template global). replace_existing=true pour écraser un template default existant.",
+        "PRIMARY ENTRY POINT to generate a Theme Builder: takes `header_sections`, `body_sections` and/or `footer_sections` (arrays of SectionInput, same grammar as iawm_divi_page_compose: patterns, free-form or blocks). Composes each zone and calls theme-builder/setup-site-defaults. assign_default=true by default (global template). replace_existing=true to overwrite an existing default template.",
       inputSchema: {
-        title: z.string().optional().describe("Titre du template (défaut : Default Site Template)"),
+        title: z.string().optional().describe("Template title (default: Default Site Template)"),
         header_sections: z.array(z.record(z.string(), z.unknown())).optional(),
         body_sections: z.array(z.record(z.string(), z.unknown())).optional(),
         footer_sections: z.array(z.record(z.string(), z.unknown())).optional(),
+        language: LANGUAGE_HINT,
         assign_default: z.boolean().optional(),
         replace_existing: z.boolean().optional(),
       },
@@ -864,19 +890,19 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   server.registerTool(
     "iawm_divi_page_write",
     {
-      title: "Écrire un layout Divi 5",
+      title: "Write a Divi 5 layout",
       description:
-        "Écrit un layout Divi 5 dans un post. Deux formats acceptés : content (chaîne post_content déjà sérialisée avec les commentaires wp:divi/*) OU blocks (tableau de blocs au format parse_blocks). Si le wrapper racine wp:divi/placeholder manque, il est ajouté automatiquement. La meta _et_pb_use_builder est posée si absente. dry_run=true prévisualise sans écrire.",
+        "Writes a Divi 5 layout into a post. Two accepted formats: `content` (post_content string already serialised with the wp:divi/* comments) OR `blocks` (array of blocks in parse_blocks format). If the root wp:divi/placeholder wrapper is missing, it is added automatically. The `_et_pb_use_builder` meta is set when absent. dry_run=true previews without writing.",
       inputSchema: {
-        post_id: z.number().int().describe("Identifiant du post/page cible"),
+        post_id: z.number().int().describe("Target post/page id"),
         content: z
           .string()
           .optional()
-          .describe("Post_content déjà sérialisé (chaîne avec commentaires wp:divi/*)"),
+          .describe("Already-serialised post_content (string with wp:divi/* comments)"),
         blocks: z
           .array(z.record(z.string(), z.unknown()))
           .optional()
-          .describe("Tableau de blocs au format parse_blocks (alternatif à content)"),
+          .describe("Array of blocks in parse_blocks format (alternative to content)"),
         dry_run: z.boolean().optional(),
       },
     },
@@ -885,10 +911,10 @@ function registerDivi(server: McpServer, client: IawmClient): void {
 }
 
 /**
- * Enregistre tous les outils du pont sur le serveur MCP.
+ * Registers every gateway tool on the MCP server.
  *
- * @param server Serveur MCP.
- * @param client Client signé vers l'adaptateur.
+ * @param server MCP server.
+ * @param client Signed client to the adapter.
  */
 export function registerTools(server: McpServer, client: IawmClient): void {
   registerSystem(server, client);

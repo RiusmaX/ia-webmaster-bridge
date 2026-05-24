@@ -1,8 +1,8 @@
 /**
- * Pattern Testimonials — preuve sociale.
+ * Testimonials pattern — social proof.
  *
- * Variante 1 : grille (3 colonnes).
- * Variante 2 : carrousel (slider) — TODO.
+ * Variant 1: grid (3 columns).
+ * Variant 2: carousel (slider) — TODO.
  */
 
 import { section, row, column, text, testimonial } from "../builders.js";
@@ -48,12 +48,12 @@ export function testimonials(options: TestimonialsOptions): GutenbergBlock {
     );
   }
 
-  // Layout adaptatif : 1, 2 ou 3 colonnes selon le nombre d'items.
+  // Adaptive layout: 1, 2 or 3 columns depending on the item count.
   const count = options.items.length;
   const structure = count === 1 ? "4_4" : count === 2 ? "1_2,1_2" : "1_3,1_3,1_3";
   const colType = count === 1 ? "4_4" : count === 2 ? "1_2" : "1_3";
 
-  // Si > 3, on regroupe par 3.
+  // If > 3, group items by 3.
   const groups: TestimonialItem[][] = [];
   if (count <= 3) {
     groups.push(options.items);

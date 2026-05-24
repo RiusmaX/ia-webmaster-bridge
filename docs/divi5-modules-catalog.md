@@ -1,52 +1,52 @@
-# Catalogue des modules Divi 5 (natifs)
+# Divi 5 (native) modules catalog
 
-> Source de vérité : `wp-content/themes/Divi/includes/builder-5/server/Packages/ModuleLibrary/`
-> sur le site local. Croisé avec la doc officielle Elegant Themes.
-> Dernière mise à jour : 2026-05-23.
+> Source of truth: `wp-content/themes/Divi/includes/builder-5/server/Packages/ModuleLibrary/`
+> on the local site. Cross-referenced with the official Elegant Themes docs.
+> Last updated: 2026-05-23.
 
-## Pattern de nommage des blocs
+## Block naming pattern
 
-Les modules Divi 5 sont enregistrés comme blocs Gutenberg sous le
-namespace `divi/*`. Le `blockName` est le **kebab-case** du nom de
-classe PascalCase :
+Divi 5 modules are registered as Gutenberg blocks under the `divi/*`
+namespace. The `blockName` is the **kebab-case** of the PascalCase class
+name:
 
-| Classe PHP | blockName |
+| PHP class | blockName |
 |-----------|-----------|
 | `NumberCounter` | `divi/number-counter` |
 | `AccordionItem` | `divi/accordion-item` |
 | `BeforeAfterImage` | `divi/before-after-image` |
-| `WooCommerceBreadcrumb` | `divi/woocommerce-breadcrumb` (à confirmer) |
+| `WooCommerceBreadcrumb` | `divi/woocommerce-breadcrumb` (to confirm) |
 
-## Légende
+## Legend
 
-- ✅ **Documenté + builder TS implémenté** dans `lib/divi/builders.ts`
-- 🟢 **Documenté** (format observé sur une page de référence)
-- 🟡 **Inventorié** (blockName déduit, format à valider)
-- ⚠️ **À confirmer** (peupler une page de référence)
+- ✅ **Documented + TS builder implemented** in `lib/divi/builders.ts`
+- 🟢 **Documented** (format observed on a reference page)
+- 🟡 **Inventoried** (blockName inferred, format to validate)
+- ⚠️ **To confirm** (populate a reference page)
 
 ---
 
-## 1. Structurels (3)
+## 1. Structural (3)
 
-Tout le squelette d'une page Divi 5. Hiérarchie obligatoire :
+The entire skeleton of a Divi 5 page. Mandatory hierarchy:
 `placeholder > section > row > column > modules`.
 
-| blockName | Statut | Note |
+| blockName | Status | Note |
 |-----------|--------|------|
-| `divi/placeholder` | ✅ | Wrapper racine obligatoire |
-| `divi/section` | ✅ | Bande horizontale |
-| `divi/row` | ✅ | Avec `columnStructure` (notation `a_b,c_d,...`) |
-| `divi/column` | ✅ | `type` (ex. `1_3`), `flexType` auto (`8_24`) |
-| `divi/row-inner` | 🟡 | Variante de row pour modules nested |
-| `divi/column-inner` | 🟡 | Variante de column pour modules nested |
+| `divi/placeholder` | ✅ | Mandatory root wrapper |
+| `divi/section` | ✅ | Horizontal band |
+| `divi/row` | ✅ | With `columnStructure` (notation `a_b,c_d,...`) |
+| `divi/column` | ✅ | `type` (e.g. `1_3`), auto `flexType` (`8_24`) |
+| `divi/row-inner` | 🟡 | Variant of row for nested modules |
+| `divi/column-inner` | 🟡 | Variant of column for nested modules |
 
 ---
 
-## 2. Modules Contenu de base (12)
+## 2. Basic content modules (12)
 
-Les briques fondamentales du builder. **Tous documentés ou implémentés.**
+The builder's fundamental bricks. **All documented or implemented.**
 
-| blockName | Statut | Builder TS | Pattern |
+| blockName | Status | TS builder | Pattern |
 |-----------|--------|------------|---------|
 | `divi/text` | ✅ | `text({ html, headingFont })` | hero / features3col |
 | `divi/heading` | ✅ | `heading({ text })` | — |
@@ -55,83 +55,83 @@ Les briques fondamentales du builder. **Tous documentés ou implémentés.**
 | `divi/button` | ✅ | `button({ text, linkUrl })` | — |
 | `divi/image` | ✅ | `image({ src, alt? })` | imageTextSplit |
 | `divi/video` | ✅ | `video({ src })` | videoSection |
-| `divi/code` | ✅ | `code({ html })` | (à éviter) |
-| `divi/divider` | ✅ | `divider({ color?, height? })` | utile pour séparation visuelle |
-| `divi/icon` | ✅ | `icon({ unicode, color?, size? })` | code Divi unicode |
+| `divi/code` | ✅ | `code({ html })` | (avoid) |
+| `divi/divider` | ✅ | `divider({ color?, height? })` | useful for visual separation |
+| `divi/icon` | ✅ | `icon({ unicode, color?, size? })` | Divi unicode code |
 | `divi/gallery` | ✅ | `gallery({ ids[], columns? })` | — |
-| `divi/audio` | ✅ | `audio({ title, artistName?, audioUrl? })` | lecteur audio HTML5 |
+| `divi/audio` | ✅ | `audio({ title, artistName?, audioUrl? })` | HTML5 audio player |
 
 ---
 
-## 3. Modules Composés (nested) (8 groupes)
+## 3. Composed (nested) modules (8 groups)
 
-Modules qui contiennent d'autres blocs Divi en `innerBlocks`.
+Modules that contain other Divi blocks as `innerBlocks`.
 
-| Conteneur | Item enfant | Statut | Builder TS |
+| Container | Child item | Status | TS builder |
 |-----------|-------------|--------|------------|
 | `divi/accordion` | `divi/accordion-item` | ✅ | `accordion([items])` |
 | `divi/tabs` | `divi/tab` | ✅ | `tabs([items])` |
 | `divi/slider` | `divi/slide` | ✅ | `slider([items])` |
 | `divi/contact-form` | `divi/contact-field` | ✅ | `contactForm({ fields })` |
-| `divi/toggle` | — (simple) | 🟡 | À ajouter (accordion mais 1 seul item) |
-| `divi/pricing-tables` | `divi/pricing-table` ⚠️ | ✅ | **singulier** (pas -item ni -s) |
+| `divi/toggle` | — (simple) | 🟡 | To add (accordion but a single item) |
+| `divi/pricing-tables` | `divi/pricing-table` ⚠️ | ✅ | **singular** (not -item nor -s) |
 | `divi/icon-list` | `divi/icon-list-item` | ✅ | |
-| `divi/social-media-follow` | `divi/social-media-follow-network` ⚠️ | ✅ | **`-network`** (pas `-item`) |
-| `divi/timeline` | `divi/timeline-item` | 🟡 | À ajouter — histoire entreprise |
-| `divi/map` | `divi/map-item` | ✅ | (item à ajouter pour les marqueurs) |
-| `divi/video-slider` | `divi/video-slider-item` | 🟡 | À ajouter |
-| `divi/counters` ⚠️ | `divi/counter` ⚠️ | ✅ | **`counters`**, pas `bar-counters` |
+| `divi/social-media-follow` | `divi/social-media-follow-network` ⚠️ | ✅ | **`-network`** (not `-item`) |
+| `divi/timeline` | `divi/timeline-item` | 🟡 | To add — company history |
+| `divi/map` | `divi/map-item` | ✅ | (item to add for markers) |
+| `divi/video-slider` | `divi/video-slider-item` | 🟡 | To add |
+| `divi/counters` ⚠️ | `divi/counter` ⚠️ | ✅ | **`counters`**, not `bar-counters` |
 
 ---
 
-## 4. Statistiques et chiffres (4)
+## 4. Statistics and numbers (4)
 
-| blockName | Statut | Builder TS | Note |
+| blockName | Status | TS builder | Note |
 |-----------|--------|------------|------|
-| `divi/number-counter` | ✅ | `numberCounter({ title, number, percent? })` | Animation au scroll |
-| `divi/circle-counter` | ✅ | `circleCounter({ title, number })` | Variante circulaire |
-| `divi/counters` ⚠️ (composé) | ✅ | `counters({ items, showPercentages? })` | Barres horizontales (PAS `bar-counters`) |
-| `divi/countdown-timer` | 🟡 | À ajouter | Compte à rebours réel |
+| `divi/number-counter` | ✅ | `numberCounter({ title, number, percent? })` | Animation on scroll |
+| `divi/circle-counter` | ✅ | `circleCounter({ title, number })` | Circular variant |
+| `divi/counters` ⚠️ (composed) | ✅ | `counters({ items, showPercentages? })` | Horizontal bars (NOT `bar-counters`) |
+| `divi/countdown-timer` | 🟡 | To add | Real countdown |
 
 ---
 
-## 5. Personnes et témoignages (2)
+## 5. People and testimonials (2)
 
-| blockName | Statut | Builder TS | Note |
+| blockName | Status | TS builder | Note |
 |-----------|--------|------------|------|
-| `divi/testimonial` | ✅ | `testimonial({ quoteHtml, author, portraitUrl? })` | Citation + photo |
-| `divi/team-member` | ✅ | `teamMember({ name, position, imageUrl?, bioHtml? })` | Photo + bio + réseaux sociaux |
+| `divi/testimonial` | ✅ | `testimonial({ quoteHtml, author, portraitUrl? })` | Quote + photo |
+| `divi/team-member` | ✅ | `teamMember({ name, position, imageUrl?, bioHtml? })` | Photo + bio + social networks |
 
 ---
 
-## 6. Portfolio et galeries (5)
+## 6. Portfolio and galleries (5)
 
-| blockName | Statut | Note |
+| blockName | Status | Note |
 |-----------|--------|------|
-| `divi/portfolio` | 🟡 | Grille de projets WP (post_type=project) |
-| `divi/filterable-portfolio` | 🟡 | Avec filtres par catégorie |
-| `divi/fullwidth-portfolio` | 🟡 | Variante pleine largeur |
-| `divi/gallery` | ✅ | Galerie d'images simple |
-| `divi/before-after-image` | 🟡 | Slider de comparaison |
+| `divi/portfolio` | 🟡 | WP project grid (post_type=project) |
+| `divi/filterable-portfolio` | 🟡 | With category filters |
+| `divi/fullwidth-portfolio` | 🟡 | Full-width variant |
+| `divi/gallery` | ✅ | Simple image gallery |
+| `divi/before-after-image` | 🟡 | Comparison slider |
 
 ---
 
-## 7. Contenu dynamique WordPress (theme builder) (6)
+## 7. WordPress dynamic content (theme builder) (6)
 
-Modules qui s'alimentent depuis le post courant. Surtout utiles dans
-le Theme Builder (templates de pages dynamiques).
+Modules fed from the current post. Mainly useful in the Theme Builder
+(dynamic page templates).
 
-| blockName | Statut | Note |
+| blockName | Status | Note |
 |-----------|--------|------|
-| `divi/post-title` | 🟡 | Titre dynamique du post |
-| `divi/post-content` | 🟡 | Contenu du post |
-| `divi/post-navigation` | 🟡 | Liens précédent / suivant |
-| `divi/post-slider` | 🟡 | Articles en curseur |
-| `divi/blog` | 🟡 | Liste d'articles paginée |
-| `divi/comments` | 🟡 | Commentaires WP |
-| `divi/breadcrumbs` | 🟡 | Fil d'Ariane (utile SEO) |
+| `divi/post-title` | 🟡 | Dynamic post title |
+| `divi/post-content` | 🟡 | Post content |
+| `divi/post-navigation` | 🟡 | Previous / next links |
+| `divi/post-slider` | 🟡 | Posts as a slider |
+| `divi/blog` | 🟡 | Paginated post list |
+| `divi/comments` | 🟡 | WP comments |
+| `divi/breadcrumbs` | 🟡 | Breadcrumb (useful for SEO) |
 
-Variantes pleine largeur (`fullwidth-*`) :
+Full-width variants (`fullwidth-*`):
 - `divi/fullwidth-header`
 - `divi/fullwidth-image`
 - `divi/fullwidth-map`
@@ -145,58 +145,58 @@ Variantes pleine largeur (`fullwidth-*`) :
 
 ---
 
-## 8. Navigation et menus (3)
+## 8. Navigation and menus (3)
 
-| blockName | Statut | Note |
+| blockName | Status | Note |
 |-----------|--------|------|
-| `divi/menu` | 🟡 | Menu WP |
-| `divi/search` | 🟡 | Barre de recherche |
-| `divi/sidebar` | 🟡 | Affiche une sidebar WP |
+| `divi/menu` | 🟡 | WP menu |
+| `divi/search` | 🟡 | Search bar |
+| `divi/sidebar` | 🟡 | Displays a WP sidebar |
 
 ---
 
-## 9. Formulaires et utilisateurs (4)
+## 9. Forms and users (4)
 
-| blockName | Statut | Builder TS | Note |
+| blockName | Status | TS builder | Note |
 |-----------|--------|------------|------|
-| `divi/contact-form` (composé) | ✅ | `contactForm({ fields })` | Form natif Divi |
-| `divi/contact-form-7` | 🟡 | — | Intégration CF7 |
+| `divi/contact-form` (composed) | ✅ | `contactForm({ fields })` | Native Divi form |
+| `divi/contact-form-7` | 🟡 | — | CF7 integration |
 | `divi/signup` | ✅ | `signup({ title, contentHtml })` | Email opt-in (newsletter) |
-| `divi/signup-custom-field` | 🟡 | — | Enfant de signup |
-| `divi/login` | 🟡 | À ajouter | Formulaire de login WP |
+| `divi/signup-custom-field` | 🟡 | — | Child of signup |
+| `divi/login` | 🟡 | To add | WP login form |
 
 ---
 
-## 10. Médias et richesse visuelle (4)
+## 10. Media and visual richness (4)
 
-| blockName | Statut | Note |
+| blockName | Status | Note |
 |-----------|--------|------|
-| `divi/lottie` | 🟡 | Animations Lottie (JSON) |
-| `divi/svg` | 🟡 | SVG inline |
-| `divi/icon` | 🟡 | Icône Divi (unicode + couleur + taille) |
-| `divi/link` | 🟡 | Bouton/lien stylé |
+| `divi/lottie` | 🟡 | Lottie animations (JSON) |
+| `divi/svg` | 🟡 | Inline SVG |
+| `divi/icon` | 🟡 | Divi icon (unicode + color + size) |
+| `divi/link` | 🟡 | Styled button/link |
 
 ---
 
-## 11. Mise en page avancée (3)
+## 11. Advanced layout (3)
 
-| blockName | Statut | Note |
+| blockName | Status | Note |
 |-----------|--------|------|
-| `divi/group` | 🟡 | Regroupement de blocs |
-| `divi/group-carousel` | 🟡 | Groupe en carrousel |
-| `divi/canvas-portal` | 🟡 | Portail vers off-canvas |
-| `divi/dropdown` | 🟡 | Menu déroulant |
-| `divi/common` | 🟡 | Module utilitaire (rare en usage direct) |
+| `divi/group` | 🟡 | Block grouping |
+| `divi/group-carousel` | 🟡 | Group as a carousel |
+| `divi/canvas-portal` | 🟡 | Portal to off-canvas |
+| `divi/dropdown` | 🟡 | Dropdown menu |
+| `divi/common` | 🟡 | Utility module (rare in direct usage) |
 
 ---
 
 ## 12. WooCommerce (25 modules) ⚠️
 
-Pour sites e-commerce. **Tous à confirmer côté blockName** — le pattern
-est probablement `divi/woocommerce-{slug}` mais à valider en peuplant
-une page WooCommerce de référence.
+For e-commerce sites. **All blockNames to confirm** — the pattern is
+likely `divi/woocommerce-{slug}` but needs validation by populating a
+reference WooCommerce page.
 
-| Module | blockName probable |
+| Module | Probable blockName |
 |--------|---------------------|
 | Breadcrumb | `divi/woocommerce-breadcrumb` |
 | CartNotice | `divi/woocommerce-cart-notice` |
@@ -224,48 +224,48 @@ une page WooCommerce de référence.
 | ProductUpsell | `divi/woocommerce-product-upsell` |
 | RelatedProducts | `divi/woocommerce-related-products` |
 
-→ **Phase ultérieure** : créer une page produit WooCommerce de référence
-pour valider tous ces blockNames et leur structure d'attributs.
+→ **Later phase**: create a reference WooCommerce product page to
+validate all these blockNames and their attribute structure.
 
 ---
 
-## Synthèse de couverture
+## Coverage summary
 
-| Catégorie | Total | ✅ Couvert | 🟡 Inventorié | ⚠️ Woo |
+| Category | Total | ✅ Covered | 🟡 Inventoried | ⚠️ Woo |
 |-----------|-------|-----------|---------------|--------|
-| Structurels | 6 | 4 | 2 | — |
-| Contenu base | 12 | 9 | 3 | — |
-| Composés | 12 | 4 | 8 | — |
-| Chiffres | 4 | 1 | 3 | — |
-| Personnes/témoignages | 2 | 1 | 1 | — |
+| Structural | 6 | 4 | 2 | — |
+| Basic content | 12 | 9 | 3 | — |
+| Composed | 12 | 4 | 8 | — |
+| Numbers | 4 | 1 | 3 | — |
+| People/testimonials | 2 | 1 | 1 | — |
 | Portfolio | 5 | 1 | 4 | — |
 | Theme Builder | 6 + 10 fullwidth | 0 | 16 | — |
 | Navigation | 3 | 0 | 3 | — |
 | Forms/users | 5 | 1 | 4 | — |
-| Médias | 4 | 0 | 4 | — |
-| Mise en page | 5 | 0 | 5 | — |
+| Media | 4 | 0 | 4 | — |
+| Layout | 5 | 0 | 5 | — |
 | WooCommerce | 25 | 0 | — | 25 |
-| **TOTAL natif** | **~99** | **21** | **53** | **25** |
+| **NATIVE TOTAL** | **~99** | **21** | **53** | **25** |
 
-→ **21 modules opérationnels** côté builders TS (couvre toutes les pages
-de marketing classique : landing, services, à propos, contact, FAQ).
-→ **~30 modules** à ajouter en priorité moyenne (theme builder, portfolio,
+→ **21 operational modules** on the TS builder side (covers all classic
+marketing pages: landing, services, about, contact, FAQ).
+→ **~30 modules** to add at medium priority (theme builder, portfolio,
 icon-list, social-follow, pricing-tables, team, signup).
-→ **WooCommerce** : phase dédiée à venir.
+→ **WooCommerce**: dedicated phase to come.
 
 ---
 
-## Priorités d'extension de `lib/divi/builders.ts`
+## `lib/divi/builders.ts` extension priorities
 
-Top 10 modules à implémenter en priorité (impact / fréquence d'usage) :
+Top 10 modules to implement first (impact / usage frequency):
 
-1. **`divider`** — séparation visuelle (très utilisé)
-2. **`icon`** — icône standalone
-3. **`pricing-tables`** + `pricing-tables-item` — pages tarifs
-4. **`icon-list`** + `icon-list-item` — listes bullet
+1. **`divider`** — visual separation (very common)
+2. **`icon`** — standalone icon
+3. **`pricing-tables`** + `pricing-tables-item` — pricing pages
+4. **`icon-list`** + `icon-list-item` — bullet lists
 5. **`social-media-follow`** + `social-media-follow-item` — footer/header
-6. **`team-member`** — page équipe
-7. **`signup`** — capture email newsletter
-8. **`map`** — page contact
-9. **`circle-counter`** + **`bar-counters`** — variations KPIs
-10. **`toggle`** — révélation de contenu (mini-accordion)
+6. **`team-member`** — team page
+7. **`signup`** — newsletter email capture
+8. **`map`** — contact page
+9. **`circle-counter`** + **`bar-counters`** — KPI variations
+10. **`toggle`** — content reveal (mini-accordion)
