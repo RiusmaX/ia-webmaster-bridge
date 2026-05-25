@@ -110,17 +110,37 @@ extracting `post_content` and meta), to anchor everything else.
 
 ## Open questions
 
-- Where does Divi 5 exactly store the layout (post_content, post meta,
-  dedicated table)? → to be confirmed by observation (step 1).
-- After writing, should a regeneration of Divi cache/assets be triggered
-  (analogous to Elementor's CSS cache)? → to be checked.
-- Is the "portability" format sufficient, or do we need to write the
-  native storage directly?
-- Does the Divi 5 Builder API offer an entry point for layout
-  generation, or only for custom modules?
-- Multi-breakpoint / multi-state attribute model: exact structure to
-  be mapped.
-- Strategy for third-party modules (Divi extensions) present on sites.
+Most original questions are answered (see `docs/divi5-format.md`,
+`docs/divi5-modules-catalog.md`, `docs/divi5-compose-dsl.md`, and
+decisions D-018 + D-019). Remaining items:
+
+- **Divi cache/assets purge after a write** (analogous to Elementor's
+  CSS cache). Not currently called from our handlers. Worth verifying
+  on a production site whether `/divi/page/write` requires a Divi
+  cache rebuild for the changes to render correctly outside the
+  builder iframe — if yes, the plugin should invoke Divi's purge
+  routine after every write. P1 to verify under prod traffic.
+- **Multi-breakpoint / multi-state attribute model**: read/write
+  round-trip is bit-faithful, but no high-level helper yet for "set
+  this module's mobile variant to X". The full multi-state map lives
+  in `docs/divi5-format.md`; opinionated helpers can be added on
+  demand.
+- **Deeper Divi module builders** (Phase 9 explicit). 47 builders
+  typed today, 58 modules remaining in free-form-only via the
+  auto-discovered registry. Decision D-018 documents the registry; a
+  prioritisation pass is the next step.
+- **Third-party Divi modules** (Divi Supreme, etc.). The
+  auto-discovery scanner picks them up if they register cleanly, but
+  no opinionated patterns are shipped. Out of scope until a target
+  site demands it.
+- **Testimonials carousel variant**. `patterns/testimonials.ts`
+  currently ships only the grid variant; a slider variant is a known
+  TODO (P1 polish).
+
+Settled (removed from the list): native storage shape — confirmed
+post_content + Divi 5 module markup, no dedicated table; "portability"
+format — declined, we write the native storage directly; Builder API
+entry point — not needed, REST + post update suffices.
 
 ## Dependencies & risks
 

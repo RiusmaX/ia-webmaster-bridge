@@ -94,11 +94,29 @@ and guardrails against dangerous operations (decision D-005).
 
 ## Open questions
 
-- Audit log storage: custom table, file, or both?
-- Precise classification of "risky action" → list to be established per plan.
-- Exact mechanism for the confirmation token (TTL, single use).
-- Should sensitive parameters be encrypted in the log?
-- Key rotation policy (frequency, procedure).
+The original list of open questions is mostly settled by decisions
+D-013 → D-022. The remaining items:
+
+- **Sensitive-parameter pseudonymisation in the audit log**. Today
+  `parameters_summary` is stored as plain JSON in `wp_iawm_audit_log`.
+  For a setup where a third party can read the audit log (e.g. a
+  read-only key used by a monitoring sidecar), pseudonymising values
+  marked sensitive in the schema would be safer. P1 backlog.
+- **Automated key expiry**. Rotation procedure is documented in
+  `operations.md`; the **policy** (frequency, procedure) is the
+  operator's call. The plugin does not currently enforce a TTL on a
+  key — a manual rotation cycle is the convention. Adding an optional
+  `expires_at` per key is a reasonable P2 enhancement.
+- **Pentest against real production**. `docs/pentest-2026-05-25.md`
+  documents the dry-run on local; "small prod" and "large prod"
+  validations remain decoched on the roadmap. Not a code item but a
+  ship-blocking checkpoint for any operator publishing the bridge
+  outside their own dev box.
+
+Settled and removed from this list (see `docs/decisions.md` for
+context): audit-log storage (custom table — D-013 era), risky-action
+classification (per-route allow-list, D-015 + D-022), confirmation
+token mechanism (D-015: single-use, 5-min TTL, body-bound).
 
 ## Dependencies & risks
 

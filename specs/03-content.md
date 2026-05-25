@@ -40,18 +40,52 @@ menus, taxonomies, and content as Gutenberg blocks.
 - **Guardrails** (spec 02): draft by default, dry-run available,
   explicit publication.
 
+## Implemented (Phase 2 to date)
+
+- **Content**: `IAWM_Content` (`/content/list`, `/get`, `/create`,
+  `/update`). Validation goes through `serialize_blocks()` server-side
+  so Gutenberg trees stay schema-correct. Build-mode detection
+  (Gutenberg vs Divi) happens before any write: a Divi page is routed
+  to `/divi/page/write` instead. Status defaults to `draft`; publishing
+  is explicit.
+- **Media**: `IAWM_Media` (`/media/list`, `/get`, `/sideload`,
+  `/update`). `sideload` accepts a remote URL plus alt/title/caption so
+  every upload carries accessibility metadata from creation.
+- **Menus**: `IAWM_Menu` (six routes: `list`, `get`, `create`,
+  `add_item`, `remove_item`, `assign_location`). Classic menus only;
+  block-based navigation (`wp_navigation`) reuses the content routes.
+- **Taxonomies**: `IAWM_Taxonomy` (`/list`, `/create`, `/assign`).
+
+## Multi-language
+
+The content language is independent of the codebase language (which is
+English — see `CLAUDE.md`). Callers pass an optional `language`
+parameter (BCP-47, e.g. `fr-FR`, `en-US`, `pt-BR`) on the
+content-generation skills/tools. The plugin stores the produced
+content as-is in `post_content`; **no WPML/Polylang integration** is
+shipped — translation plugins remain the operator's choice and live
+outside the API surface.
+
 ## Open questions
 
-- A Divi 5 page is not managed like a Gutenberg block page: the boundary
-  between this spec and spec 04 must be clear (detect the page's build mode
-  before any write).
-- Should there be a "high-level content" abstraction layer (titles,
-  paragraphs, images) that the agent manipulates, then translated to blocks?
-- Revisions management: expose history and restoration?
-- Custom post types: automatic discovery or explicit declaration?
+- **Revisions management** — expose history and restoration as a
+  first-class capability? Today the agent can read the current state
+  but cannot restore yesterday's version of a post. Listed in the
+  Phase 9 backlog (P1).
+- **Custom post types discovery** — implicit today via the `type`
+  parameter on `/content/list`; a dedicated `/content/types` endpoint
+  would let the agent enumerate available CPTs on a fresh install
+  (P2).
+- **Bulk operations** — no dedicated bulk endpoint; the agent loops
+  client-side. Acceptable today, may revisit if a use case demands it.
+- **High-level content abstraction** (titles/paragraphs/images
+  decoupled from blocks) — declined: the abstraction lives in the
+  gateway-side patterns (`src/divi/patterns/`) for Divi, and Gutenberg
+  blocks are already a sufficient lingua franca for the rest.
 
 ## Dependencies & risks
 
 - Depends on specs 01 (adapter) and 02 (security).
 - Risk: writing Gutenberg content into a Divi-built page (or the other way
-  around) would corrupt the page → detecting the page mode is critical.
+  around) would corrupt the page → build-mode detection on
+  `/divi/page/read` is the safeguard.

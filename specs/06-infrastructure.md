@@ -1,7 +1,7 @@
 # Spec 06 — Infrastructure plan
 
-- **Status**: Implemented (plugins, themes, core update, DB tools, cron, backups; ops runbook)
-- **Phase**: 4
+- **Status**: Implemented (plugins, themes, core update, DB tools, cron, backups, smoke test, link checker, 404 tracker, WooCommerce helper, multisite-tolerant; ops runbook)
+- **Phase**: 4 + Phase 8 add-ons
 - **Priority**: Medium
 - **Last updated**: 2026-05-25
 
@@ -65,21 +65,73 @@ plugins, themes, database, backups, scheduled tasks, updates.
   `plugins/update`, `themes/install`, `themes/activate`, `themes/update`,
   `core/update` and risky settings updates. Restore supports `dry_run`
   and is gated by the Phase 5.3 confirmation token.
+- **Site hygiene smoke test** (Phase 7.2): `/diagnostics/smoke` runs a
+  composite HTTP probe (homepage + admin reachability + fatal-error
+  scan in `debug.log` + WP-Cron state) and returns `healthy: true|false`
+  with per-probe detail. `/diagnostics/check-self` validates the plugin's
+  install invariants (tables present, role installed, agent user
+  reachable). The two answer the open question "how does the agent
+  verify a site is healthy after an operation" — every safe-update
+  workflow ends on a `/diagnostics/smoke` call.
+
+## Phase 8 add-ons (shipped v1.2.0)
+
+- **Broken-links scanner** (`IAWM_LinkChecker`, decision D-028).
+  Per-site table `wp_iawm_link_issues`. Four routes:
+  `/diagnostics/links/scan` (walks published posts/pages/CPTs,
+  HEAD-then-GET probe with a 100 ms throttle, in-scan + table dedup,
+  classifies failures into `404 / 410 / timeout / dns / ssl / other`),
+  `/diagnostics/links/list`, `/diagnostics/links/resolve`,
+  `/diagnostics/links/delete`. Scope: published content only; drafts,
+  revisions, attachments and comment links are excluded. The scanner
+  is one of the building blocks of the `broken-links-audit` workflow
+  skill.
+- **404 tracker** (`IAWM_FourOhFour`, decision D-026). Per-site table
+  `wp_iawm_404_log` with a `(url, IP)` transient dedup at insert time
+  (60 s TTL) that keeps the table bounded under scanner load while
+  still counting hits from distinct IPs on the same URL. Optional
+  sampling denominator for very high-traffic sites. Four routes:
+  `/diagnostics/404/{list,stats,delete,clear}`. `clear` is gated by
+  the confirmation token. Daily prune via WP-Cron at 03:30, offset
+  from the audit prune (03:00) and the backup prune (03:15).
+- **WooCommerce Theme Builder helper** (`IAWM_WooCommerce`). Read-only
+  helpers: `/woocommerce/status` reports plugin activity, version,
+  product count, currency, key page ids (shop/cart/checkout/myaccount)
+  and which template contexts already have a Theme Builder layout;
+  `/woocommerce/contexts` returns the four canonical contexts
+  (shop, single-product, cart, checkout), each with a suggested
+  module list and the matching Theme Builder `use_on` assignment
+  expression. No new parametric pattern — the 25 Woo modules in the
+  auto-discovered Divi registry (D-018) compose cleanly via
+  `iawm_divi_theme_builder_compose`. Doc: `docs/woocommerce-integration.md`.
+- **Multisite tolerance** (decision D-027). Network-activation walks
+  every sub-site under `switch_to_blog()` and installs the per-site
+  pieces (role, tables) under that sub-site's `$wpdb->prefix`; the
+  dedicated agent WordPress user is provisioned once globally for the
+  network. New sub-sites are auto-provisioned via `wp_initialize_site`
+  (`wpmu_new_blog` registered as a legacy fallback). New endpoint
+  `POST /status/network` exposes topology; new admin module
+  `IAWM_Network_Admin` adds a Network Admin → Settings page listing
+  every sub-site with key count, kill-switch state, last audit row
+  and next cron timestamp. Doc: `docs/multisite.md`.
 
 ## Open questions
 
-- Backup mechanism beyond the in-plugin snapshots: do we eventually
-  need a filesystem-level backup (uploads, themes, plugins on disk),
-  or is the snapshot-of-state approach enough for everything we plan
-  to do through the API?
-- Which WP-CLI commands to wrap, and which to leave strictly to the
-  human operator?
-- `search-replace` is powerful and dangerous (serialisation) → specific
-  guardrails, mandatory dry-run.
-- Updates: do we need a pre-production environment to test an update
-  before production?
-- How does the agent verify that a site is healthy after an operation
-  (smoke test)?
+- **Filesystem-level backup** (uploads, plugins on disk, themes on
+  disk): out of scope (D-013). The snapshot-of-state approach covers
+  every operation we expose through the API; a true filesystem backup
+  is the operator's job (off-site, scheduled, outside the agent's
+  blast radius).
+- **WP-CLI wrappers**: never landed. Every infrastructure operation is
+  served by native PHP / WP APIs, which is the cleaner path. The
+  reference to "wrapping precise WP-CLI calls" in the original spec
+  is now obsolete; the SSH/WP-CLI fallback is the **human operator's**
+  channel, documented in `docs/operations.md`.
+- **Pre-production environment** for testing updates before
+  production: still no in-plugin tooling for it. The
+  `prod-deployment-checklist` skill documents the manual rehearsal
+  flow; out of scope to automate further until a clear use case
+  emerges.
 
 ## Dependencies & risks
 

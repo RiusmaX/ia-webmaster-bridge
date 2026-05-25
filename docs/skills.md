@@ -1,8 +1,8 @@
 # Skills catalog
 
-> Status: Living · Last updated: 2026-05-25 (v1.1.0)
+> Status: Living · Last updated: 2026-05-25 (v1.2.0)
 
-The IA Webmaster Bridge ships **14 Claude Code skills** — reusable
+The IA Webmaster Bridge ships **15 Claude Code skills** — reusable
 workflows that compose the underlying MCP tools into recognisable
 operator procedures. Each skill is a markdown file with YAML
 frontmatter under `claude-plugin/skills/<slug>/SKILL.md`; Claude
@@ -32,6 +32,7 @@ knowing what's available helps you ask precisely.
 | [`site-context-discovery`](#site-context-discovery) | Bootstrap the per-site context from observable signals | read + config:write |
 | [`site-status-report`](#site-status-report) | Weekly compiled health + content + audit + updates report | read |
 | [`scheduled-routines`](#scheduled-routines) | Program periodic site checks via WP-Cron | read + infra:write |
+| [`broken-links-audit`](#broken-links-audit) | Find broken outgoing links + triage incoming 404s, with concrete fix actions | read + infra:write + content:write |
 
 ---
 
@@ -212,6 +213,22 @@ quarterly brand-drift check.
 **Prompt example**:
 > *"Set up the weekly site status report every Monday at 9 AM and
 > a quarterly reminder to rotate my API keys."*
+
+### broken-links-audit
+
+Find broken **outgoing** links via the link checker (`iawm_links_scan`,
+walks every published post type with HEAD→GET probes) **and** triage
+**incoming** 404s via the 404 tracker (`iawm_404_stats`,
+popularity-weighted by `hit_count`). Produces three buckets: fix in
+content (internal targets the operator can rewrite), redirect candidates
+(external referers worth catching with a redirect), and ignore/parked
+(scanner noise + known-broken-by-design). Applies approved content
+rewrites via `iawm_content_update` / `iawm_divi_page_write`, marks
+issues as resolved, smoke-tests, optionally clears the 404 log.
+
+**Prompt example**:
+> *"Audit broken links on the site and propose fixes — group by what I
+> can fix in content vs what needs a redirect."*
 
 ---
 

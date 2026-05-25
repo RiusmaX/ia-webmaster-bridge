@@ -616,6 +616,45 @@ new one.
   - Internal vs external is recorded so operators can fix internal
     issues directly and choose whether external dead links matter.
 
+## D-029 — Static gateway catalogue, not runtime `/capabilities` discovery
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: spec 01 originally described a gateway that would query
+  the plugin's `/capabilities` endpoint at startup and generate its
+  MCP tools from the returned schemas. Two years later, the catalogue
+  is **declared statically** in `claude-plugin/mcp-gateway/src/tools.ts`
+  (100 tools in v1.2.0), each with a Zod input schema and a typed
+  handler. No `/capabilities` endpoint exists on the plugin side.
+- **Decision**: ratify the static approach as the long-term shape.
+  Adding a capability requires a coordinated edit on both sides
+  (plugin route + gateway tool + bundle rebuild) — the bundled
+  distribution makes that ergonomic.
+- **Rationale**:
+  - **Type safety**: Zod at compile time catches drift between the
+    gateway tool's input schema and what the route actually accepts.
+    A dynamic catalogue would be JSON-schema at runtime, with no
+    TypeScript checking on call sites.
+  - **Smaller attack surface**: no runtime-introspection endpoint to
+    exploit (no path traversal via crafted capability names, no
+    information leak via inspectable schemas).
+  - **Simpler audit**: a code reviewer can read `tools.ts` and see
+    every tool the gateway exposes in one file. With dynamic
+    discovery, the live tool set would depend on plugin version and
+    feature flags.
+  - **Cheaper smoke test**: `iawm_ping` + `iawm_status` is enough to
+    detect catalogue drift in CI; no separate "schema diff" job
+    needed.
+- **Trade-offs**:
+  - Third parties can't extend the gateway dynamically. Acceptable —
+    this project is not designed to host third-party capabilities,
+    and the bundled distribution is opinionated.
+  - Adding a feature requires touching both repos in lockstep. Lived
+    with in practice; the cycle plugin route → gateway tool → bundle
+    rebuild → copy `dist/index.js` is a single commit.
+- **Implementation**: spec 01 rewritten to describe the static
+  catalogue; the "Dynamic vs static discovery" section now explains
+  why the static path was kept.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

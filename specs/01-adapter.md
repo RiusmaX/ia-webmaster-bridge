@@ -1,6 +1,6 @@
 # Spec 01 — Adapter (plugin + MCP gateway)
 
-- **Status**: Implemented
+- **Status**: Implemented (plugin v1.2.0, gateway v1.2.0, 100 MCP tools mapped to ~100 REST routes)
 - **Phase**: 1–2
 - **Priority**: High
 - **Last updated**: 2026-05-25
@@ -16,8 +16,10 @@ components: the **WordPress plugin** and the **local MCP gateway**.
 ### Included
 - WordPress plugin exposing a custom REST API `ia-webmaster/v1`.
 - Local MCP gateway (Node.js) presenting an MCP server to Claude Code.
-- Registry of discoverable and typed **capabilities**.
-- API versioning and management of multiple targets (profiles).
+- Statically typed, Zod-validated catalogue of **capabilities** (MCP tools)
+  declared in the gateway, one-to-one with the REST routes the plugin
+  exposes.
+- Management of multiple targets (profiles) via the gateway config file.
 
 ### Excluded (for now)
 - The implementation of each functional plan (specs 03 to 06).
@@ -26,42 +28,53 @@ components: the **WordPress plugin** and the **local MCP gateway**.
 ## Technical approach
 
 ### "IA Webmaster Bridge" plugin (PHP)
-- Standalone WordPress plugin, `plugin/` folder.
+- Standalone WordPress plugin, `plugin/ia-webmaster-bridge/` folder.
 - Registers REST routes via `register_rest_route()` under `ia-webmaster/v1`.
 - Each **capability** = an endpoint with: validated input schema, permission
-  callback, execution, logging. Capabilities are grouped by plan (content,
-  Divi, configuration, infrastructure).
-- A discovery endpoint (`/capabilities`) lists the available capabilities and
-  their schemas — the MCP gateway uses it to generate its tools.
-- Target compatibility: WordPress 7.0, modern PHP. Divi 5 required for the
-  Divi plan.
+  callback (HMAC + scopes), execution, audit logging. Capabilities are
+  grouped by plan (content, Divi, configuration, infrastructure,
+  webmaster-layer).
+- Target compatibility: WordPress 7.0+, PHP 7.4+. Divi 5 required for the
+  Divi plan. Multisite-tolerant since v1.2.0 (D-027).
 
 ### Local MCP gateway (Node.js / TypeScript)
-- `mcp-gateway/` folder. MCP server, stdio transport, for Claude Code.
-- On startup: queries the plugin's `/capabilities` and exposes each capability
-  as a typed **MCP tool**.
-- Translates each tool call into a signed HTTPS request (see spec 02).
-- **Profiles**: a configuration file (outside the repo) describes each target
-  (local, prod A, prod B) with its URL and secret.
-- Expected implementation with the official MCP SDK (`@modelcontextprotocol/sdk`).
+- `claude-plugin/mcp-gateway/` folder. MCP server, stdio transport, for
+  Claude Code. Implementation uses the official MCP SDK
+  (`@modelcontextprotocol/sdk`).
+- **Tool catalogue is declared statically** in `src/tools.ts`: every MCP
+  tool has a Zod schema for its inputs and a typed handler that translates
+  the call into a signed HTTPS request (see spec 02). 100 tools in v1.2.0.
+- **Profiles**: a configuration file outside the repo
+  (`~/.iawm/config.json`) describes each target (local, prod A, prod B) with
+  its `baseUrl`, `keyId` and `secret`. One gateway process per profile;
+  Claude Code picks the active one at session start.
 
-### Dynamic vs static discovery
-The gateway generates its tools from the plugin's `/capabilities`: adding a
-capability on the plugin side makes it available without modifying the gateway.
+### Static vs dynamic discovery (decision D-029)
+
+The gateway declares its tools statically rather than pulling them from a
+plugin-side `/capabilities` endpoint at runtime. Rationale and trade-offs
+are recorded in **D-029**: type safety (Zod at compile time), no
+runtime-discovery surface to exploit, simpler audit. Cost: adding a
+capability requires a coordinated edit on both sides (plugin route +
+gateway tool) and a gateway rebuild. The bundled gateway distribution
+makes that ergonomic (`npm run build` + copy `dist/index.js`).
 
 ## Open questions
 
-- Use the WordPress core Abilities API as an internal registry, or a custom
-  registry? (to be decided in Phase 1, related to D-001).
-- MCP gateway: a single multi-profile server, or one server per target?
-- Capability granularity: many small capabilities, or broader parameterised
-  capabilities?
-- API version management (`v1`, `v2`) and backward compatibility.
+- **API versioning** (`v1` → `v2`) and backward compatibility: nothing
+  has shipped yet that would require a v2; a deprecation policy will be
+  written the first time a breaking change is needed (P2 backlog).
+- **Capability granularity**: settled in practice on ~100 narrow
+  capabilities; the cost of one extra tool is low because of the static
+  catalogue.
 
 ## Dependencies & risks
 
 - Depends on spec 02 (security) for the transport.
 - The official MCP SDK is a gateway dependency — acceptable (standard, our
-  choice), but to be pinned to a version.
+  choice), pinned via `package.json`.
 - Risk: evolution of the MCP protocol — isolated in the gateway, with no
-  impact on the plugin.
+  impact on the plugin (the REST API stays stable).
+- Risk: catalogue drift between plugin routes and gateway tools — caught
+  by an integration smoke test that calls `iawm_ping` + `iawm_status`
+  before any production rollout.

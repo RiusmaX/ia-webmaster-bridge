@@ -1,6 +1,6 @@
 # Spec 07 — Webmaster layer (skills & workflows)
 
-- **Status**: Implemented (11 skills shipped; per-site context module + 3 workflow skills + scheduled-routines workflow shipped in v1.1.0)
+- **Status**: Implemented (15 skills shipped; per-site context module since v1.1.0; broken-links-audit workflow added in v1.2.0)
 - **Phase**: 6
 - **Priority**: Medium
 - **Last updated**: 2026-05-25
@@ -21,7 +21,6 @@ give Claude working methods, per-site context, and ready-to-use workflows.
 
 ### Excluded (for now)
 - The technical capabilities themselves → specs 03 to 06.
-- Scheduled routines (possible, to be evaluated once the base is stable).
 
 ## Technical approach
 
@@ -38,18 +37,25 @@ give Claude working methods, per-site context, and ready-to-use workflows.
 
 ## Expected workflows — current status
 
+15 skills in v1.2.0:
+
 | Workflow | Skill | Status |
 |---|---|---|
+| Webmaster method (when to use what) | `webmaster-wordpress` | ✅ Shipped |
+| Create a standard WordPress page | `create-wordpress-page` | ✅ Shipped |
 | Create a Divi 5 landing page from a brief | `create-divi-page` | ✅ Shipped |
+| Front-end design fundamentals on WP | `frontend-design-wordpress` | ✅ Shipped |
+| Marketing & conversion patterns | `marketing-conversion-wordpress` | ✅ Shipped |
 | Audit the SEO of a set of pages and propose fixes | `seo-wordpress` | ✅ Shipped |
-| Update plugins safely (backup → update → smoke test → report) | `safe-plugin-update` | ✅ Shipped |
-| Detect and fix broken links | — | ⏳ Phase 8 backlog |
-| Produce a site status report (content, performance, to-do) | `site-status-report` | ✅ Shipped |
-| Configure the brand design system, then author pages | `design-system-first` | ✅ Shipped |
-| Site health smoke test post-op | `site-smoke-test` | ✅ Shipped |
-| Walk a fresh production install | `prod-deployment-checklist` | ✅ Shipped |
+| Site audit (content + infra + SEO) | `audit-wordpress-site` | ✅ Shipped |
+| Update plugins safely (backup → update → smoke test → report) | `safe-plugin-update` | ✅ Shipped (v1.0.0) |
+| Configure the brand design system, then author pages | `design-system-first` | ✅ Shipped (v1.0.0) |
+| Site health smoke test post-op | `site-smoke-test` | ✅ Shipped (v1.0.0) |
+| Walk a fresh production install | `prod-deployment-checklist` | ✅ Shipped (v1.0.0) |
 | Bootstrap the per-site context | `site-context-discovery` | ✅ Shipped (v1.1.0) |
+| Produce a site status report (content, performance, to-do) | `site-status-report` | ✅ Shipped (v1.1.0) |
 | Set up scheduled routines | `scheduled-routines` | ✅ Shipped (v1.1.0) |
+| Detect and fix broken links + audit 404 traffic | `broken-links-audit` | ✅ Shipped (v1.2.0) |
 
 ## Per-site context (shipped v1.1.0)
 
@@ -75,11 +81,15 @@ Reading this context is the FIRST step every workflow skill performs.
 
 ## Open questions
 
-- Format of the per-site context file (a Markdown? a dedicated skill?).
-- Which workflows to prioritise once Phases 1–5 are stable?
-- Are scheduled routines needed (weekly audit, etc.)? To be evaluated.
-- How to capitalise: should a successful workflow on a site enrich a
-  pool of methods shared across all sites?
+- **Cross-site capitalisation**: should a successful workflow on a site
+  enrich a pool of methods shared across all sites? Today every site
+  has its own `IAWM_Context` and there's no fan-out. Listed as P2
+  nice-to-have — the simplest first step is probably exporting the
+  context option as a portable file the operator can seed elsewhere.
+- ~~Format of the per-site context file (Markdown? dedicated skill?)~~
+  → tranched by D-024 (single WP option, schema-versioned).
+- ~~Scheduled routines~~ → shipped via the `scheduled-routines` skill
+  + the cron module (v1.1.0).
 
 ## Dependencies & risks
 

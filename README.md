@@ -4,28 +4,39 @@
 > action signed.
 
 ![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)
-![Plugin](https://img.shields.io/badge/plugin-1.1.0-brightgreen)
-![Gateway](https://img.shields.io/badge/gateway-1.1.0-brightgreen)
-![Status](https://img.shields.io/badge/status-v1.1.0-brightgreen)
+![Plugin](https://img.shields.io/badge/plugin-1.2.0-brightgreen)
+![Gateway](https://img.shields.io/badge/gateway-1.2.0-brightgreen)
+![Status](https://img.shields.io/badge/status-v1.2.0-brightgreen)
+![Tools](https://img.shields.io/badge/MCP%20tools-100-blue)
+![Skills](https://img.shields.io/badge/skills-15-blue)
+![Divi modules](https://img.shields.io/badge/Divi%205%20modules-105-blue)
 
 ## Status
 
-**v1.1.0 — production ready, full webmaster layer.** Phase 7
-(production hardening) + Phase 6 (webmaster layer) closed.
-Specs 01-07 all Implemented. Highlights:
+**v1.2.0 — production ready, full webmaster layer + Phase 8.** Phases
+0-8 closed; specs 01-07 all Implemented. Numbers at a glance:
 
-- 8-layer security model + rotation + smoke test + pentest record.
-- 14 Claude Code skills covering content, design, marketing, SEO,
-  Divi authoring, infrastructure operations, smoke testing,
-  production deployment, per-site context discovery, scheduled
-  routines, status reporting.
-- Per-site context module so multi-operator setups share a curated
+- **100 MCP tools** exposed to Claude (≈100 signed REST routes on the
+  WordPress side, grouped in 24 modules).
+- **15 Claude Code skills** covering content, design, marketing, SEO,
+  Divi authoring, safe plugin updates, design-system-first builds,
+  smoke testing, production deployment, per-site context discovery,
+  scheduled routines, status reporting, audits.
+- **105 Divi 5 modules** auto-discovered (incl. 25 WooCommerce) + 13
+  parametric patterns + full Theme Builder.
+- **Two SEO backends** auto-detected: Rank Math and Yoast.
+- **8-layer security model** + rotation + smoke test + pentest record.
+- **Multisite-tolerant**: global agent user, per-site role + tables,
+  auto-provisioning on new sub-sites.
+- **Site hygiene loop**: broken-links scanner + 404 tracker
+  (with dedup + sampling) shipped in v1.2.0.
+- **Per-site context module** so multi-operator setups share a curated
   brand brief.
 - French localisation complete.
 
-Tracking: [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md);
+History: [`CHANGELOG.md`](CHANGELOG.md);
 pentest: [`docs/pentest-2026-05-25.md`](docs/pentest-2026-05-25.md);
-history: [`CHANGELOG.md`](CHANGELOG.md).
+phase tracker: [`docs/roadmap.md`](docs/roadmap.md).
 
 Validated end-to-end on a local WordPress 7.0 + Divi 5 site. Run the
 [production deployment checklist](docs/production-deployment.md)
@@ -42,10 +53,11 @@ switch.
 
 ## What you can ask Claude to do
 
-A condensed tour. The full catalogue with every tool + more examples
-is in [`docs/capabilities.md`](docs/capabilities.md); the 14 skills
-that compose these tools into recognisable workflows are documented
-in [`docs/skills.md`](docs/skills.md).
+A condensed tour. The full catalogue of the **100 MCP tools** with
+example prompts is in [`docs/capabilities.md`](docs/capabilities.md);
+the **15 Claude Code skills** that compose those tools into
+recognisable workflows are documented in
+[`docs/skills.md`](docs/skills.md).
 
 ### Build pages
 
@@ -162,8 +174,8 @@ documented in [`docs/security-model.md`](docs/security-model.md).
 Operator-facing:
 
 - [`docs/capabilities.md`](docs/capabilities.md) — comprehensive
-  tour of every capability with example prompts.
-- [`docs/skills.md`](docs/skills.md) — the 14 Claude Code skills
+  tour of the 100 capabilities with example prompts.
+- [`docs/skills.md`](docs/skills.md) — the 15 Claude Code skills
   that compose the tools into operator workflows.
 - [`docs/operations.md`](docs/operations.md) — operator runbook (key
   rotation, multi-operator, safe-update workflow, WP-CLI fallback,
@@ -185,10 +197,11 @@ Reference:
   composer DSL.
 - [`docs/architecture.md`](docs/architecture.md) — three-component
   architecture.
-- [`docs/decisions.md`](docs/decisions.md) — 24 structuring
-  decisions (D-001 → D-024).
-- [`docs/roadmap.md`](docs/roadmap.md) — phase-by-phase history +
-  Phase 8 backlog.
+- [`docs/decisions.md`](docs/decisions.md) — 28 structuring
+  decisions (D-001 → D-028).
+- [`docs/roadmap.md`](docs/roadmap.md) — phase-by-phase history,
+  Phase 8 closed in v1.2.0, Phase 9 backlog (deeper Divi builders +
+  webhook signing).
 - [`docs/glossary.md`](docs/glossary.md) — vocabulary primer.
 
 ## Contributing
