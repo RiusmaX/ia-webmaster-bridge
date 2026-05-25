@@ -24,7 +24,7 @@ described using **three modes** that can be mixed in the same page:
 | `features3col` | 3 benefits with icons | `items: [{title, contentHtml, iconUnicode?, imageUrl?}]`, `sectionTitle?`, `sectionSubtitle?` |
 | `ctaBanner` | Call-to-action banner | `title`, `contentHtml`, `buttonText`, `buttonUrl`, `backgroundColor?` |
 | `imageTextSplit` | 2 columns image \| text | `imageUrl`, `title`, `contentHtml`, `imageOnLeft?`, `backgroundColor?` |
-| `testimonials` | Testimonial grid (1/2/3 col) | `items: [{quoteHtml, author, portraitUrl?}]`, `sectionTitle?` |
+| `testimonials` | Testimonials, grid or carousel | `items: [{quoteHtml, author, portraitUrl?}]`, `variant?: "grid" \| "carousel"` (default `"grid"`), `sectionTitle?`, `sectionSubtitle?`, `backgroundColor?` |
 | `faqAccordion` | FAQ accordion (first open) | `items: [{question, answerHtml}]`, `openFirst?`, `sectionTitle?` |
 | `numbersBar` | Animated KPI bar | `items: [{label, number, percent?}]`, `backgroundColor?` |
 | `videoSection` | Full-width video | `videoUrl`, `sectionTitle?`, `sectionSubtitle?` |

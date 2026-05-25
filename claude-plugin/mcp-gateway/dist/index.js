@@ -32979,26 +32979,13 @@ function escapeHtml3(s) {
 
 // src/divi/patterns/testimonials.ts
 function testimonials(options) {
+  const variant = options.variant ?? "grid";
+  return variant === "carousel" ? testimonialsCarousel(options) : testimonialsGrid(options);
+}
+function testimonialsGrid(options) {
   const rows = [];
   if (options.sectionTitle || options.sectionSubtitle) {
-    rows.push(
-      row(
-        { columnStructure: "4_4" },
-        [
-          column(
-            { type: "4_4" },
-            [
-              text({
-                html: (options.sectionTitle ? `<h2>${escapeHtml4(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml4(options.sectionSubtitle)}</p>` : ""),
-                headingFont: {
-                  h2: { textAlign: "center", size: "36px", weight: "700" }
-                }
-              })
-            ]
-          )
-        ]
-      )
-    );
+    rows.push(sectionHeader(options));
   }
   const count = options.items.length;
   const structure = count === 1 ? "4_4" : count === 2 ? "1_2,1_2" : "1_3,1_3,1_3";
@@ -33019,6 +33006,50 @@ function testimonials(options) {
       )
     );
   }
+  return wrapInSection(options, rows);
+}
+function testimonialsCarousel(options) {
+  const rows = [];
+  if (options.sectionTitle || options.sectionSubtitle) {
+    rows.push(sectionHeader(options));
+  }
+  if (options.items.length > 0) {
+    const slides = options.items.map((item) => ({
+      title: item.author,
+      contentHtml: composeSlideContent(item)
+    }));
+    rows.push(
+      row(
+        { columnStructure: "4_4" },
+        [column({ type: "4_4" }, [slider(slides)])]
+      )
+    );
+  }
+  return wrapInSection(options, rows);
+}
+function composeSlideContent(item) {
+  const portrait = item.portraitUrl ? `<p style="text-align:center;margin:0 0 16px;"><img class="iawm-testimonial-portrait" src="${escapeAttr(item.portraitUrl)}" alt="${escapeAttr(item.author)}" style="border-radius:50%;width:96px;height:96px;object-fit:cover;display:inline-block;" /></p>` : "";
+  return `${portrait}<blockquote>${item.quoteHtml}</blockquote>`;
+}
+function sectionHeader(options) {
+  return row(
+    { columnStructure: "4_4" },
+    [
+      column(
+        { type: "4_4" },
+        [
+          text({
+            html: (options.sectionTitle ? `<h2>${escapeHtml4(options.sectionTitle)}</h2>` : "") + (options.sectionSubtitle ? `<p>${escapeHtml4(options.sectionSubtitle)}</p>` : ""),
+            headingFont: {
+              h2: { textAlign: "center", size: "36px", weight: "700" }
+            }
+          })
+        ]
+      )
+    ]
+  );
+}
+function wrapInSection(options, rows) {
   return section(
     {
       backgroundColor: options.backgroundColor ?? colors.body,
@@ -33031,6 +33062,9 @@ function testimonials(options) {
 }
 function escapeHtml4(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function escapeAttr(s) {
+  return escapeHtml4(s).replace(/'/g, "&#39;");
 }
 
 // src/divi/patterns/faq-accordion.ts
