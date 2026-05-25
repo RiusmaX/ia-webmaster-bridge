@@ -1,6 +1,6 @@
 # Spec 04 — Divi 5 plan (priority)
 
-- **Status**: Implemented (Phase 3.1 through 3.6 complete; unified composer shipped; full module registry — 105 modules, native + WooCommerce — autonomously scanned from Divi)
+- **Status**: Implemented (Phase 3.1 through 3.6 complete; unified composer shipped; full module registry — 105 modules, native + WooCommerce — autonomously scanned; design system writes — global colors, fonts, variables, theme options — shipped)
 - **Phase**: 3
 - **Priority**: Top
 - **Last updated**: 2026-05-25

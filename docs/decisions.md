@@ -292,6 +292,33 @@ new one.
   Regenerating after a Divi upgrade is one command:
   `node tools/scan-divi-modules.mjs`.
 
+## D-019 — Design system writes (global colors, fonts, variables, theme options)
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: until v0.27.x the API could READ the Divi design
+  system (global colors, fonts, variables) but not write it. That
+  meant every generated page had to either hard-code colours and
+  fonts or assume a pre-configured palette — pages were
+  surface-decorated rather than truly on-brand. To produce
+  "ultra-personalised pages with reusable components and centralised
+  variables", the agent needs to OWN the design system.
+- **Decision**: wrap Divi's four write endpoints under
+  `/divi/global-data/{colors,fonts,variables}/update` and
+  `/divi/theme-options/{get,update}`. Three of them have
+  full-replace semantics (colours, variables); fonts is a two-field
+  set; theme-options is a merge (read current, patch, write). All
+  go through the standard pipeline — `infra:write`-equivalent scope
+  via `divi:write`, audit logged, kill-switch respected, `dry_run`
+  supported. The dedicated agent user has `edit_posts`, which is
+  what Divi requires for these endpoints.
+- **Consequences**: the agent can now run a "design-system first"
+  workflow (`docs/design-system.md`): read → normalise the brand
+  palette → write the tokens → author pages that reference the
+  tokens. Changing one `gcid-*` value cascades through every page
+  that referenced it. The hand-off to the human via the admin UI
+  still works exactly the same: this just complements the manual
+  flow with a programmatic one.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

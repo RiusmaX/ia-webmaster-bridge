@@ -53,14 +53,20 @@ class IAWM_Divi {
 	 */
 	public static function register_routes() {
 		$routes = array(
-			'/divi/page/read'      => array( 'handle_page_read', 'guard_read' ),
-			'/divi/page/write'     => array( 'handle_page_write', 'guard_write' ),
-			'/divi/status'         => array( 'handle_status', 'guard_read' ),
-			'/divi/library/list'   => array( 'handle_library_list', 'guard_read' ),
-			'/divi/library/item'   => array( 'handle_library_item', 'guard_read' ),
-			'/divi/library/local'  => array( 'handle_library_local', 'guard_read' ),
-			'/divi/cloud/status'   => array( 'handle_cloud_status', 'guard_read' ),
-			'/divi/global-data'    => array( 'handle_global_data', 'guard_read' ),
+			'/divi/page/read'                  => array( 'handle_page_read', 'guard_read' ),
+			'/divi/page/write'                 => array( 'handle_page_write', 'guard_write' ),
+			'/divi/status'                     => array( 'handle_status', 'guard_read' ),
+			'/divi/library/list'               => array( 'handle_library_list', 'guard_read' ),
+			'/divi/library/item'               => array( 'handle_library_item', 'guard_read' ),
+			'/divi/library/local'              => array( 'handle_library_local', 'guard_read' ),
+			'/divi/cloud/status'               => array( 'handle_cloud_status', 'guard_read' ),
+			'/divi/global-data'                => array( 'handle_global_data', 'guard_read' ),
+			// Design system writes (Phase 6 — design system).
+			'/divi/global-data/colors/update'  => array( 'handle_global_colors_update', 'guard_write' ),
+			'/divi/global-data/fonts/update'   => array( 'handle_global_fonts_update', 'guard_write' ),
+			'/divi/global-data/variables/update' => array( 'handle_global_variables_update', 'guard_write' ),
+			'/divi/theme-options/get'          => array( 'handle_theme_options_get', 'guard_read' ),
+			'/divi/theme-options/update'       => array( 'handle_theme_options_update', 'guard_write' ),
 		);
 
 		foreach ( $routes as $path => $config ) {
@@ -447,12 +453,17 @@ class IAWM_Divi {
 	/**
 	 * POST /divi/global-data — fetches the site's Divi design system.
 	 *
-	 * Tip: we fetch any item from the Divi library; its response always
-	 * includes global colors and global variables. We could also go further
-	 * with direct divi/v1/global-data/* routes.
+	 * Returns the three pieces of the design system the caller will need
+	 * before authoring pages: global colors (the `gcid-*` palette),
+	 * global fonts (heading / body), and global variables (the typed
+	 * design tokens — numbers, strings, images, links, colors, fonts).
+	 * The matching write endpoints are exposed under
+	 * `/divi/global-data/{colors,fonts,variables}/update`.
 	 *
-	 * This route is useful for driving generated pages by referencing the
-	 * design system variables (gcid-*).
+	 * Implementation: piggy-backs on a Divi library item call (the
+	 * Divi REST response always carries globalColors + globalVariables
+	 * inline) plus reads the saved `heading_font` / `body_font` ePanel
+	 * options for the fonts piece.
 	 *
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
@@ -473,11 +484,313 @@ class IAWM_Divi {
 		}
 
 		$data = (array) $res['data'];
+
+		// Read the saved fonts from ePanel options (the heading/body fonts
+		// are persisted there alongside the global_variables.fonts entries).
+		$heading_font = function_exists( 'et_get_option' ) ? et_get_option( 'heading_font', 'Open Sans' ) : 'Open Sans';
+		$body_font    = function_exists( 'et_get_option' ) ? et_get_option( 'body_font', 'Open Sans' ) : 'Open Sans';
+
+		return new WP_REST_Response(
+			array(
+				'ok'               => true,
+				'global_colors'    => isset( $data['globalColors'] ) ? $data['globalColors'] : null,
+				'global_variables' => isset( $data['globalVariables'] ) ? $data['globalVariables'] : null,
+				'global_fonts'     => array(
+					'heading_font' => $heading_font,
+					'body_font'    => $body_font,
+				),
+			),
+			200
+		);
+	}
+
+	/* ---------------------------------------------------------------- */
+	/* Design system writes                                              */
+	/* ---------------------------------------------------------------- */
+
+	/**
+	 * POST /divi/global-data/colors/update — replaces the global-colors palette.
+	 *
+	 * Body: { global_colors: { "gcid-...": { color, lastUpdated?, status?, usedInPosts? }, ... }, dry_run? }
+	 *
+	 * The full palette is sent (this matches Divi's own contract — the
+	 * upstream endpoint replaces the palette wholesale). Use
+	 * `/divi/global-data` to read the current palette first, then add /
+	 * change entries and send back. Missing entries are removed.
+	 *
+	 * A common pattern: call `/divi/global-data`, mutate the response's
+	 * `global_colors`, post it back here. The agent gets to choose
+	 * stable `gcid-*` ids (e.g. `gcid-primary-color` for an explicit
+	 * brand colour, or a `gcid-<uuid>` for a custom one).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_global_colors_update( $request ) {
+		$params = IAWM_Support::json_params( $request );
+		$colors = isset( $params['global_colors'] ) && is_array( $params['global_colors'] ) ? $params['global_colors'] : null;
+		if ( null === $colors || empty( $colors ) ) {
+			return IAWM_Support::rest_error( 'iawm_missing_global_colors', 'Provide a non-empty `global_colors` object.', 400 );
+		}
+
+		if ( ! empty( $params['dry_run'] ) ) {
+			return new WP_REST_Response(
+				array(
+					'ok'           => true,
+					'dry_run'      => true,
+					'would_set'    => array_keys( $colors ),
+				),
+				200
+			);
+		}
+
+		IAWM_Support::act_as_agent();
+
+		// Normalise: ensure each entry has the canonical shape Divi expects.
+		$now = gmdate( 'Y-m-d\TH:i:s.000\Z' );
+		$normalised = array();
+		foreach ( $colors as $id => $entry ) {
+			$entry = is_array( $entry ) ? $entry : array();
+			$normalised[ (string) $id ] = array(
+				'color'       => isset( $entry['color'] ) ? (string) $entry['color'] : '#000000',
+				'lastUpdated' => isset( $entry['lastUpdated'] ) ? (string) $entry['lastUpdated'] : $now,
+				'status'      => isset( $entry['status'] ) ? (string) $entry['status'] : 'active',
+				'usedInPosts' => isset( $entry['usedInPosts'] ) && is_array( $entry['usedInPosts'] ) ? $entry['usedInPosts'] : array(),
+			);
+		}
+
+		$res = self::call_divi_route( '/global-data/global-colors', 'POST', array(
+			'global_colors' => $normalised,
+		) );
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'global_colors_update_failed', 'Divi rejected the update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'      => true,
+				'updated' => true,
+				'palette' => $res['data'],
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /divi/global-data/fonts/update — sets the global heading + body fonts.
+	 *
+	 * Body: { heading_font?, body_font?, dry_run? }
+	 *
+	 * Either or both fields can be omitted; the omitted one is left
+	 * unchanged. Values are Google Fonts (or 'system fonts') family
+	 * names exactly as Divi expects ('Open Sans', 'Roboto', 'Inter',
+	 * 'Arial', 'Georgia', …).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_global_fonts_update( $request ) {
+		$params = IAWM_Support::json_params( $request );
+		$heading = isset( $params['heading_font'] ) ? (string) $params['heading_font'] : '';
+		$body    = isset( $params['body_font'] ) ? (string) $params['body_font'] : '';
+		if ( '' === $heading && '' === $body ) {
+			return IAWM_Support::rest_error( 'iawm_missing_fonts', 'Provide at least one of `heading_font` or `body_font`.', 400 );
+		}
+
+		if ( ! empty( $params['dry_run'] ) ) {
+			return new WP_REST_Response(
+				array(
+					'ok'      => true,
+					'dry_run' => true,
+					'would_set' => array(
+						'heading_font' => '' !== $heading ? $heading : null,
+						'body_font'    => '' !== $body ? $body : null,
+					),
+				),
+				200
+			);
+		}
+
+		IAWM_Support::act_as_agent();
+
+		// Divi's endpoint expects BOTH params. Fill the missing one with
+		// the currently-saved value to avoid clobbering it with empty.
+		if ( '' === $heading ) {
+			$heading = function_exists( 'et_get_option' ) ? (string) et_get_option( 'heading_font', 'Open Sans' ) : 'Open Sans';
+		}
+		if ( '' === $body ) {
+			$body = function_exists( 'et_get_option' ) ? (string) et_get_option( 'body_font', 'Open Sans' ) : 'Open Sans';
+		}
+
+		$res = self::call_divi_route( '/global-data/global-fonts', 'POST', array(
+			'heading_font' => $heading,
+			'body_font'    => $body,
+		) );
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'global_fonts_update_failed', 'Divi rejected the update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'           => true,
+				'updated'      => true,
+				'heading_font' => $heading,
+				'body_font'    => $body,
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /divi/global-data/variables/update — replaces the global variables.
+	 *
+	 * Body: { global_variables: { numbers: {...}, strings: {...},
+	 *         images: {...}, links: {...}, colors: {...}, fonts: {...} },
+	 *         dry_run? }
+	 *
+	 * Each bucket is a map keyed by `gvid-<id>` -> { label, value, order,
+	 * status }. Use `/divi/global-data` to read first, mutate, and post
+	 * back. Like colors, this is a full-replace operation.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_global_variables_update( $request ) {
+		$params = IAWM_Support::json_params( $request );
+		$vars = isset( $params['global_variables'] ) && is_array( $params['global_variables'] ) ? $params['global_variables'] : null;
+		if ( null === $vars ) {
+			return IAWM_Support::rest_error( 'iawm_missing_global_variables', 'Provide `global_variables` as an object with keys among numbers, strings, images, links, colors, fonts.', 400 );
+		}
+
+		// Bucket-level validation.
+		$known_buckets = array( 'numbers', 'strings', 'images', 'links', 'colors', 'fonts' );
+		foreach ( $vars as $bucket => $_unused ) {
+			if ( ! in_array( $bucket, $known_buckets, true ) ) {
+				return IAWM_Support::rest_error( 'iawm_unknown_variable_bucket', "Unknown bucket: {$bucket}. Use one of: " . implode( ', ', $known_buckets ), 400 );
+			}
+		}
+
+		if ( ! empty( $params['dry_run'] ) ) {
+			$summary = array();
+			foreach ( $vars as $bucket => $entries ) {
+				$summary[ $bucket ] = is_array( $entries ) ? array_keys( $entries ) : array();
+			}
+			return new WP_REST_Response(
+				array(
+					'ok'        => true,
+					'dry_run'   => true,
+					'would_set' => $summary,
+				),
+				200
+			);
+		}
+
+		IAWM_Support::act_as_agent();
+
+		$res = self::call_divi_route( '/global-data/global-variables', 'POST', array(
+			'global_variables' => $vars,
+		) );
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'global_variables_update_failed', 'Divi rejected the update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'        => true,
+				'updated'   => true,
+				'variables' => $res['data'],
+			),
+			200
+		);
+	}
+
+	/* ---------------------------------------------------------------- */
+	/* Theme options                                                     */
+	/* ---------------------------------------------------------------- */
+
+	/**
+	 * POST /divi/theme-options/get — read Divi's theme-options panel.
+	 *
+	 * Wraps Divi's `outside-vb/theme-options/get` route which returns
+	 * the full set of options stored under the `et_divi` option key —
+	 * site logo, favicon, layout settings, performance switches,
+	 * integration headers/footers, etc. Treat the response as
+	 * opaque-ish: keys are documented in Divi's ePanel.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_theme_options_get( $request ) {
+		unset( $request );
+		$res = self::call_divi_route( '/outside-vb/theme-options/get', 'POST', array() );
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'theme_options_get_failed', 'Could not retrieve theme options.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+		return new WP_REST_Response( array( 'ok' => true, 'theme_options' => $res['data'] ), 200 );
+	}
+
+	/**
+	 * POST /divi/theme-options/update — write Divi's theme-options panel.
+	 *
+	 * Body: { options: { key: value, ... }, dry_run? }
+	 *
+	 * Only the keys you provide are touched; existing keys are
+	 * preserved. Commonly-set keys:
+	 *
+	 *   - `divi_logo`      : URL of the site logo image.
+	 *   - `divi_favicon`   : URL of the site favicon.
+	 *   - `divi_color_schemes` : palette preset name.
+	 *   - `divi_fixed_nav` : 'on' | 'off'.
+	 *   - `divi_layout_setting` : 'fixed' | 'fluid'.
+	 *
+	 * The full key list is what Divi's ePanel surfaces. Use the GET
+	 * endpoint to inspect what's there before updating.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_theme_options_update( $request ) {
+		$params  = IAWM_Support::json_params( $request );
+		$updates = isset( $params['options'] ) && is_array( $params['options'] ) ? $params['options'] : null;
+		if ( null === $updates || empty( $updates ) ) {
+			return IAWM_Support::rest_error( 'iawm_missing_options', 'Provide a non-empty `options` object.', 400 );
+		}
+
+		// Fetch current options to apply a merge (Divi's update endpoint
+		// expects the full set; only sending changed keys would clobber the
+		// rest).
+		$current = self::call_divi_route( '/outside-vb/theme-options/get', 'POST', array() );
+		if ( $current['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'theme_options_read_failed', 'Could not read current theme options before update.', $current['status'] );
+		}
+		$current_data = is_array( $current['data'] ) ? $current['data'] : array();
+
+		if ( ! empty( $params['dry_run'] ) ) {
+			$diff = array();
+			foreach ( $updates as $k => $v ) {
+				$diff[ $k ] = array(
+					'from' => array_key_exists( $k, $current_data ) ? $current_data[ $k ] : null,
+					'to'   => $v,
+				);
+			}
+			return new WP_REST_Response( array( 'ok' => true, 'dry_run' => true, 'would_change' => $diff ), 200 );
+		}
+
+		IAWM_Support::act_as_agent();
+
+		$merged = array_merge( $current_data, $updates );
+		$res    = self::call_divi_route( '/outside-vb/theme-options/update', 'POST', array(
+			'options' => $merged,
+		) );
+		if ( $res['status'] >= 400 ) {
+			return IAWM_Support::rest_error( 'theme_options_update_failed', 'Divi rejected the theme-options update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		}
+
 		return new WP_REST_Response(
 			array(
 				'ok'              => true,
-				'global_colors'   => isset( $data['globalColors'] ) ? $data['globalColors'] : null,
-				'global_variables' => isset( $data['globalVariables'] ) ? $data['globalVariables'] : null,
+				'updated'         => true,
+				'changed_keys'    => array_keys( $updates ),
 			),
 			200
 		);

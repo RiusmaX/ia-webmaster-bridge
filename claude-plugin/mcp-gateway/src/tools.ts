@@ -799,9 +799,99 @@ function registerDivi(server: McpServer, client: IawmClient): void {
     {
       title: "Divi design system (global data)",
       description:
-        "Fetches the site's Divi design system: global colors (gcid-*), global variables (CSS variables), global fonts. Call this BEFORE generating a layout to reference global colors/fonts.",
+        "Fetches the site's Divi design system: global colors (`gcid-*` palette), global variables (typed design tokens — numbers, strings, images, links, colors, fonts), and global fonts (heading + body family). Call this BEFORE generating a layout so the page can reference these tokens for a cohesive look.",
     },
     async () => toToolResult("divi/global-data", await client.post("/divi/global-data", {})),
+  );
+
+  server.registerTool(
+    "iawm_divi_global_colors_update",
+    {
+      title: "Update the global color palette",
+      description:
+        "Replaces the Divi `gcid-*` global color palette. Full-replace semantics: send the WHOLE palette you want (typical pattern: read via iawm_divi_global_data, mutate, send back). Stable ids: keep `gcid-primary-color`, `gcid-secondary-color`, `gcid-heading-color`, `gcid-body-color`, `gcid-link-color` for the default brand slots, and add custom `gcid-<uuid>` entries for extras. dry_run=true previews the impacted ids.",
+      inputSchema: {
+        global_colors: z
+          .record(
+            z.string(),
+            z.object({
+              color: z.string().describe("Hex color (e.g. #ca5500)"),
+              lastUpdated: z.string().optional(),
+              status: z.enum(["active", "inactive"]).optional(),
+              usedInPosts: z.array(z.unknown()).optional(),
+            }),
+          )
+          .describe("Map of gcid -> color entry"),
+        dry_run: z.boolean().optional(),
+      },
+    },
+    async (args) =>
+      toToolResult("divi/global-data/colors/update", await client.post("/divi/global-data/colors/update", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_global_fonts_update",
+    {
+      title: "Update the global heading + body fonts",
+      description:
+        "Sets the site-wide heading and body font families. Either field may be omitted to leave it unchanged. Values are family names exactly as Divi expects ('Open Sans', 'Roboto', 'Inter', 'Arial', 'Georgia', 'Playfair Display', …) — Google Fonts names work, plus the standard system fonts.",
+      inputSchema: {
+        heading_font: z.string().optional().describe("Heading family"),
+        body_font: z.string().optional().describe("Body family"),
+        dry_run: z.boolean().optional(),
+      },
+    },
+    async (args) =>
+      toToolResult("divi/global-data/fonts/update", await client.post("/divi/global-data/fonts/update", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_global_variables_update",
+    {
+      title: "Update the global variables (design tokens)",
+      description:
+        "Replaces Divi's typed design-token map. Six buckets: numbers, strings, images, links, colors, fonts. Each entry: { label, value, order, status }. Ids are `gvid-<uuid>`. Full-replace semantics — read with iawm_divi_global_data, mutate, send back. Common bucket conventions: `numbers` for sizes/radii ('12px', '0.75rem'), `colors` for non-palette accents, `strings` for reusable labels.",
+      inputSchema: {
+        global_variables: z
+          .object({
+            numbers: z.record(z.string(), z.unknown()).optional(),
+            strings: z.record(z.string(), z.unknown()).optional(),
+            images: z.record(z.string(), z.unknown()).optional(),
+            links: z.record(z.string(), z.unknown()).optional(),
+            colors: z.record(z.string(), z.unknown()).optional(),
+            fonts: z.record(z.string(), z.unknown()).optional(),
+          })
+          .describe("Buckets keyed by category"),
+        dry_run: z.boolean().optional(),
+      },
+    },
+    async (args) =>
+      toToolResult("divi/global-data/variables/update", await client.post("/divi/global-data/variables/update", args)),
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_options_get",
+    {
+      title: "Read Divi's theme options (ePanel)",
+      description:
+        "Returns the full set of Divi theme options stored under the `et_divi` option key — site logo, favicon, header/footer integration code, performance switches, layout settings, etc. The shape is what Divi's ePanel exposes; use this to inspect before calling iawm_divi_theme_options_update.",
+    },
+    async () => toToolResult("divi/theme-options/get", await client.post("/divi/theme-options/get", {})),
+  );
+
+  server.registerTool(
+    "iawm_divi_theme_options_update",
+    {
+      title: "Update Divi's theme options (ePanel)",
+      description:
+        "Updates one or more keys in Divi's theme-options panel. Merge semantics — only the keys you pass are touched; everything else is preserved. Useful for: `divi_logo` (URL to the site logo), `divi_favicon`, header/footer integration HTML, performance switches. Use iawm_divi_theme_options_get first to see what keys exist on this site.",
+      inputSchema: {
+        options: z.record(z.string(), z.unknown()).describe("Keys to set on et_divi"),
+        dry_run: z.boolean().optional(),
+      },
+    },
+    async (args) =>
+      toToolResult("divi/theme-options/update", await client.post("/divi/theme-options/update", args)),
   );
 
   // -------- Theme Builder --------

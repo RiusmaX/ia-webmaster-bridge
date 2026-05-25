@@ -99,6 +99,35 @@
 
 ---
 
+## Design system writes (plugin v0.28.0, gateway v0.20.0)
+
+### Untested as of this writing
+
+- [ ] **Read** — `iawm_divi_global_data()`.
+  - Expected: `global_colors` (palette), `global_variables` (6 buckets), `global_fonts` (heading + body). The new `global_fonts` field is the marker of v0.28.0.
+
+- [ ] **Update colors** — `iawm_divi_global_colors_update({ global_colors: { "gcid-primary-color": { color: "#0a6ef5", status: "active" } } })`.
+  - Expected: `updated: true`, palette returned with the new value.
+  - Re-call `iawm_divi_global_data` and confirm the new color is persisted.
+
+- [ ] **Update fonts** — `iawm_divi_global_fonts_update({ heading_font: "Inter", body_font: "Inter" })`.
+  - Expected: `updated: true`. Re-call `iawm_divi_global_data` → `global_fonts.heading_font === "Inter"`.
+
+- [ ] **Partial fonts update** — `iawm_divi_global_fonts_update({ heading_font: "Playfair Display" })` (no body).
+  - Expected: body font preserved, only heading changed.
+
+- [ ] **Variables** — `iawm_divi_global_variables_update({ global_variables: { numbers: { "gvid-brand-radius": { label: "Brand radius", value: "12px", order: 1, status: "active" } } } })`.
+  - Expected: `updated: true`, the new entry is in subsequent `iawm_divi_global_data` calls.
+
+- [ ] **Theme options get** — `iawm_divi_theme_options_get()`.
+  - Expected: full `et_divi` option array (logo, favicon, integration HTML, performance switches, layout settings, etc.).
+
+- [ ] **Theme options update (dry-run)** — `iawm_divi_theme_options_update({ options: { divi_logo: "https://example.com/logo.svg" }, dry_run: true })`.
+  - Expected: `dry_run: true`, `would_change.divi_logo.from` = current value, `to` = new URL.
+
+- [ ] **Theme options update (real)** — same call without `dry_run`.
+  - Expected: `updated: true, changed_keys: ["divi_logo"]`. Confirm via re-reading.
+
 ## Divi modules registry (gateway v0.19.0)
 
 ### Untested as of this writing
