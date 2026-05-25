@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-3 complete; Phase 5.1 (dedicated user + scopes) and 5.2 (auto backup before destructive) shipped · Last updated: 2026-05-25
+> Status: Phases 0-3 complete; Phase 4 (themes) + Phase 5.1 (dedicated user + scopes) + 5.2 (auto backup before destructive) shipped · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -55,10 +55,10 @@ continuously, with Phase 5 being the formal hardening pass.
 ## Phase 4 — Infrastructure plane
 
 - [x] Plugin capabilities (install, activate, deactivate) — advanced in Phase 3 to integrate Rank Math
-- [ ] Theme capabilities (install, activate, update)
+- [x] Theme capabilities: `/themes/info`, `/themes/list`, `/themes/install`, `/themes/activate`, `/themes/update`. WP.org-only source, slug validation, auto-snapshot of theme-related options before any write
 - [ ] Plugin updates
 - [ ] Controlled database capabilities (export, query, search-replace)
-- [ ] Backups and restore
+- [x] Backups and restore — shipped in Phase 5.2 (`/backup/*`)
 - [ ] SSH/WP-CLI fallback channel documented
 
 ## Phase 5 — Security & safeguards (hardening)

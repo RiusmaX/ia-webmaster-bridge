@@ -33189,6 +33189,65 @@ function registerDivi(server, client) {
     async (args) => toToolResult("divi/page/write", await client.post("/divi/page/write", args))
   );
 }
+function registerThemes(server, client) {
+  server.registerTool(
+    "iawm_themes_info",
+    {
+      title: "Theme metadata",
+      description: "Fetches a WordPress.org theme's metadata (version, author, screenshot, requirements, last update) from the official theme repository. Read-only.",
+      inputSchema: {
+        slug: external_exports.string().describe("WordPress.org theme slug (e.g. twentytwentyfour)")
+      }
+    },
+    async (args) => toToolResult("themes/info", await client.post("/themes/info", args))
+  );
+  server.registerTool(
+    "iawm_themes_list",
+    {
+      title: "List installed themes",
+      description: "Lists themes installed on the site. For each theme: stylesheet (slug), name, version, author, parent template if any, active flag, update available + new_version when applicable. The active theme and parent template are also returned at the top level.",
+      inputSchema: {}
+    },
+    async () => toToolResult("themes/list", await client.post("/themes/list", {}))
+  );
+  server.registerTool(
+    "iawm_themes_install",
+    {
+      title: "Install a theme",
+      description: "Installs a theme from the official WordPress.org repository. With activate=true, switches the active theme to it in the same call. Automatically takes a pre-op snapshot of the theme-related options before doing anything (returned as pre_op_backup_id). Source is restricted to WP.org \u2014 no arbitrary URL.",
+      inputSchema: {
+        slug: external_exports.string().describe("WordPress.org theme slug"),
+        activate: external_exports.boolean().optional().describe("Activate immediately after install (default false)"),
+        skip_backup: external_exports.boolean().optional().describe("Skip the pre-op backup (use only on retries / chained ops)")
+      }
+    },
+    async (args) => toToolResult("themes/install", await client.post("/themes/install", args))
+  );
+  server.registerTool(
+    "iawm_themes_activate",
+    {
+      title: "Activate a theme",
+      description: "Switches the site's active theme to an already-installed theme. CAUTION: changes the entire frontend. The previous theme settings (template, stylesheet, theme_mods) are snapshotted automatically beforehand; restore the returned pre_op_backup_id to roll back.",
+      inputSchema: {
+        stylesheet: external_exports.string().describe("Stylesheet (slug) of the theme to activate"),
+        skip_backup: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("themes/activate", await client.post("/themes/activate", args))
+  );
+  server.registerTool(
+    "iawm_themes_update",
+    {
+      title: "Update an installed theme",
+      description: "Updates an installed theme to its latest version from WordPress.org. Returns no_update=true if already up to date. Otherwise snapshots the theme-related options first (pre_op_backup_id) and replays the upgrade.",
+      inputSchema: {
+        stylesheet: external_exports.string().describe("Stylesheet (slug) of the theme to update"),
+        skip_backup: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("themes/update", await client.post("/themes/update", args))
+  );
+}
 function registerBackup(server, client) {
   server.registerTool(
     "iawm_backup_list",
@@ -33272,6 +33331,7 @@ function registerTools(server, client) {
   registerDiagnostics(server, client);
   registerConfig(server, client);
   registerPlugins(server, client);
+  registerThemes(server, client);
   registerSeo(server, client);
   registerDivi(server, client);
   registerBackup(server, client);

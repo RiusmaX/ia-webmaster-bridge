@@ -1,9 +1,9 @@
 # Spec 06 — Infrastructure plan
 
-- **Status**: Draft
+- **Status**: In implementation (plugins + themes + backups shipped)
 - **Phase**: 4
 - **Priority**: Medium
-- **Last updated**: 2026-05-21
+- **Last updated**: 2026-05-25
 
 ## Goal
 
@@ -40,10 +40,26 @@ plugins, themes, database, backups, scheduled tasks, updates.
 - Plugin/theme sources: restrict to trusted sources (official repository,
   validated archives) — no install from an arbitrary URL.
 
+## Implemented (Phase 4 to date)
+
+- **Plugins**: install / activate / deactivate / info, via
+  `IAWM_Plugins`. WP.org-only source; the bridge plugin itself cannot
+  be deactivated via the API.
+- **Themes**: install / activate / update / info / list, via
+  `IAWM_Themes`. WP.org-only source; strict slug validation; deletion
+  intentionally not exposed.
+- **Backups**: snapshot + restore, via `IAWM_Backup` (`options`,
+  `plugins_state`, `tables` kinds). Auto-triggered before
+  `plugins/install`, `plugins/activate`, `plugins/deactivate`,
+  `themes/install`, `themes/activate`, `themes/update` and risky
+  settings updates. Restore supports `dry_run`.
+
 ## Open questions
 
-- Backup mechanism: rely on an existing backup plugin, or implement a
-  minimal backup in the plugin?
+- Backup mechanism beyond the in-plugin snapshots: do we eventually
+  need a filesystem-level backup (uploads, themes, plugins on disk),
+  or is the snapshot-of-state approach enough for everything we plan
+  to do through the API?
 - Which WP-CLI commands to wrap, and which to leave strictly to the
   human operator?
 - `search-replace` is powerful and dangerous (serialisation) → specific
