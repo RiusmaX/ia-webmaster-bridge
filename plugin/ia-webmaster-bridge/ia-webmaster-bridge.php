@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       IA Webmaster Bridge
  * Description:       Adapter that lets an AI (Claude) act as a webmaster on this WordPress site. Exposes a controlled, signed REST API under the ia-webmaster/v1 namespace.
- * Version:           0.19.0
+ * Version:           0.20.0
  * Requires at least: 7.0
  * Requires PHP:      7.4
  * Author:            Marius Sergent
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'IAWM_VERSION', '0.19.0' );
+define( 'IAWM_VERSION', '0.20.0' );
 define( 'IAWM_REST_NAMESPACE', 'ia-webmaster/v1' );
 define( 'IAWM_PLUGIN_FILE', __FILE__ );
 define( 'IAWM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -40,6 +40,7 @@ require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-plugins.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-seo.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-divi.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-divi-theme-builder.php';
+require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-backup.php';
 
 // Database schema creation / migration on plugin activation.
 register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Audit', 'maybe_upgrade' ) );
@@ -47,9 +48,13 @@ register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Audit', 'maybe_upgrade'
 // Dedicated agent role + user creation/upgrade on plugin activation.
 register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Agent_User', 'install' ) );
 
+// Backup table creation/migration on plugin activation.
+register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Backup', 'maybe_upgrade' ) );
+
 // Module initialisation.
 IAWM_Agent_User::init();
 IAWM_Audit::init();
+IAWM_Backup::init();
 IAWM_REST::init();
 IAWM_Content::init();
 IAWM_Media::init();

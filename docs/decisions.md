@@ -145,6 +145,46 @@ new one.
   the right scope automatically by their family. The admin UI lets the
   operator generate, retighten or rotate scopes without leaving WP.
 
+## D-013 — Pre-op backups as snapshots, not full dumps
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: spec 02 calls for a backup before any destructive
+  operation, but a full filesystem + database backup is out of the
+  plugin's scope (touches files outside `wp-content`, needs server
+  access, is heavy). At the same time, operations done via this plugin
+  affect a well-bounded slice of state — options, plugin activation
+  status, sometimes raw tables.
+- **Decision**: implement three snapshot kinds in `IAWM_Backup`:
+  `options` (JSON map of WP option keys), `plugins_state` (a derived
+  options snapshot of `active_plugins` + `recently_activated` plus the
+  installed plugin list) and `tables` (SQL dump of named tables).
+  Snapshots live in a dedicated `wp_iawm_backups` table; restore is
+  done by the same plugin, with `dry_run` first. A full filesystem
+  backup is left to dedicated tooling and is out of scope.
+- **Consequences**: the plugin's auto-backup before destructive ops is
+  fast (low-byte JSON snapshot in most cases), restorable in-band, and
+  bounded to what the API can plausibly affect. For heavy database
+  operations (`search-replace`, raw SQL) the caller asks for `tables`
+  explicitly — keeping snapshot cost intentional.
+
+## D-014 — Pre-op snapshot is automatic and surfaced as `pre_op_backup_id`
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: we want safety by default, not safety by remembering to
+  ask for it. But there are legitimate cases (chained retries, dry-run
+  composition flows) where the caller does not want an extra snapshot.
+- **Decision**: destructive endpoints (`plugins/install`,
+  `plugins/activate`, `plugins/deactivate`, risky settings updates)
+  automatically call `IAWM_Backup::snapshot_*()` before applying the
+  change. The new backup id is surfaced in the response as
+  `pre_op_backup_id`. Callers can opt out per request with
+  `skip_backup: true`, which is intended for dry-runs and re-tries
+  where the previous snapshot is still valid.
+- **Consequences**: the agent does not need to think about backups for
+  the common path; the operator gets a free safety net; advanced
+  callers retain control. Backup table needs periodic pruning, exposed
+  via `/backup/prune`.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

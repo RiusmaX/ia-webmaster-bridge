@@ -184,6 +184,14 @@ class IAWM_Plugins {
 		require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 
+		// Pre-op safety net: snapshot the plugin activation state.
+		$pre_backup = empty( $params['skip_backup'] )
+			? IAWM_Backup::snapshot_plugins_state(
+				"Before plugin install: {$slug}" . ( $activate ? ' (+activate)' : '' ),
+				(string) $request->get_route()
+			)
+			: null;
+
 		IAWM_Support::act_as_agent();
 
 		// Fetch metadata (signed download_link) via plugins_api.
@@ -251,6 +259,10 @@ class IAWM_Plugins {
 			}
 		}
 
+		if ( null !== $pre_backup ) {
+			$result['pre_op_backup_id'] = $pre_backup;
+		}
+
 		return new WP_REST_Response( $result, $result['installed'] ? 201 : 200 );
 	}
 
@@ -269,7 +281,6 @@ class IAWM_Plugins {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		IAWM_Support::act_as_agent();
 
 		if ( is_plugin_active( $file ) ) {
 			return new WP_REST_Response(
@@ -278,15 +289,23 @@ class IAWM_Plugins {
 			);
 		}
 
+		// Pre-op safety net.
+		$pre_backup = empty( $params['skip_backup'] )
+			? IAWM_Backup::snapshot_plugins_state( "Before plugin activate: {$file}", (string) $request->get_route() )
+			: null;
+
+		IAWM_Support::act_as_agent();
+
 		$res = activate_plugin( $file, '', false, true );
 		if ( is_wp_error( $res ) ) {
 			return IAWM_Support::rest_error( 'activation_failed', $res->get_error_message(), 500 );
 		}
 
-		return new WP_REST_Response(
-			array( 'ok' => true, 'file' => $file, 'activated' => true ),
-			200
-		);
+		$response = array( 'ok' => true, 'file' => $file, 'activated' => true );
+		if ( null !== $pre_backup ) {
+			$response['pre_op_backup_id'] = $pre_backup;
+		}
+		return new WP_REST_Response( $response, 200 );
 	}
 
 	/**
@@ -314,7 +333,6 @@ class IAWM_Plugins {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		IAWM_Support::act_as_agent();
 
 		if ( ! is_plugin_active( $file ) ) {
 			return new WP_REST_Response(
@@ -323,12 +341,20 @@ class IAWM_Plugins {
 			);
 		}
 
+		// Pre-op safety net.
+		$pre_backup = empty( $params['skip_backup'] )
+			? IAWM_Backup::snapshot_plugins_state( "Before plugin deactivate: {$file}", (string) $request->get_route() )
+			: null;
+
+		IAWM_Support::act_as_agent();
+
 		deactivate_plugins( $file );
 
-		return new WP_REST_Response(
-			array( 'ok' => true, 'file' => $file, 'deactivated' => true ),
-			200
-		);
+		$response = array( 'ok' => true, 'file' => $file, 'deactivated' => true );
+		if ( null !== $pre_backup ) {
+			$response['pre_op_backup_id'] = $pre_backup;
+		}
+		return new WP_REST_Response( $response, 200 );
 	}
 
 	/**

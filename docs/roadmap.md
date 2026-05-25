@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-3 complete; Phase 5.1 (dedicated user + scopes) shipped · Last updated: 2026-05-25
+> Status: Phases 0-3 complete; Phase 5.1 (dedicated user + scopes) and 5.2 (auto backup before destructive) shipped · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -68,9 +68,11 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] **5.1** — Per-key scopes (`read`, `content:write`, `divi:write`, `config:write`, `infra:write`) enforced by the auth guard; HTTP 403 `iawm_scope_denied` on miss
 - [x] **5.1** — Admin UI: pick scopes when generating a key, retighten an existing key without rotating the secret, reinstall agent role/user
 - [x] **5.1** — Agent's own user is protected from modification or deletion by the API
+- [x] **5.2** — `IAWM_Backup` module: snapshot/restore for WP options, plugin activation state and SQL tables; `wp_iawm_backups` table + `/backup/*` routes (list/get/create/restore/delete/prune)
+- [x] **5.2** — Automatic pre-op snapshot before `plugins/install`, `plugins/activate`, `plugins/deactivate` and risky settings updates (e.g. `permalink_structure`); `pre_op_backup_id` surfaced in the response
+- [x] **5.2** — Restore supports `dry_run` so the operator previews the diff before applying
 - [x] Kill switch (Phase 1)
-- [ ] Automatic backup before destructive operation
-- [ ] Explicit confirmations for risky actions
+- [ ] Explicit confirmations for risky actions (e.g. `restore`, `infra:write` ops) — Phase 5.3
 - [ ] Key rotation policy (documented procedure)
 - [ ] Light penetration test of the plugin
 

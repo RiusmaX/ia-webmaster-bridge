@@ -163,6 +163,23 @@ class IAWM_Config {
 			);
 		}
 
+		// Pre-op safety net: any change that touches a "risky" setting (e.g.
+		// permalink_structure) gets an automatic option snapshot.
+		$pre_backup = null;
+		$risky_keys = array();
+		foreach ( $changes as $key => $change ) {
+			if ( ! empty( $change['risky'] ) ) {
+				$risky_keys[] = $key;
+			}
+		}
+		if ( ! empty( $risky_keys ) && empty( $params['skip_backup'] ) && class_exists( 'IAWM_Backup' ) ) {
+			$pre_backup = IAWM_Backup::snapshot_options(
+				array_keys( $changes ),
+				'Before risky settings update: ' . implode( ', ', $risky_keys ),
+				(string) $request->get_route()
+			);
+		}
+
 		IAWM_Support::act_as_agent();
 
 		$flush_permalinks = false;
@@ -181,15 +198,17 @@ class IAWM_Config {
 			$applied[ $key ] = get_option( $key );
 		}
 
-		return new WP_REST_Response(
-			array(
-				'ok'       => true,
-				'updated'  => true,
-				'applied'  => $applied,
-				'rejected' => $rejected,
-			),
-			200
+		$response = array(
+			'ok'       => true,
+			'updated'  => true,
+			'applied'  => $applied,
+			'rejected' => $rejected,
 		);
+		if ( null !== $pre_backup ) {
+			$response['pre_op_backup_id'] = $pre_backup;
+		}
+
+		return new WP_REST_Response( $response, 200 );
 	}
 
 	/**

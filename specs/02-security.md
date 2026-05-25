@@ -1,6 +1,6 @@
 # Spec 02 — Security & guardrails
 
-- **Status**: In implementation (Phase 5.1 — dedicated user + scopes shipped)
+- **Status**: In implementation (Phase 5.1 + 5.2 shipped)
 - **Phase**: Cross-cutting (built from Phase 1, hardened in Phase 5)
 - **Priority**: High
 - **Last updated**: 2026-05-25
@@ -65,10 +65,18 @@ and guardrails against dangerous operations (decision D-005).
   (returns what it would do, without applying it).
 - **Draft before publish**: created content is created as a draft by
   default; publishing is an explicit step.
-- **Backup before destructive**: any destructive or risky operation
-  (deletion, plugin update, database operation) triggers a prior backup.
-- **Explicit confirmation**: actions classified "at risk" require a
-  confirmation token distinct from the initial call.
+- **Backup before destructive** — *implemented since v0.20.0*. Any
+  destructive or risky operation triggers a prior snapshot:
+    - plugin install/activate/deactivate → `plugins_state` snapshot;
+    - settings update on a `risky` option (e.g. `permalink_structure`)
+      → `options` snapshot of the affected keys.
+  The operation response surfaces a `pre_op_backup_id` the operator can
+  feed to `/backup/restore` (with `dry_run` first) to roll back. The
+  same `/backup/*` routes also expose manual snapshots and a SQL-level
+  `tables` kind for future Phase 4 database operations.
+- **Explicit confirmation** — to be implemented in Phase 5.3. Actions
+  classified "at risk" will require a confirmation token distinct from
+  the initial call.
 - **Kill switch**: a plugin setting instantly disables all write
   capabilities.
 

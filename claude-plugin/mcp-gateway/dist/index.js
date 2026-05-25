@@ -33189,6 +33189,80 @@ function registerDivi(server, client) {
     async (args) => toToolResult("divi/page/write", await client.post("/divi/page/write", args))
   );
 }
+function registerBackup(server, client) {
+  server.registerTool(
+    "iawm_backup_list",
+    {
+      title: "List backups",
+      description: "Lists snapshots taken by the adapter (manual or auto-triggered before destructive operations). Each entry surfaces id, kind (options / plugins_state / tables), label, timestamp, payload size, and restore state. Use this to find a pre-op snapshot id before /backup/restore.",
+      inputSchema: {
+        limit: external_exports.number().int().optional().describe("Per-page (1-100, default 50)"),
+        offset: external_exports.number().int().optional().describe("Offset (>=0, default 0)")
+      }
+    },
+    async (args) => toToolResult("backup/list", await client.post("/backup/list", args))
+  );
+  server.registerTool(
+    "iawm_backup_get",
+    {
+      title: "Get a backup",
+      description: "Returns a backup record. Set include_payload=true to also read the snapshot content (options dict / plugin state / SQL dump). Large payloads can be skipped by leaving include_payload false.",
+      inputSchema: {
+        id: external_exports.number().int().describe("Backup id"),
+        include_payload: external_exports.boolean().optional().describe("True to include the snapshot payload (defaults to false)")
+      }
+    },
+    async (args) => toToolResult("backup/get", await client.post("/backup/get", args))
+  );
+  server.registerTool(
+    "iawm_backup_create",
+    {
+      title: "Create a manual backup",
+      description: "Takes a manual snapshot. kind='options' captures the given option_names (array of WP option keys). kind='plugins_state' captures active_plugins and the installed plugin list. kind='tables' dumps the given tables to SQL (heavy \u2014 use sparingly). Useful before a series of changes or before invoking external tooling.",
+      inputSchema: {
+        kind: external_exports.enum(["options", "plugins_state", "tables"]).describe("Snapshot kind"),
+        label: external_exports.string().optional().describe("Human-readable label"),
+        option_names: external_exports.array(external_exports.string()).optional().describe("For kind=options: WP option keys to snapshot"),
+        tables: external_exports.array(external_exports.string()).optional().describe("For kind=tables: fully-qualified table names (e.g. wp_options)")
+      }
+    },
+    async (args) => toToolResult("backup/create", await client.post("/backup/create", args))
+  );
+  server.registerTool(
+    "iawm_backup_restore",
+    {
+      title: "Restore a backup",
+      description: "Restores a previously taken snapshot. dry_run=true returns the diff (options to overwrite, plugins to (de)activate, tables to replay) WITHOUT applying. Without dry_run, the snapshot is applied and the record is stamped as restored. Use with care; this is the most invasive operation in the API.",
+      inputSchema: {
+        id: external_exports.number().int().describe("Backup id to restore"),
+        dry_run: external_exports.boolean().optional().describe("True to preview the diff without applying (RECOMMENDED first pass)")
+      }
+    },
+    async (args) => toToolResult("backup/restore", await client.post("/backup/restore", args))
+  );
+  server.registerTool(
+    "iawm_backup_delete",
+    {
+      title: "Delete a backup",
+      description: "Permanently removes a backup record. The payload cannot be recovered after deletion.",
+      inputSchema: {
+        id: external_exports.number().int().describe("Backup id")
+      }
+    },
+    async (args) => toToolResult("backup/delete", await client.post("/backup/delete", args))
+  );
+  server.registerTool(
+    "iawm_backup_prune",
+    {
+      title: "Prune old backups",
+      description: "Storage hygiene: keeps only the last `keep` backup records (newest first) and deletes the rest. Defaults to keeping 50.",
+      inputSchema: {
+        keep: external_exports.number().int().optional().describe("Number of records to keep (default 50)")
+      }
+    },
+    async (args) => toToolResult("backup/prune", await client.post("/backup/prune", args))
+  );
+}
 function registerTools(server, client) {
   registerSystem(server, client);
   registerContent(server, client);
@@ -33200,6 +33274,7 @@ function registerTools(server, client) {
   registerPlugins(server, client);
   registerSeo(server, client);
   registerDivi(server, client);
+  registerBackup(server, client);
 }
 
 // src/index.ts

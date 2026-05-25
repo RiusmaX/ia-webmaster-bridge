@@ -111,7 +111,7 @@ class IAWM_Auth {
 
 		// Scope check (since v0.19.0). Keys without an explicit scope list
 		// keep the legacy behaviour: full access.
-		$required = self::required_scope( $request );
+		$required = self::required_scope( $request, $require_write );
 		if ( null !== $required && ! IAWM_Settings::key_has_scope( $required ) ) {
 			return new WP_Error(
 				'iawm_scope_denied',
@@ -138,22 +138,27 @@ class IAWM_Auth {
 	/**
 	 * Derives the scope required to call a given route.
 	 *
-	 * The mapping is intentionally **prefix-based** so new routes are
-	 * categorised automatically by their family. Any GET is `read`; any
-	 * write goes to the scope matching its top-level family.
+	 * The categorisation uses **the permission callback the route was
+	 * registered with** (read vs write), not the HTTP method: every
+	 * endpoint in this plugin happens to be POST regardless of intent,
+	 * so the read/write distinction comes from the developer's explicit
+	 * `guard_read` / `guard_write` choice at registration time.
 	 *
-	 *  - `/divi/*`               (POST/PUT/DELETE) → `divi:write`
-	 *  - `/config/*`             (POST/PUT/DELETE) → `config:write`
-	 *  - `/plugins/*`            (POST/PUT/DELETE) → `infra:write`
-	 *  - `/themes/*` (future)    (POST/PUT/DELETE) → `infra:write`
-	 *  - `/database/*` (future)  (POST/PUT/DELETE) → `infra:write`
-	 *  - `/backup/*` (future)    (POST/PUT/DELETE) → `infra:write`
-	 *  - any other write         → `content:write`
+	 *  - registered with `guard_read`  → `read`
+	 *  - registered with `guard_write` → write scope based on path prefix:
+	 *      - `/divi/*`      → `divi:write`
+	 *      - `/config/*`    → `config:write`
+	 *      - `/plugins/*`   → `infra:write`
+	 *      - `/themes/*`    → `infra:write` (Phase 4)
+	 *      - `/database/*`  → `infra:write` (Phase 4)
+	 *      - `/backup/*`    → `infra:write` (Phase 5.2)
+	 *      - any other      → `content:write`
 	 *
-	 * @param WP_REST_Request $request Incoming request.
+	 * @param WP_REST_Request $request       Incoming request.
+	 * @param bool            $require_write True if the route was registered with guard_write.
 	 * @return string|null Required scope, or null when no scope check applies.
 	 */
-	public static function required_scope( $request ) {
+	public static function required_scope( $request, $require_write = false ) {
 		$route = (string) $request->get_route();
 		$ns    = '/' . IAWM_REST_NAMESPACE . '/';
 
@@ -162,15 +167,14 @@ class IAWM_Auth {
 			return null;
 		}
 
-		$suffix = substr( $route, strlen( $ns ) );
-		$method = strtoupper( (string) $request->get_method() );
-
-		// Read paths.
-		if ( 'GET' === $method || 'HEAD' === $method ) {
+		// Read endpoints — the developer chose guard_read.
+		if ( ! $require_write ) {
 			return IAWM_Settings::SCOPE_READ;
 		}
 
-		// Write paths — categorise by family.
+		$suffix = substr( $route, strlen( $ns ) );
+
+		// Write endpoints — categorise by family.
 		$prefix_map = array(
 			'divi/'     => IAWM_Settings::SCOPE_DIVI_WRITE,
 			'config/'   => IAWM_Settings::SCOPE_CONFIG_WRITE,
