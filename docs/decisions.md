@@ -260,6 +260,38 @@ new one.
   same HMAC + scope + audit + backup pipeline, just with finer
   attribution.
 
+## D-018 — Auto-generated module registry from the Divi install
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: hand-curating the list of Divi 5 modules (and their
+  WooCommerce variants) is brittle. Each Divi update can rename a
+  block, change a default attribute path, add a new module. We had
+  manually catalogued ~48 of the 105 blocks Divi ships, with at least
+  one wrong block name (`divi/post-navigation` was a typo for the real
+  `divi/post-nav`). We want a single source of truth that survives
+  Divi upgrades.
+- **Decision**: ship `tools/scan-divi-modules.mjs` — a Node script
+  that walks the Divi theme's `visual-builder/packages/module-library/
+  src/components/` directory, parses every `module.json` and
+  `module-default-render-attributes.json`, and writes three artefacts:
+    - `docs/divi5-modules-registry.json` — structured registry
+      (one record per module with its block name, slug, family,
+      category, accepted children, default attribute paths);
+    - `docs/divi5-modules-catalog.md` — human-readable catalog with
+      one section per family + the full flat attribute path list
+      per module;
+    - `claude-plugin/mcp-gateway/src/divi/modules-registry.ts` —
+      the TypeScript `DiviBlock` enum and `DIVI_MODULES` runtime
+      array used by the gateway. `types.ts` re-exports these.
+- **Consequences**: the gateway now knows every Divi 5 module (105
+  vs. the previous 48). The MCP catalog tools (`iawm_divi_modules_
+  catalog`, `iawm_divi_module_info`) let Claude introspect the
+  registry at runtime — useful for free-form composition without
+  having a typed builder. Bug fix in passing: the spurious
+  `divi/post-navigation` block name is corrected to `divi/post-nav`.
+  Regenerating after a Divi upgrade is one command:
+  `node tools/scan-divi-modules.mjs`.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

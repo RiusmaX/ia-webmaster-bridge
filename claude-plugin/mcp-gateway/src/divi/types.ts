@@ -55,59 +55,17 @@ export type ColumnStructure =
 /** Pinned builder version (to be updated when Divi evolves). */
 export const BUILDER_VERSION = "5.5.2";
 
-/** Constants for Divi block names. */
-export const DiviBlock = {
-  Placeholder: "divi/placeholder",
-  Section: "divi/section",
-  Row: "divi/row",
-  Column: "divi/column",
-  Text: "divi/text",
-  Blurb: "divi/blurb",
-  Cta: "divi/cta",
-  Image: "divi/image",
-  Button: "divi/button",
-  Heading: "divi/heading",
-  NumberCounter: "divi/number-counter",
-  Testimonial: "divi/testimonial",
-  Gallery: "divi/gallery",
-  Video: "divi/video",
-  Code: "divi/code",
-  Accordion: "divi/accordion",
-  AccordionItem: "divi/accordion-item",
-  Tabs: "divi/tabs",
-  Tab: "divi/tab",
-  Slider: "divi/slider",
-  Slide: "divi/slide",
-  ContactForm: "divi/contact-form",
-  ContactField: "divi/contact-field",
-  // Phase 3.5 priority modules (reference page #53).
-  Divider: "divi/divider",
-  Icon: "divi/icon",
-  Toggle: "divi/toggle",
-  // Warning: convention is tables (plural) + table (singular).
-  PricingTables: "divi/pricing-tables",
-  PricingTable: "divi/pricing-table",
-  IconList: "divi/icon-list",
-  IconListItem: "divi/icon-list-item",
-  // Warning: convention is -network and not -item.
-  SocialMediaFollow: "divi/social-media-follow",
-  SocialMediaFollowNetwork: "divi/social-media-follow-network",
-  TeamMember: "divi/team-member",
-  Signup: "divi/signup",
-  Map: "divi/map",
-  CircleCounter: "divi/circle-counter",
-  // Warning: blockName = divi/counters (not divi/bar-counters).
-  Counters: "divi/counters",
-  Counter: "divi/counter",
-  Audio: "divi/audio",
-  // Theme Builder & dynamic content (Phase 3.6).
-  Menu: "divi/menu",
-  FullwidthMenu: "divi/fullwidth-menu",
-  Search: "divi/search",
-  Breadcrumbs: "divi/breadcrumbs",
-  PostTitle: "divi/post-title",
-  PostContent: "divi/post-content",
-  PostNavigation: "divi/post-navigation",
-  Sidebar: "divi/sidebar",
-  Comments: "divi/comments",
-} as const;
+/**
+ * The full catalogue of Divi 5 block names lives in the auto-generated
+ * `modules-registry.ts` file (re-run `node tools/scan-divi-modules.mjs`
+ * after a Divi upgrade to refresh it). We re-export both the enum and
+ * the runtime metadata from there so callers only need one import.
+ */
+export {
+  DiviBlock,
+  DIVI_MODULES,
+  DIVI_MODULE_BY_NAME,
+  type DiviBlockName,
+  type DiviModuleCategory,
+  type DiviModuleMeta,
+} from "./modules-registry.js";

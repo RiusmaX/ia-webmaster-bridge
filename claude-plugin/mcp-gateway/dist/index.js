@@ -31063,63 +31063,1173 @@ var IawmClient = class {
   }
 };
 
-// src/divi/types.ts
-var BUILDER_VERSION = "5.5.2";
+// src/divi/modules-registry.ts
 var DiviBlock = {
   Placeholder: "divi/placeholder",
-  Section: "divi/section",
-  Row: "divi/row",
-  Column: "divi/column",
-  Text: "divi/text",
-  Blurb: "divi/blurb",
-  Cta: "divi/cta",
-  Image: "divi/image",
-  Button: "divi/button",
-  Heading: "divi/heading",
-  NumberCounter: "divi/number-counter",
-  Testimonial: "divi/testimonial",
-  Gallery: "divi/gallery",
-  Video: "divi/video",
-  Code: "divi/code",
   Accordion: "divi/accordion",
   AccordionItem: "divi/accordion-item",
-  Tabs: "divi/tabs",
-  Tab: "divi/tab",
-  Slider: "divi/slider",
-  Slide: "divi/slide",
-  ContactForm: "divi/contact-form",
+  Audio: "divi/audio",
+  BeforeAfterImage: "divi/before-after-image",
+  Blog: "divi/blog",
+  Blurb: "divi/blurb",
+  Breadcrumbs: "divi/breadcrumbs",
+  Button: "divi/button",
+  CanvasPortal: "divi/canvas-portal",
+  CircleCounter: "divi/circle-counter",
+  Code: "divi/code",
+  Column: "divi/column",
+  ColumnInner: "divi/column-inner",
+  Comments: "divi/comments",
   ContactField: "divi/contact-field",
-  // Phase 3.5 priority modules (reference page #53).
+  ContactForm: "divi/contact-form",
+  ContactForm7: "divi/contact-form-7",
+  CountdownTimer: "divi/countdown-timer",
+  Counter: "divi/counter",
+  Counters: "divi/counters",
+  Cta: "divi/cta",
   Divider: "divi/divider",
+  Dropdown: "divi/dropdown",
+  FilterablePortfolio: "divi/filterable-portfolio",
+  FullwidthCode: "divi/fullwidth-code",
+  FullwidthHeader: "divi/fullwidth-header",
+  FullwidthImage: "divi/fullwidth-image",
+  FullwidthMap: "divi/fullwidth-map",
+  FullwidthMenu: "divi/fullwidth-menu",
+  FullwidthPortfolio: "divi/fullwidth-portfolio",
+  FullwidthPostContent: "divi/fullwidth-post-content",
+  FullwidthPostSlider: "divi/fullwidth-post-slider",
+  FullwidthPostTitle: "divi/fullwidth-post-title",
+  FullwidthSlider: "divi/fullwidth-slider",
+  Gallery: "divi/gallery",
+  GlobalLayout: "divi/global-layout",
+  Group: "divi/group",
+  GroupCarousel: "divi/group-carousel",
+  Heading: "divi/heading",
   Icon: "divi/icon",
-  Toggle: "divi/toggle",
-  // Warning: convention is tables (plural) + table (singular).
-  PricingTables: "divi/pricing-tables",
-  PricingTable: "divi/pricing-table",
   IconList: "divi/icon-list",
   IconListItem: "divi/icon-list-item",
-  // Warning: convention is -network and not -item.
+  Image: "divi/image",
+  Link: "divi/link",
+  Login: "divi/login",
+  Lottie: "divi/lottie",
+  Map: "divi/map",
+  MapPin: "divi/map-pin",
+  Menu: "divi/menu",
+  NumberCounter: "divi/number-counter",
+  Portfolio: "divi/portfolio",
+  PostContent: "divi/post-content",
+  PostNav: "divi/post-nav",
+  PostSlider: "divi/post-slider",
+  PostTitle: "divi/post-title",
+  PricingTable: "divi/pricing-table",
+  PricingTables: "divi/pricing-tables",
+  Row: "divi/row",
+  RowInner: "divi/row-inner",
+  Search: "divi/search",
+  Section: "divi/section",
+  Shop: "divi/shop",
+  Sidebar: "divi/sidebar",
+  Signup: "divi/signup",
+  SignupCustomField: "divi/signup-custom-field",
+  Slide: "divi/slide",
+  Slider: "divi/slider",
   SocialMediaFollow: "divi/social-media-follow",
   SocialMediaFollowNetwork: "divi/social-media-follow-network",
+  Svg: "divi/svg",
+  Tab: "divi/tab",
+  Tabs: "divi/tabs",
   TeamMember: "divi/team-member",
-  Signup: "divi/signup",
-  Map: "divi/map",
-  CircleCounter: "divi/circle-counter",
-  // Warning: blockName = divi/counters (not divi/bar-counters).
-  Counters: "divi/counters",
-  Counter: "divi/counter",
-  Audio: "divi/audio",
-  // Theme Builder & dynamic content (Phase 3.6).
-  Menu: "divi/menu",
-  FullwidthMenu: "divi/fullwidth-menu",
-  Search: "divi/search",
-  Breadcrumbs: "divi/breadcrumbs",
-  PostTitle: "divi/post-title",
-  PostContent: "divi/post-content",
-  PostNavigation: "divi/post-navigation",
-  Sidebar: "divi/sidebar",
-  Comments: "divi/comments"
+  Testimonial: "divi/testimonial",
+  Text: "divi/text",
+  Timeline: "divi/timeline",
+  TimelineItem: "divi/timeline-item",
+  Toggle: "divi/toggle",
+  Video: "divi/video",
+  VideoSlider: "divi/video-slider",
+  VideoSliderItem: "divi/video-slider-item",
+  WoocommerceBreadcrumb: "divi/woocommerce-breadcrumb",
+  WoocommerceCartNotice: "divi/woocommerce-cart-notice",
+  WoocommerceCartProducts: "divi/woocommerce-cart-products",
+  WoocommerceCartTotals: "divi/woocommerce-cart-totals",
+  WoocommerceCheckoutAdditionalInfo: "divi/woocommerce-checkout-additional-info",
+  WoocommerceCheckoutBilling: "divi/woocommerce-checkout-billing",
+  WoocommerceCheckoutOrderDetails: "divi/woocommerce-checkout-order-details",
+  WoocommerceCheckoutPaymentInfo: "divi/woocommerce-checkout-payment-info",
+  WoocommerceCheckoutShipping: "divi/woocommerce-checkout-shipping",
+  WoocommerceCrossSells: "divi/woocommerce-cross-sells",
+  WoocommerceProductAdditionalInfo: "divi/woocommerce-product-additional-info",
+  WoocommerceProductAddToCart: "divi/woocommerce-product-add-to-cart",
+  WoocommerceProductDescription: "divi/woocommerce-product-description",
+  WoocommerceProductGallery: "divi/woocommerce-product-gallery",
+  WoocommerceProductImages: "divi/woocommerce-product-images",
+  WoocommerceProductMeta: "divi/woocommerce-product-meta",
+  WoocommerceProductPrice: "divi/woocommerce-product-price",
+  WoocommerceProductRating: "divi/woocommerce-product-rating",
+  WoocommerceProductReviews: "divi/woocommerce-product-reviews",
+  WoocommerceProductStock: "divi/woocommerce-product-stock",
+  WoocommerceProductTabs: "divi/woocommerce-product-tabs",
+  WoocommerceProductTitle: "divi/woocommerce-product-title",
+  WoocommerceProductUpsell: "divi/woocommerce-product-upsell",
+  WoocommerceRelatedProducts: "divi/woocommerce-related-products"
 };
+var DIVI_MODULES = [
+  {
+    name: "divi/accordion",
+    slug: "accordion",
+    d4Shortcode: "et_pb_accordion",
+    title: "Accordion",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/accordion-item"],
+    topLevelGroups: ["closedToggleIcon", "module", "title"]
+  },
+  {
+    name: "divi/accordion-item",
+    slug: "accordion-item",
+    d4Shortcode: "et_pb_accordion_item",
+    title: "Accordion Item",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["closedToggleIcon", "module"]
+  },
+  {
+    name: "divi/audio",
+    slug: "audio",
+    d4Shortcode: "et_pb_audio",
+    title: "Audio",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "title"]
+  },
+  {
+    name: "divi/before-after-image",
+    slug: "before-after-image",
+    d4Shortcode: "et_pb_before_after_image",
+    title: "Before/After Image",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "slider"]
+  },
+  {
+    name: "divi/blog",
+    slug: "blog",
+    d4Shortcode: "et_pb_blog",
+    title: "Blog",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["blogGrid", "fullwidth", "image", "meta", "module", "overlayIcon", "pagination", "post", "readMore", "title"]
+  },
+  {
+    name: "divi/blurb",
+    slug: "blurb",
+    d4Shortcode: "et_pb_blurb",
+    title: "Blurb",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["imageIcon", "module", "title"]
+  },
+  {
+    name: "divi/breadcrumbs",
+    slug: "breadcrumbs",
+    d4Shortcode: null,
+    title: "Breadcrumbs",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["home", "module", "separator", "trail"]
+  },
+  {
+    name: "divi/button",
+    slug: "button",
+    d4Shortcode: "et_pb_button",
+    title: "Button",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "module"]
+  },
+  {
+    name: "divi/canvas-portal",
+    slug: "canvas-portal",
+    d4Shortcode: "et_pb_canvas_portal",
+    title: "Canvas Portal",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["canvas", "module"]
+  },
+  {
+    name: "divi/circle-counter",
+    slug: "circle-counter",
+    d4Shortcode: "et_pb_circle_counter",
+    title: "Circle Counter",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["circle", "module", "number", "title"]
+  },
+  {
+    name: "divi/code",
+    slug: "code",
+    d4Shortcode: "et_pb_code",
+    title: "Code",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/column",
+    slug: "column",
+    d4Shortcode: "et_pb_column",
+    title: "Column",
+    family: "native",
+    category: "structure",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/column-inner",
+    slug: "column-inner",
+    d4Shortcode: "et_pb_column_inner",
+    title: "Inner Column",
+    family: "native",
+    category: "structure",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/comments",
+    slug: "comments",
+    d4Shortcode: "et_pb_comments",
+    title: "Comments",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "commentCount", "field", "formTitle", "image", "meta", "module"]
+  },
+  {
+    name: "divi/contact-field",
+    slug: "contact-field",
+    d4Shortcode: "et_pb_contact_field",
+    title: "Field",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["fieldItem", "module"]
+  },
+  {
+    name: "divi/contact-form",
+    slug: "contact-form",
+    d4Shortcode: "et_pb_contact_form",
+    title: "Contact Form",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/contact-field"],
+    topLevelGroups: ["button", "module", "redirect", "title"]
+  },
+  {
+    name: "divi/contact-form-7",
+    slug: "contact-form-7",
+    d4Shortcode: "et_pb_contact_form_7",
+    title: "Contact Form 7 Styler",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/countdown-timer",
+    slug: "countdown-timer",
+    d4Shortcode: "et_pb_countdown_timer",
+    title: "Countdown Timer",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "module", "title"]
+  },
+  {
+    name: "divi/counter",
+    slug: "counter",
+    d4Shortcode: "et_pb_counter",
+    title: "Bar Counter",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["barProgress", "module"]
+  },
+  {
+    name: "divi/counters",
+    slug: "counters",
+    d4Shortcode: "et_pb_counters",
+    title: "Bar Counters",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/counter"],
+    topLevelGroups: ["barProgress", "children", "module"]
+  },
+  {
+    name: "divi/cta",
+    slug: "cta",
+    d4Shortcode: "et_pb_cta",
+    title: "Call To Action",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "module", "title"]
+  },
+  {
+    name: "divi/divider",
+    slug: "divider",
+    d4Shortcode: "et_pb_divider",
+    title: "Divider",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["divider", "module"]
+  },
+  {
+    name: "divi/dropdown",
+    slug: "dropdown",
+    d4Shortcode: "et_pb_dropdown",
+    title: "Dropdown",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/filterable-portfolio",
+    slug: "filterable-portfolio",
+    d4Shortcode: "et_pb_filterable_portfolio",
+    title: "Filterable Portfolio",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "overlay", "portfolio", "portfolioGrid", "title"]
+  },
+  {
+    name: "divi/fullwidth-code",
+    slug: "fullwidth-code",
+    d4Shortcode: "et_pb_fullwidth_code",
+    title: "Fullwidth Code",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/fullwidth-header",
+    slug: "fullwidth-header",
+    d4Shortcode: "et_pb_fullwidth_header",
+    title: "Hero",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: ["buttonOne", "buttonTwo", "content", "image", "module", "scrollDown", "title"]
+  },
+  {
+    name: "divi/fullwidth-image",
+    slug: "fullwidth-image",
+    d4Shortcode: "et_pb_fullwidth_image",
+    title: "Fullwidth Image",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: ["image", "module"]
+  },
+  {
+    name: "divi/fullwidth-map",
+    slug: "fullwidth-map",
+    d4Shortcode: "et_pb_fullwidth_map",
+    title: "Fullwidth Map",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: ["divi/map-pin"],
+    topLevelGroups: ["map", "module"]
+  },
+  {
+    name: "divi/fullwidth-menu",
+    slug: "fullwidth-menu",
+    d4Shortcode: "et_pb_fullwidth_menu",
+    title: "Fullwidth Menu",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: ["cartIcon", "cartQuantity", "hamburgerMenuIcon", "logo", "menu", "menuDropdown", "module", "searchIcon"]
+  },
+  {
+    name: "divi/fullwidth-portfolio",
+    slug: "fullwidth-portfolio",
+    d4Shortcode: "et_pb_fullwidth_portfolio",
+    title: "Post Carousel",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: ["module", "overlay", "portfolio", "portfolioGrid", "title"]
+  },
+  {
+    name: "divi/fullwidth-post-content",
+    slug: "fullwidth-post-content",
+    d4Shortcode: "et_pb_fullwidth_post_content",
+    title: "Fullwidth Post Content",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: []
+  },
+  {
+    name: "divi/fullwidth-post-slider",
+    slug: "fullwidth-post-slider",
+    d4Shortcode: "et_pb_fullwidth_post_slider",
+    title: "Fullwidth Post Slider",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: ["arrows", "button", "content", "image", "meta", "module", "pagination", "post", "slideOverlay", "title"]
+  },
+  {
+    name: "divi/fullwidth-post-title",
+    slug: "fullwidth-post-title",
+    d4Shortcode: "et_pb_fullwidth_post_title",
+    title: "Fullwidth Post Title",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: [],
+    topLevelGroups: ["featuredImage", "meta", "module", "textWrapper", "title"]
+  },
+  {
+    name: "divi/fullwidth-slider",
+    slug: "fullwidth-slider",
+    d4Shortcode: "et_pb_fullwidth_slider",
+    title: "Fullwidth Slider",
+    family: "native",
+    category: "fullwidth-module",
+    childrenName: ["divi/slide"],
+    topLevelGroups: ["arrows", "button", "children", "module", "pagination", "title"]
+  },
+  {
+    name: "divi/gallery",
+    slug: "gallery",
+    d4Shortcode: "et_pb_gallery",
+    title: "Gallery",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["galleryGrid", "image", "module", "pagination", "title"]
+  },
+  {
+    name: "divi/global-layout",
+    slug: "global-layout",
+    d4Shortcode: null,
+    title: "Global Layout",
+    family: "native",
+    category: "structure",
+    childrenName: [],
+    topLevelGroups: []
+  },
+  {
+    name: "divi/group",
+    slug: "group",
+    d4Shortcode: null,
+    title: "Group",
+    family: "native",
+    category: "structure",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/group-carousel",
+    slug: "group-carousel",
+    d4Shortcode: null,
+    title: "Group Carousel",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/group"],
+    topLevelGroups: ["arrows", "dotNav", "module"]
+  },
+  {
+    name: "divi/heading",
+    slug: "heading",
+    d4Shortcode: "et_pb_heading",
+    title: "Heading",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "title"]
+  },
+  {
+    name: "divi/icon",
+    slug: "icon",
+    d4Shortcode: "et_pb_icon",
+    title: "Icon",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["icon", "module"]
+  },
+  {
+    name: "divi/icon-list",
+    slug: "icon-list",
+    d4Shortcode: "et_pb_icon_list",
+    title: "Icon List",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/icon-list-item"],
+    topLevelGroups: ["icon", "module"]
+  },
+  {
+    name: "divi/icon-list-item",
+    slug: "icon-list-item",
+    d4Shortcode: "et_pb_icon_list_item",
+    title: "Icon List Item",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["content", "icon", "module"]
+  },
+  {
+    name: "divi/image",
+    slug: "image",
+    d4Shortcode: "et_pb_image",
+    title: "Image",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["image", "module"]
+  },
+  {
+    name: "divi/link",
+    slug: "link",
+    d4Shortcode: "et_pb_link",
+    title: "Link",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/login",
+    slug: "login",
+    d4Shortcode: "et_pb_login",
+    title: "Login",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "module", "title"]
+  },
+  {
+    name: "divi/lottie",
+    slug: "lottie",
+    d4Shortcode: "et_pb_lottie",
+    title: "Lottie",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["lottie", "module"]
+  },
+  {
+    name: "divi/map",
+    slug: "map",
+    d4Shortcode: "et_pb_map",
+    title: "Map",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/map-pin"],
+    topLevelGroups: ["map", "module"]
+  },
+  {
+    name: "divi/map-pin",
+    slug: "map-pin",
+    d4Shortcode: "et_pb_map_pin",
+    title: "Map Pin",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["pin"]
+  },
+  {
+    name: "divi/menu",
+    slug: "menu",
+    d4Shortcode: "et_pb_menu",
+    title: "Menu",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["cartIcon", "cartQuantity", "hamburgerMenuIcon", "logo", "menu", "menuDropdown", "module", "searchIcon"]
+  },
+  {
+    name: "divi/number-counter",
+    slug: "number-counter",
+    d4Shortcode: "et_pb_number_counter",
+    title: "Number Counter",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "number", "title"]
+  },
+  {
+    name: "divi/portfolio",
+    slug: "portfolio",
+    d4Shortcode: "et_pb_portfolio",
+    title: "Portfolio",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "overlay", "portfolio", "portfolioGrid", "title"]
+  },
+  {
+    name: "divi/post-content",
+    slug: "post-content",
+    d4Shortcode: "et_pb_post_content",
+    title: "Post Content",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: []
+  },
+  {
+    name: "divi/post-nav",
+    slug: "post-nav",
+    d4Shortcode: "et_pb_post_nav",
+    title: "Pagination",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["links", "module"]
+  },
+  {
+    name: "divi/post-slider",
+    slug: "post-slider",
+    d4Shortcode: "et_pb_post_slider",
+    title: "Post Slider",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["arrows", "button", "content", "image", "meta", "module", "pagination", "post", "slideOverlay", "title"]
+  },
+  {
+    name: "divi/post-title",
+    slug: "post-title",
+    d4Shortcode: "et_pb_post_title",
+    title: "Post Title",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["image", "meta", "module", "textWrapper", "title"]
+  },
+  {
+    name: "divi/pricing-table",
+    slug: "pricing-table",
+    d4Shortcode: "et_pb_pricing_table",
+    title: "Pricing Table",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/pricing-tables",
+    slug: "pricing-tables",
+    d4Shortcode: "et_pb_pricing_tables",
+    title: "Pricing Tables",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/pricing-table"],
+    topLevelGroups: ["button", "content", "featuredTable", "module", "title"]
+  },
+  {
+    name: "divi/row",
+    slug: "row",
+    d4Shortcode: "et_pb_row",
+    title: "Row",
+    family: "native",
+    category: "structure",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/row-inner",
+    slug: "row-inner",
+    d4Shortcode: "et_pb_row_inner",
+    title: "Inner Row",
+    family: "native",
+    category: "structure",
+    childrenName: [],
+    topLevelGroups: []
+  },
+  {
+    name: "divi/search",
+    slug: "search",
+    d4Shortcode: "et_pb_search",
+    title: "Search",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "module", "search"]
+  },
+  {
+    name: "divi/section",
+    slug: "section",
+    d4Shortcode: "et_pb_section",
+    title: "Section",
+    family: "native",
+    category: "structure",
+    childrenName: ["divi/row"],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/shop",
+    slug: "products",
+    d4Shortcode: "et_pb_shop",
+    title: "Woo Products",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "elements", "module"]
+  },
+  {
+    name: "divi/sidebar",
+    slug: "sidebar",
+    d4Shortcode: "et_pb_sidebar",
+    title: "Sidebar",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "sidebar", "sidebarWidgets"]
+  },
+  {
+    name: "divi/signup",
+    slug: "signup",
+    d4Shortcode: "et_pb_signup",
+    title: "Email Optin",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "content", "customFields", "field", "module", "resultMessage", "success", "title"]
+  },
+  {
+    name: "divi/signup-custom-field",
+    slug: "signup-custom-field",
+    d4Shortcode: "et_pb_signup_custom_field",
+    title: "Custom Field",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["fieldItem", "module"]
+  },
+  {
+    name: "divi/slide",
+    slug: "slide",
+    d4Shortcode: "et_pb_slide",
+    title: "Slide",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["button", "contentOverlay", "image", "module"]
+  },
+  {
+    name: "divi/slider",
+    slug: "slider",
+    d4Shortcode: "et_pb_slider",
+    title: "Slider",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/slide"],
+    topLevelGroups: ["arrows", "button", "children", "module", "pagination", "title"]
+  },
+  {
+    name: "divi/social-media-follow",
+    slug: "social-media-follow",
+    d4Shortcode: "et_pb_social_media_follow",
+    title: "Social Media Follow",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/social-media-follow-network"],
+    topLevelGroups: ["icon", "module", "socialNetwork"]
+  },
+  {
+    name: "divi/social-media-follow-network",
+    slug: "social-media-follow-item",
+    d4Shortcode: "et_pb_social_media_follow_network",
+    title: "Social Network",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["icon", "module", "socialNetwork"]
+  },
+  {
+    name: "divi/svg",
+    slug: "svg",
+    d4Shortcode: "et_pb_svg",
+    title: "SVG",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "svg"]
+  },
+  {
+    name: "divi/tab",
+    slug: "tab",
+    d4Shortcode: "et_pb_tab",
+    title: "Tab",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: []
+  },
+  {
+    name: "divi/tabs",
+    slug: "tabs",
+    d4Shortcode: "et_pb_tabs",
+    title: "Tabs",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/tab"],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/team-member",
+    slug: "team-member",
+    d4Shortcode: "et_pb_team_member",
+    title: "Person",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["image", "module", "name", "social"]
+  },
+  {
+    name: "divi/testimonial",
+    slug: "testimonial",
+    d4Shortcode: "et_pb_testimonial",
+    title: "Testimonial",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["company", "module", "quoteIcon"]
+  },
+  {
+    name: "divi/text",
+    slug: "text",
+    d4Shortcode: "et_pb_text",
+    title: "Text",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/timeline",
+    slug: "timeline",
+    d4Shortcode: "et_pb_timeline",
+    title: "Timeline",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/timeline-item"],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/timeline-item",
+    slug: "timeline-item",
+    d4Shortcode: "et_pb_timeline_item",
+    title: "Timeline Item",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/toggle",
+    slug: "toggle",
+    d4Shortcode: "et_pb_toggle",
+    title: "Toggle",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["closedToggleIcon", "module", "openToggleIcon", "title"]
+  },
+  {
+    name: "divi/video",
+    slug: "video",
+    d4Shortcode: "et_pb_video",
+    title: "Video",
+    family: "native",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "overlay", "playIcon"]
+  },
+  {
+    name: "divi/video-slider",
+    slug: "video-slider",
+    d4Shortcode: "et_pb_video_slider",
+    title: "Video Slider",
+    family: "native",
+    category: "module",
+    childrenName: ["divi/video-slider-item"],
+    topLevelGroups: ["module", "overlay", "playIcon", "sliderControls"]
+  },
+  {
+    name: "divi/video-slider-item",
+    slug: "video-slider-item",
+    d4Shortcode: "et_pb_video_slider_item",
+    title: "Video Slider Item",
+    family: "native",
+    category: "child-module",
+    childrenName: [],
+    topLevelGroups: ["module", "overlay", "playIcon", "sliderControls"]
+  },
+  {
+    name: "divi/woocommerce-breadcrumb",
+    slug: "breadcrumb",
+    d4Shortcode: "et_pb_wc_breadcrumb",
+    title: "Woo Breadcrumbs",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "module"]
+  },
+  {
+    name: "divi/woocommerce-cart-notice",
+    slug: "cart-notice",
+    d4Shortcode: "et_pb_wc_cart_notice",
+    title: "Woo Notice",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "content", "field", "module"]
+  },
+  {
+    name: "divi/woocommerce-cart-products",
+    slug: "cart-products",
+    d4Shortcode: "et_pb_wc_cart_products",
+    title: "Woo Cart Products",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "elements", "layout", "module", "table"]
+  },
+  {
+    name: "divi/woocommerce-cart-totals",
+    slug: "cart-totals",
+    d4Shortcode: "et_pb_wc_cart_totals",
+    title: "Woo Cart Totals",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "module", "table"]
+  },
+  {
+    name: "divi/woocommerce-checkout-additional-info",
+    slug: "checkout-information",
+    d4Shortcode: "et_pb_wc_checkout_additional_info",
+    title: "Woo Checkout Information",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["elements", "module"]
+  },
+  {
+    name: "divi/woocommerce-checkout-billing",
+    slug: "checkout-billing",
+    d4Shortcode: "et_pb_wc_checkout_billing",
+    title: "Woo Checkout Billing",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["layout", "module"]
+  },
+  {
+    name: "divi/woocommerce-checkout-order-details",
+    slug: "checkout-order-details",
+    d4Shortcode: "et_pb_wc_checkout_order_details",
+    title: "Woo Checkout Details",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module", "table"]
+  },
+  {
+    name: "divi/woocommerce-checkout-payment-info",
+    slug: "checkout-payment-info",
+    d4Shortcode: "et_pb_wc_checkout_payment_info",
+    title: "Woo Checkout Payment",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "module"]
+  },
+  {
+    name: "divi/woocommerce-checkout-shipping",
+    slug: "checkout-shipping",
+    d4Shortcode: "et_pb_wc_checkout_shipping",
+    title: "Woo Checkout Shipping",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["layout", "module"]
+  },
+  {
+    name: "divi/woocommerce-cross-sells",
+    slug: "cross-sells",
+    d4Shortcode: "et_pb_wc_cross_sells",
+    title: "Woo Cross Sells",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["module"]
+  },
+  {
+    name: "divi/woocommerce-product-additional-info",
+    slug: "product-additional-info",
+    d4Shortcode: "et_pb_wc_additional_info",
+    title: "Woo Product Information",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "elements", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-add-to-cart",
+    slug: "product-add-to-cart",
+    d4Shortcode: "et_pb_wc_add_to_cart",
+    title: "Woo Product Add To Cart",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "content", "elements", "fieldLabels", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-description",
+    slug: "product-description",
+    d4Shortcode: "et_pb_wc_description",
+    title: "Woo Product Description",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-gallery",
+    slug: "product-gallery",
+    d4Shortcode: "et_pb_wc_gallery",
+    title: "Woo Product Gallery",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "galleryGrid", "image", "layout", "module", "overlay", "overlayIcon", "title"]
+  },
+  {
+    name: "divi/woocommerce-product-images",
+    slug: "product-images",
+    d4Shortcode: "et_pb_wc_images",
+    title: "Woo Product Images",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "elements", "galleryGrid", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-meta",
+    slug: "product-meta",
+    d4Shortcode: "et_pb_wc_meta",
+    title: "Woo Product Meta",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "elements", "layout", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-price",
+    slug: "product-price",
+    d4Shortcode: "et_pb_wc_price",
+    title: "Woo Product Price",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-rating",
+    slug: "product-rating",
+    d4Shortcode: "et_pb_wc_rating",
+    title: "Woo Product Rating",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "elements", "layout", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-reviews",
+    slug: "product-reviews",
+    d4Shortcode: "et_pb_wc_reviews",
+    title: "Woo Product Reviews",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["button", "content", "elements", "module", "reviewCount"]
+  },
+  {
+    name: "divi/woocommerce-product-stock",
+    slug: "product-stock",
+    d4Shortcode: "et_pb_wc_stock",
+    title: "Woo Product Stock",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-tabs",
+    slug: "product-tabs",
+    d4Shortcode: "et_pb_wc_tabs",
+    title: "Woo Product Tabs",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "module"]
+  },
+  {
+    name: "divi/woocommerce-product-title",
+    slug: "product-title",
+    d4Shortcode: "et_pb_wc_title",
+    title: "Woo Product Title",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "module", "title"]
+  },
+  {
+    name: "divi/woocommerce-product-upsell",
+    slug: "product-upsell",
+    d4Shortcode: "et_pb_wc_upsells",
+    title: "Woo Product Upsell",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "elements", "module"]
+  },
+  {
+    name: "divi/woocommerce-related-products",
+    slug: "related-products",
+    d4Shortcode: "et_pb_wc_related_products",
+    title: "Woo Related Products",
+    family: "woocommerce",
+    category: "module",
+    childrenName: [],
+    topLevelGroups: ["content", "elements", "module"]
+  }
+];
+var DIVI_MODULE_BY_NAME = Object.fromEntries(
+  DIVI_MODULES.map((m) => [m.name, m])
+);
+
+// src/divi/types.ts
+var BUILDER_VERSION = "5.5.2";
 
 // src/divi/globals.ts
 function colorToString(color) {
@@ -31713,7 +32823,7 @@ function postNavigation(options = {}) {
   if (Object.keys(inner).length > 0) {
     attrs.navigation = { innerContent: desktopValue(inner) };
   }
-  return makeBlock(DiviBlock.PostNavigation, attrs);
+  return makeBlock(DiviBlock.PostNav, attrs);
 }
 function comments() {
   return makeBlock(DiviBlock.Comments, {});
@@ -32964,6 +34074,63 @@ function registerSeo(server, client) {
   );
 }
 function registerDivi(server, client) {
+  server.registerTool(
+    "iawm_divi_modules_catalog",
+    {
+      title: "Divi 5 modules catalog",
+      description: "Returns the auto-generated registry of every Divi 5 module known to the gateway: native + WooCommerce, including each module's block name, Divi 4 shortcode, title, category (structure / module / fullwidth-module / child-module), and the child block names it accepts. Use this to pick the right `blockName` and `innerBlocks` shape when composing in free-form / block mode via iawm_divi_page_compose. Filter by `family` or `category` to narrow the catalog; filter by `q` for a case-insensitive substring match on slug/name/title.",
+      inputSchema: {
+        family: external_exports.enum(["native", "woocommerce", "all"]).optional().describe("Restrict to native or woocommerce modules; defaults to all"),
+        category: external_exports.enum(["structure", "module", "fullwidth-module", "child-module", "all"]).optional().describe("Restrict by Divi category; defaults to all"),
+        q: external_exports.string().optional().describe("Case-insensitive substring filter on slug, name or title")
+      }
+    },
+    async (args) => {
+      const family = args.family ?? "all";
+      const category = args.category ?? "all";
+      const q = (args.q ?? "").toLowerCase().trim();
+      const items = DIVI_MODULES.filter((m) => {
+        if (family !== "all" && m.family !== family) return false;
+        if (category !== "all" && m.category !== category) return false;
+        if (q !== "") {
+          const hay = (m.slug + " " + (m.name ?? "") + " " + (m.title ?? "")).toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+      const text2 = JSON.stringify(
+        {
+          total_in_catalog: DIVI_MODULES.length,
+          returned: items.length,
+          modules: items
+        },
+        null,
+        2
+      );
+      return { content: [{ type: "text", text: text2 }] };
+    }
+  );
+  server.registerTool(
+    "iawm_divi_module_info",
+    {
+      title: "Divi 5 module details",
+      description: "Returns the registry entry for one specific module by its block name (e.g. `divi/button`). Use this to verify a name exists and inspect its category, accepted children and default attribute groups before composing.",
+      inputSchema: {
+        name: external_exports.string().describe("Block name (e.g. divi/button or divi/woocommerce-product-add-to-cart)")
+      }
+    },
+    async (args) => {
+      const name = args.name ?? "";
+      const found = DIVI_MODULE_BY_NAME[name];
+      if (!found) {
+        return {
+          content: [{ type: "text", text: JSON.stringify({ ok: false, error: "not_found", name }, null, 2) }],
+          isError: true
+        };
+      }
+      return { content: [{ type: "text", text: JSON.stringify({ ok: true, module: found }, null, 2) }] };
+    }
+  );
   server.registerTool(
     "iawm_divi_status",
     {

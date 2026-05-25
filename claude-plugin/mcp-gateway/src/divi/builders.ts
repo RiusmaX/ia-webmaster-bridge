@@ -1125,7 +1125,10 @@ export function postNavigation(options: PostNavigationOptions = {}): GutenbergBl
   if (Object.keys(inner).length > 0) {
     attrs.navigation = { innerContent: desktopValue(inner) };
   }
-  return makeBlock(DiviBlock.PostNavigation, attrs);
+  // Note: Divi 5 ships this as `divi/post-nav` (the registry name is
+  // PostNav, not PostNavigation — the old constant referenced a non-existent
+  // block name; the auto-registry fixed it).
+  return makeBlock(DiviBlock.PostNav, attrs);
 }
 
 /**

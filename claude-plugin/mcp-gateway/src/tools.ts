@@ -21,6 +21,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { IawmClient, type ApiResult } from "./client.js";
 import { composePage, composeThemeZone, type SectionInput } from "./divi/compose.js";
+import { DIVI_MODULES, DIVI_MODULE_BY_NAME } from "./divi/modules-registry.js";
 
 /** Formats an API result as an MCP tool response. */
 function toToolResult(label: string, result: ApiResult) {
@@ -640,6 +641,73 @@ function registerSeo(server: McpServer, client: IawmClient): void {
 /* ------------------------------------------------------------------ */
 
 function registerDivi(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_divi_modules_catalog",
+    {
+      title: "Divi 5 modules catalog",
+      description:
+        "Returns the auto-generated registry of every Divi 5 module known to the gateway: native + WooCommerce, including each module's block name, Divi 4 shortcode, title, category (structure / module / fullwidth-module / child-module), and the child block names it accepts. Use this to pick the right `blockName` and `innerBlocks` shape when composing in free-form / block mode via iawm_divi_page_compose. Filter by `family` or `category` to narrow the catalog; filter by `q` for a case-insensitive substring match on slug/name/title.",
+      inputSchema: {
+        family: z
+          .enum(["native", "woocommerce", "all"])
+          .optional()
+          .describe("Restrict to native or woocommerce modules; defaults to all"),
+        category: z
+          .enum(["structure", "module", "fullwidth-module", "child-module", "all"])
+          .optional()
+          .describe("Restrict by Divi category; defaults to all"),
+        q: z.string().optional().describe("Case-insensitive substring filter on slug, name or title"),
+      },
+    },
+    async (args) => {
+      const family = (args as { family?: string }).family ?? "all";
+      const category = (args as { category?: string }).category ?? "all";
+      const q = ((args as { q?: string }).q ?? "").toLowerCase().trim();
+      const items = DIVI_MODULES.filter((m) => {
+        if (family !== "all" && m.family !== family) return false;
+        if (category !== "all" && m.category !== category) return false;
+        if (q !== "") {
+          const hay = (m.slug + " " + (m.name ?? "") + " " + (m.title ?? "")).toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+      const text = JSON.stringify(
+        {
+          total_in_catalog: DIVI_MODULES.length,
+          returned: items.length,
+          modules: items,
+        },
+        null,
+        2,
+      );
+      return { content: [{ type: "text" as const, text }] };
+    },
+  );
+
+  server.registerTool(
+    "iawm_divi_module_info",
+    {
+      title: "Divi 5 module details",
+      description:
+        "Returns the registry entry for one specific module by its block name (e.g. `divi/button`). Use this to verify a name exists and inspect its category, accepted children and default attribute groups before composing.",
+      inputSchema: {
+        name: z.string().describe("Block name (e.g. divi/button or divi/woocommerce-product-add-to-cart)"),
+      },
+    },
+    async (args) => {
+      const name = (args as { name?: string }).name ?? "";
+      const found = DIVI_MODULE_BY_NAME[name];
+      if (!found) {
+        return {
+          content: [{ type: "text" as const, text: JSON.stringify({ ok: false, error: "not_found", name }, null, 2) }],
+          isError: true,
+        };
+      }
+      return { content: [{ type: "text" as const, text: JSON.stringify({ ok: true, module: found }, null, 2) }] };
+    },
+  );
+
   server.registerTool(
     "iawm_divi_status",
     {

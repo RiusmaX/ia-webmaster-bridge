@@ -99,6 +99,21 @@
 
 ---
 
+## Divi modules registry (gateway v0.19.0)
+
+### Untested as of this writing
+
+- [ ] **Catalog tool** — `iawm_divi_modules_catalog({ family: "woocommerce" })`.
+  - Expected: 25 modules returned, every `name` starting with `divi/woocommerce-` or `divi/shop`.
+- [ ] **Catalog filter by category** — `iawm_divi_modules_catalog({ category: "fullwidth-module" })`.
+  - Expected: 10 entries (hero / fullwidth-image / fullwidth-slider / etc.).
+- [ ] **Catalog text search** — `iawm_divi_modules_catalog({ q: "post" })`.
+  - Expected: blog, post-content, post-nav, post-slider, post-title, plus fullwidth-post-* variants.
+- [ ] **Module info** — `iawm_divi_module_info({ name: "divi/woocommerce-product-add-to-cart" })`.
+  - Expected: `ok: true`, module with `family: "woocommerce"`, `d4Shortcode: "et_pb_wc_add_to_cart"`, title "Woo Product Add To Cart".
+- [ ] **Unknown module** — `iawm_divi_module_info({ name: "divi/post-navigation" })` (the old typo).
+  - Expected: `ok: false, error: "not_found"` — confirms the typo is now caught.
+
 ## Multi-key + Cron (plugin v0.27.0)
 
 ### Multi-key
