@@ -40,6 +40,73 @@ homepage, design tokens, SEO) — every call HMAC-signed, scope-checked,
 audit-logged, and protected by automatic pre-op backups and a kill
 switch.
 
+## What you can ask Claude to do
+
+A condensed tour. The full catalogue with every tool + more examples
+is in [`docs/capabilities.md`](docs/capabilities.md); the 14 skills
+that compose these tools into recognisable workflows are documented
+in [`docs/skills.md`](docs/skills.md).
+
+### Build pages
+
+> *"Build the homepage of my Brazilian Jiu-Jitsu club — hero with a
+> trial-class CTA, our pillars in 3 columns (kids/adults/competition),
+> testimonials, pricing in 3 tiers, FAQ, contact. Use the brand
+> palette."*
+
+> *"Add a 'numbers we're proud of' section between the hero and
+> features on page 53 — 4 counters animated on scroll."*
+
+### Configure the brand design system
+
+> *"Set up the brand: primary `#0a6ef5`, secondary `#10b981`, Inter
+> font, 12px brand-radius. Use the logo at /uploads/logo.svg."*
+
+> *"What's currently in the design system? I want to see palette,
+> fonts and global variables before I propose changes."*
+
+### Manage infrastructure safely
+
+> *"Install Rank Math SEO and activate it."*
+
+> *"Update every plugin that has an available update. Use the safe-
+> plugin-update procedure (backup → update → smoke test → rollback
+> if anything breaks)."*
+
+> *"A WordPress core update is pending — apply it. Run the full
+> two-step confirmation flow."*
+
+> *"Run a serialization-safe search-replace from `old-domain.com` to
+> `new-domain.com` — dry-run first."*
+
+### Author SEO
+
+> *"Set the SEO of page 19 — focus keyword 'Brazilian Jiu-Jitsu
+> Bordeaux', meta title under 60 chars, meta description with the
+> primary CTA in it."*
+
+> *"Audit every published page and tell me which ones have no meta
+> description or no focus keyword."*
+
+### Operate and monitor
+
+> *"Run a smoke test — is the site healthy?"*
+
+> *"Produce the weekly site status report."*
+
+> *"Schedule a quarterly reminder to rotate my API keys."*
+
+> *"Bootstrap the per-site context from what you can see on the
+> live site, then ask me what you can't infer."*
+
+### What it intentionally does **not** do
+
+No raw shell access. No arbitrary URL installs (WP.org only). No
+self-deactivation or self-update of the bridge plugin. No agent-user
+modification. No raw INSERT/UPDATE/DELETE. No publication by default
+— content always starts as `draft`. Full anti-pattern list in
+[`docs/capabilities.md`](docs/capabilities.md) §"Limitations".
+
 ## Architecture
 
 ```
@@ -92,17 +159,37 @@ documented in [`docs/security-model.md`](docs/security-model.md).
 
 ## Documentation
 
+Operator-facing:
+
+- [`docs/capabilities.md`](docs/capabilities.md) — comprehensive
+  tour of every capability with example prompts.
+- [`docs/skills.md`](docs/skills.md) — the 14 Claude Code skills
+  that compose the tools into operator workflows.
 - [`docs/operations.md`](docs/operations.md) — operator runbook (key
   rotation, multi-operator, safe-update workflow, WP-CLI fallback,
   pentest checklist).
-- [`docs/design-system.md`](docs/design-system.md) — Divi design system
-  workflow (colors, fonts, variables, branding).
+- [`docs/production-deployment.md`](docs/production-deployment.md) —
+  fresh production install walkthrough.
+- [`docs/security-model.md`](docs/security-model.md) — 8-layer
+  defence in depth + threat model + incident response.
+- [`docs/design-system.md`](docs/design-system.md) — Divi design
+  system workflow (colors, fonts, variables, branding).
+
+Reference:
+
 - [`docs/divi5-format.md`](docs/divi5-format.md) — Divi 5 storage
   format reference.
 - [`docs/divi5-modules-catalog.md`](docs/divi5-modules-catalog.md) —
-  the 105-module registry.
-- [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md) — the
-  current sprint towards v1.0.0.
+  the 105-module registry (auto-generated).
+- [`docs/divi5-compose-dsl.md`](docs/divi5-compose-dsl.md) — page
+  composer DSL.
+- [`docs/architecture.md`](docs/architecture.md) — three-component
+  architecture.
+- [`docs/decisions.md`](docs/decisions.md) — 24 structuring
+  decisions (D-001 → D-024).
+- [`docs/roadmap.md`](docs/roadmap.md) — phase-by-phase history +
+  Phase 8 backlog.
+- [`docs/glossary.md`](docs/glossary.md) — vocabulary primer.
 
 ## Contributing
 

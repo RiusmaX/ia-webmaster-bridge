@@ -35,7 +35,7 @@ See [`docs/decisions.md`](docs/decisions.md). In short:
 | `CHANGELOG.md` | keep-a-changelog version history (since v0.18.3) |
 | `CONTRIBUTING.md` | Contribution rules (code style, commits, tests, disclosure) |
 | `LICENSE` | GPL-3.0-or-later |
-| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossary.md`, `operations.md`, `production-deployment.md`, `security-model.md`, `design-system.md`, `phase-7-action-plan.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md` |
+| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossary.md`, `operations.md`, `production-deployment.md`, `security-model.md`, `capabilities.md`, `skills.md`, `design-system.md`, `phase-7-action-plan.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md`, `pentest-*.md`, `validation-checklist.md` |
 | `specs/` | One spec per feature (`01` to `07`) |
 | `plugin/ia-webmaster-bridge/` | WordPress plugin (REST API `ia-webmaster/v1`) |
 | `claude-plugin/` | Claude Code plugin (MCP tools + skills + MCP gateway) |
