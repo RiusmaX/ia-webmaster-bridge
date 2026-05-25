@@ -12,17 +12,112 @@ where they moved together:
 
 ## [Unreleased]
 
-Phase 7 sub-phases pending: 7.5 i18n (in progress), 7.6 PHPUnit tests,
-7.7 skills assemblies, 7.8 doc pass (this file), 7.9 pentest dry-run,
-7.10 v1.0.0 release. Tracked in
-[`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md).
+## [1.1.0] — 2026-05-25 — plugin 1.1.0, gateway 1.1.0
 
-## [0.34.0] — 2026-05-25 — plugin 0.34.0
+Phase 6 (Webmaster layer) closure. Spec 07 is now Implemented.
+
+### Added
+
+- **Per-site context module** (`IAWM_Context`). Single WP option
+  `iawm_site_context` stores brand voice, audience, do/don't lists,
+  editorial defaults (status, language, naming, main CTA), design
+  notes (palette, fonts, patterns used), infrastructure preferences
+  (plugins required / forbidden, env notes), and free-form notes.
+  Schema-versioned, mergeable. (Decision D-024.)
+- **Endpoints**: `/site-context/get` (read), `/site-context/update`
+  (config:write, dry_run supported), `/site-context/clear`
+  (config:write).
+- **MCP tools**: `iawm_site_context_get`, `iawm_site_context_update`,
+  `iawm_site_context_clear`.
+- **Admin UI**: 7th tab "Context" with sections (Brand / Content /
+  Design / Infrastructure / Notes), structured form, save in one
+  click.
+- **Skills (3 new, 14 total)**:
+  - `site-context-discovery` — bootstraps the context from
+    observable signals on a fresh install (design system + plugins
+    + homepage layout).
+  - `site-status-report` — compiles a full health + content + audit
+    + updates + SEO + cron report.
+  - `scheduled-routines` — uses the cron endpoints to set up
+    periodic site checks; documents the polling / mu-plugin /
+    webhook patterns for actually reacting to fired hooks.
 
 ### Changed
 
-- Bumped plugin version pre-i18n pass (Phase 7.5 in progress). No
-  functional change yet.
+- Spec 07 status: In progress → Implemented.
+- Roadmap Phase 6 marked complete.
+
+### Decisions
+
+- **D-024** — Per-site context lives in a single WP option, not a
+  per-operator file, so multi-operator setups share the curated
+  brief automatically.
+
+## [1.0.1] — 2026-05-25 — plugin 1.0.1, gateway 1.0.1
+
+Patch release completing the French localisation that v1.0.0 only
+partially shipped.
+
+### Added
+
+- Complete French translation: 271 strings (263 singular + 8 plural)
+  in `languages/ia-webmaster-bridge-fr_FR.po` + compiled `.mo`.
+- `tools/compile-mo.mjs` — pure-Node `.po`-to-`.mo` compiler (no
+  `msgfmt` / `wp-cli` dependency, runs on Windows out of the box).
+- `tools/extract-pot.mjs` now picks up `_n()` plural calls and emits
+  a `Plural-Forms` header.
+- `docs/operations.md` "Translation workflow" section.
+
+### Changed
+
+- Additional gettext wrapping in modules the 1.0.0 i18n pass missed:
+  agent-user, confirmation, core, divi, plugins, seo, settings,
+  themes. Total wrapped calls: ~315 across the plugin.
+
+## [1.0.0] — 2026-05-25 — plugin 1.0.0, gateway 1.0.0
+
+**v1.0.0 — production ready.** Closes Phase 7 of the action plan
+([`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md)).
+
+### Added
+
+- **PHPUnit test scaffold** (Phase 7.6). 18 critical-path tests
+  covering HMAC sign/verify round-trip, scope enforcement, backup
+  snapshot+restore, confirmation token issue/consume/mismatch/replay
+  and network CIDR matching. No full WordPress install required —
+  uses in-memory stubs (`tests/wp-stub/*`).
+- **Four assembly skills** (Phase 7.7):
+  - `safe-plugin-update` — backup → update → smoke test → rollback.
+  - `design-system-first` — read DS → write tokens → author pages.
+  - `site-smoke-test` — interpret /diagnostics/smoke probes.
+  - `prod-deployment-checklist` — fresh production install walkthrough.
+- **Production-readiness docs** (Phase 7.8):
+  - `docs/production-deployment.md` — end-to-end install runbook.
+  - `docs/security-model.md` — 8-layer defence-in-depth + threat
+    model + incident response.
+  - `CHANGELOG.md` (this file) — keep-a-changelog format.
+  - `CONTRIBUTING.md` — code style, commit conventions, security
+    disclosure.
+- **Pentest dry-run record** (Phase 7.9):
+  `docs/pentest-2026-05-25.md` — 28 probes documented, 0 active
+  vulnerabilities, 2 historical deviations fixed during the run.
+- **i18n infrastructure** (Phase 7.5):
+  - 185 strings wrapped with the `ia-webmaster-bridge` text domain.
+  - `load_plugin_textdomain` wired on `plugins_loaded`.
+  - `tools/extract-pot.mjs` — Node script generating
+    `languages/ia-webmaster-bridge.pot`.
+  - French translation stub.
+
+### Changed
+
+- Plugin version: 0.34.0 → 1.0.0 — stable contract signal.
+- Gateway version: 0.23.0 → 1.0.0.
+- Claude Code plugin manifest: 0.2.0 → 1.0.0.
+- README rewritten with v1.0.0 status, badges, quick start,
+  doc index.
+- `docs/decisions.md`: D-020 (rotation policies), D-021 (smoke
+  test approach), D-022 (HTTPS + IP allow-list), D-023 (i18n
+  strategy).
 
 ## [0.33.0] — 2026-05-25 — plugin 0.33.0, gateway 0.23.0
 

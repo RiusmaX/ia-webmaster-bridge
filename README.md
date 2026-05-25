@@ -4,17 +4,27 @@
 > action signed.
 
 ![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)
-![Plugin](https://img.shields.io/badge/plugin-1.0.0-brightgreen)
-![Gateway](https://img.shields.io/badge/gateway-1.0.0-brightgreen)
-![Status](https://img.shields.io/badge/status-v1.0.0-brightgreen)
+![Plugin](https://img.shields.io/badge/plugin-1.1.0-brightgreen)
+![Gateway](https://img.shields.io/badge/gateway-1.1.0-brightgreen)
+![Status](https://img.shields.io/badge/status-v1.1.0-brightgreen)
 
 ## Status
 
-**v1.0.0 — production ready.** All seven Phase 7 sub-phases shipped:
-network hardening, lifecycle hardening, Divi branding writer, admin
-UI redesign, i18n, PHPUnit tests, four new operator skills, full doc
-pass, pentest dry-run. Sprint tracker: [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md);
-pentest record: [`docs/pentest-2026-05-25.md`](docs/pentest-2026-05-25.md);
+**v1.1.0 — production ready, full webmaster layer.** Phase 7
+(production hardening) + Phase 6 (webmaster layer) closed.
+Specs 01-07 all Implemented. Highlights:
+
+- 8-layer security model + rotation + smoke test + pentest record.
+- 14 Claude Code skills covering content, design, marketing, SEO,
+  Divi authoring, infrastructure operations, smoke testing,
+  production deployment, per-site context discovery, scheduled
+  routines, status reporting.
+- Per-site context module so multi-operator setups share a curated
+  brand brief.
+- French localisation complete.
+
+Tracking: [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md);
+pentest: [`docs/pentest-2026-05-25.md`](docs/pentest-2026-05-25.md);
 history: [`CHANGELOG.md`](CHANGELOG.md).
 
 Validated end-to-end on a local WordPress 7.0 + Divi 5 site. Run the

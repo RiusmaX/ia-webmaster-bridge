@@ -34674,6 +34674,38 @@ function registerThemes(server, client) {
     async (args) => toToolResult("themes/update", await client.post("/themes/update", args))
   );
 }
+function registerContext(server, client) {
+  server.registerTool(
+    "iawm_site_context_get",
+    {
+      title: "Read the per-site context",
+      description: "Returns the site-specific knowledge stored on the site: brand voice, audience, do/don't lists, editorial defaults (status, language, naming, main CTA), design notes (palette summary, fonts, patterns used), infrastructure preferences (plugins required / forbidden), and free-form notes. Call this FIRST when starting work on a site \u2014 it's the operator's 'how to act here' brief. Returns `populated: false` on a brand-new site that hasn't been configured yet.",
+      inputSchema: {}
+    },
+    async () => toToolResult("site-context/get", await client.post("/site-context/get", {}))
+  );
+  server.registerTool(
+    "iawm_site_context_update",
+    {
+      title: "Update the per-site context",
+      description: "Merges the provided patch into the stored site context. Section-level merge (brand / content / design / infrastructure / notes); list fields (do_list, dont_list, patterns_used, plugins_required, plugins_forbidden) are REPLACED wholesale (so the caller controls membership). dry_run=true previews the diff. Write scope: config:write.",
+      inputSchema: {
+        context: external_exports.record(external_exports.string(), external_exports.unknown()).describe("Partial context patch \u2014 see iawm_site_context_get for the shape."),
+        dry_run: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("site-context/update", await client.post("/site-context/update", args))
+  );
+  server.registerTool(
+    "iawm_site_context_clear",
+    {
+      title: "Clear the per-site context",
+      description: "Wipes the stored context back to defaults (empty shape). Useful when transferring a site between owners or when the brand has fully changed. Pass nothing \u2014 confirmation lives in the admin UI.",
+      inputSchema: {}
+    },
+    async () => toToolResult("site-context/clear", await client.post("/site-context/clear", {}))
+  );
+}
 function registerBackup(server, client) {
   server.registerTool(
     "iawm_backup_list",
@@ -34765,6 +34797,7 @@ function registerTools(server, client) {
   registerSeo(server, client);
   registerDivi(server, client);
   registerBackup(server, client);
+  registerContext(server, client);
 }
 
 // src/index.ts

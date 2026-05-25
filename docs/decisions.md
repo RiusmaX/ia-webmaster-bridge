@@ -459,6 +459,37 @@ new one.
   add user-visible strings must update the `.pot` or at minimum
   flag the strings as added so the next release can regenerate it.
 
+## D-024 — Per-site context as a server-side WP option, not a per-operator file
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: spec 07 calls for a "per-site context file" that
+  describes the site so Claude can act as a competent webmaster on
+  it. Two natural homes were considered: (a) a markdown file on each
+  operator's machine (e.g. under `~/.iawm/site-context/<site>.md`),
+  or (b) a single WP option that every operator and every Claude
+  session sees.
+- **Decision**: option (b). Store the structured context in
+  `iawm_site_context` — a single WP option, accessed by the new
+  `IAWM_Context` module via `/site-context/{get,update,clear}`. The
+  context follows the SITE, not the operator's workstation.
+- **Consequences**:
+  - Multi-operator setups share the same brand brief without
+    coordinating .md files. Adding a second operator (per multi-key
+    workflow) means they inherit the curated context immediately.
+  - The context is editable from the admin (`Settings → IA
+    Webmaster Bridge → Context` tab) so non-Claude users can also
+    curate it.
+  - Backup: the context option is captured automatically by the
+    options-snapshot machinery when relevant settings get touched
+    — no separate backup path needed.
+  - Trade-off: the operator loses the ability to keep
+    site-specific notes "off the server". For sensitive notes,
+    the operator can still keep a private file outside the API
+    surface — the API context is for things the team agrees on.
+- **Implementation**: `IAWM_Context` module + `iawm_site_context_*`
+  MCP tools + admin tab + `site-context-discovery` skill that
+  bootstraps the context from observable signals on a fresh install.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

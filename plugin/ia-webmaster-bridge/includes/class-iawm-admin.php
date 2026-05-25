@@ -3,9 +3,9 @@
  * Admin interface for the IA Webmaster Bridge plugin.
  *
  * "Settings -> IA Webmaster Bridge" page. Multi-tab UI redesigned in
- * Phase 7.4 — status bar at the top, six tabs (Keys / Agent /
- * Security / Cleanup / Audit / Tools), card layout, danger zone
- * visually separated.
+ * Phase 7.4 — status bar at the top, seven tabs (Keys / Agent /
+ * Security / Cleanup / Context / Audit / Tools), card layout, danger
+ * zone visually separated.
  *
  * @package IA_Webmaster_Bridge
  */
@@ -39,6 +39,7 @@ class IAWM_Admin {
 			'agent'    => array( 'label' => __( 'Agent', 'ia-webmaster-bridge' ),     'icon' => '\f110' ), // dashicons-businessman
 			'security' => array( 'label' => __( 'Security', 'ia-webmaster-bridge' ),  'icon' => '\f332' ), // dashicons-shield
 			'cleanup'  => array( 'label' => __( 'Cleanup', 'ia-webmaster-bridge' ),   'icon' => '\f182' ), // dashicons-trash
+			'context'  => array( 'label' => __( 'Context', 'ia-webmaster-bridge' ),   'icon' => '\f163' ), // dashicons-book
 			'audit'    => array( 'label' => __( 'Audit log', 'ia-webmaster-bridge' ), 'icon' => '\f105' ), // dashicons-list-view
 			'tools'    => array( 'label' => __( 'Tools', 'ia-webmaster-bridge' ),     'icon' => '\f308' ), // dashicons-admin-tools
 		);
@@ -279,6 +280,69 @@ class IAWM_Admin {
 				$notice  = 'backups_pruned';
 				$args['pruned'] = (int) $deleted;
 				break;
+
+			case 'save_context':
+				$patch = array(
+					'brand'          => array(
+						'name'      => isset( $_POST['iawm_ctx_brand_name'] ) ? sanitize_text_field( wp_unslash( $_POST['iawm_ctx_brand_name'] ) ) : '',
+						'tagline'   => isset( $_POST['iawm_ctx_brand_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['iawm_ctx_brand_tagline'] ) ) : '',
+						'voice'     => isset( $_POST['iawm_ctx_brand_voice'] ) ? sanitize_textarea_field( wp_unslash( $_POST['iawm_ctx_brand_voice'] ) ) : '',
+						'audience'  => isset( $_POST['iawm_ctx_brand_audience'] ) ? sanitize_textarea_field( wp_unslash( $_POST['iawm_ctx_brand_audience'] ) ) : '',
+						'do_list'   => self::lines_to_list( isset( $_POST['iawm_ctx_brand_do_list'] ) ? (string) wp_unslash( $_POST['iawm_ctx_brand_do_list'] ) : '' ),
+						'dont_list' => self::lines_to_list( isset( $_POST['iawm_ctx_brand_dont_list'] ) ? (string) wp_unslash( $_POST['iawm_ctx_brand_dont_list'] ) : '' ),
+					),
+					'content'        => array(
+						'default_status'         => isset( $_POST['iawm_ctx_content_default_status'] ) ? sanitize_key( wp_unslash( $_POST['iawm_ctx_content_default_status'] ) ) : 'draft',
+						'default_language'       => isset( $_POST['iawm_ctx_content_default_language'] ) ? sanitize_text_field( wp_unslash( $_POST['iawm_ctx_content_default_language'] ) ) : '',
+						'page_naming_convention' => isset( $_POST['iawm_ctx_content_page_naming_convention'] ) ? sanitize_text_field( wp_unslash( $_POST['iawm_ctx_content_page_naming_convention'] ) ) : '',
+						'homepage_pattern'       => isset( $_POST['iawm_ctx_content_homepage_pattern'] ) ? sanitize_textarea_field( wp_unslash( $_POST['iawm_ctx_content_homepage_pattern'] ) ) : '',
+						'main_cta'               => array(
+							'label' => isset( $_POST['iawm_ctx_content_main_cta_label'] ) ? sanitize_text_field( wp_unslash( $_POST['iawm_ctx_content_main_cta_label'] ) ) : '',
+							'url'   => isset( $_POST['iawm_ctx_content_main_cta_url'] ) ? esc_url_raw( wp_unslash( $_POST['iawm_ctx_content_main_cta_url'] ) ) : '',
+						),
+					),
+					'design'         => array(
+						'palette_summary' => isset( $_POST['iawm_ctx_design_palette_summary'] ) ? sanitize_textarea_field( wp_unslash( $_POST['iawm_ctx_design_palette_summary'] ) ) : '',
+						'fonts_summary'   => isset( $_POST['iawm_ctx_design_fonts_summary'] ) ? sanitize_textarea_field( wp_unslash( $_POST['iawm_ctx_design_fonts_summary'] ) ) : '',
+						'patterns_used'   => self::lines_to_list( isset( $_POST['iawm_ctx_design_patterns_used'] ) ? (string) wp_unslash( $_POST['iawm_ctx_design_patterns_used'] ) : '' ),
+					),
+					'infrastructure' => array(
+						'plugins_required'  => self::lines_to_list( isset( $_POST['iawm_ctx_infra_plugins_required'] ) ? (string) wp_unslash( $_POST['iawm_ctx_infra_plugins_required'] ) : '' ),
+						'plugins_forbidden' => self::lines_to_list( isset( $_POST['iawm_ctx_infra_plugins_forbidden'] ) ? (string) wp_unslash( $_POST['iawm_ctx_infra_plugins_forbidden'] ) : '' ),
+						'environment_note'  => isset( $_POST['iawm_ctx_infra_environment_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['iawm_ctx_infra_environment_note'] ) ) : '',
+					),
+					'notes'          => isset( $_POST['iawm_ctx_notes'] ) ? (string) wp_unslash( $_POST['iawm_ctx_notes'] ) : '',
+				);
+
+				// Normalize default_status against a small whitelist.
+				$allowed_statuses = array( 'draft', 'pending', 'publish' );
+				if ( ! in_array( $patch['content']['default_status'], $allowed_statuses, true ) ) {
+					$patch['content']['default_status'] = 'draft';
+				}
+
+				$current = IAWM_Context::get_context();
+				$merged  = array_replace_recursive( $current, $patch );
+				$merged['version']    = IAWM_Context::SCHEMA_VERSION;
+				$merged['updated_at'] = gmdate( 'c' );
+				$current_user         = wp_get_current_user();
+				$merged['updated_by'] = ( $current_user instanceof WP_User && $current_user->user_login )
+					? 'admin:' . $current_user->user_login
+					: 'admin';
+
+				// array_replace_recursive merges list arrays element-by-element, which would
+				// keep stale tail items when the new list is shorter. Force the list fields
+				// to the freshly-submitted values.
+				$merged['brand']['do_list']                  = $patch['brand']['do_list'];
+				$merged['brand']['dont_list']                = $patch['brand']['dont_list'];
+				$merged['design']['patterns_used']           = $patch['design']['patterns_used'];
+				$merged['infrastructure']['plugins_required']  = $patch['infrastructure']['plugins_required'];
+				$merged['infrastructure']['plugins_forbidden'] = $patch['infrastructure']['plugins_forbidden'];
+				$merged['notes']                             = $patch['notes'];
+
+				update_option( IAWM_Context::OPTION_KEY, $merged, false );
+				$notice = 'context_saved';
+				$tab    = 'context';
+				break;
 		}
 
 		$args['page']        = self::PAGE_SLUG;
@@ -328,6 +392,7 @@ class IAWM_Admin {
 					case 'agent':    self::render_tab_agent();    break;
 					case 'security': self::render_tab_security(); break;
 					case 'cleanup':  self::render_tab_cleanup();  break;
+					case 'context':  self::render_tab_context();  break;
 					case 'audit':    self::render_tab_audit();    break;
 					case 'tools':    self::render_tab_tools();    break;
 					case 'keys':
@@ -873,6 +938,221 @@ class IAWM_Admin {
 	}
 
 	/* ----------------------------------------------------------------- */
+	/* Tab: context                                                       */
+	/* ----------------------------------------------------------------- */
+
+	private static function render_tab_context() {
+		$ctx          = IAWM_Context::get_context();
+		$is_populated = IAWM_Context::is_populated();
+		$brand        = isset( $ctx['brand'] ) && is_array( $ctx['brand'] ) ? $ctx['brand'] : array();
+		$content      = isset( $ctx['content'] ) && is_array( $ctx['content'] ) ? $ctx['content'] : array();
+		$design       = isset( $ctx['design'] ) && is_array( $ctx['design'] ) ? $ctx['design'] : array();
+		$infra        = isset( $ctx['infrastructure'] ) && is_array( $ctx['infrastructure'] ) ? $ctx['infrastructure'] : array();
+		$notes        = isset( $ctx['notes'] ) ? (string) $ctx['notes'] : '';
+		$main_cta     = isset( $content['main_cta'] ) && is_array( $content['main_cta'] ) ? $content['main_cta'] : array();
+
+		$do_list_str           = isset( $brand['do_list'] ) && is_array( $brand['do_list'] ) ? implode( "\n", $brand['do_list'] ) : '';
+		$dont_list_str         = isset( $brand['dont_list'] ) && is_array( $brand['dont_list'] ) ? implode( "\n", $brand['dont_list'] ) : '';
+		$patterns_used_str     = isset( $design['patterns_used'] ) && is_array( $design['patterns_used'] ) ? implode( "\n", $design['patterns_used'] ) : '';
+		$plugins_required_str  = isset( $infra['plugins_required'] ) && is_array( $infra['plugins_required'] ) ? implode( "\n", $infra['plugins_required'] ) : '';
+		$plugins_forbidden_str = isset( $infra['plugins_forbidden'] ) && is_array( $infra['plugins_forbidden'] ) ? implode( "\n", $infra['plugins_forbidden'] ) : '';
+
+		$default_status = isset( $content['default_status'] ) ? (string) $content['default_status'] : 'draft';
+		$status_options = array(
+			'draft'   => __( 'Draft', 'ia-webmaster-bridge' ),
+			'pending' => __( 'Pending review', 'ia-webmaster-bridge' ),
+			'publish' => __( 'Publish', 'ia-webmaster-bridge' ),
+		);
+		?>
+		<p style="margin-top:0;color:#646970;">
+			<?php
+			echo wp_kses(
+				/* translators: <code> tags wrap a function name; left verbatim. */
+				__( 'Site-wide knowledge Claude reads before acting on this site — brand voice, editorial defaults, design notes, infrastructure preferences. Stored in the <code>iawm_site_context</code> option and exposed through the <code>/site-context/get</code> endpoint.', 'ia-webmaster-bridge' ),
+				array( 'code' => array() )
+			);
+			?>
+		</p>
+
+		<?php if ( $is_populated && ( ! empty( $ctx['updated_at'] ) || ! empty( $ctx['updated_by'] ) ) ) : ?>
+			<p style="font-size:12px;color:#646970;margin:0 0 16px;">
+				<?php
+				$updated_at = ! empty( $ctx['updated_at'] ) ? (string) $ctx['updated_at'] : '';
+				$updated_by = ! empty( $ctx['updated_by'] ) ? (string) $ctx['updated_by'] : '';
+				if ( '' !== $updated_at && '' !== $updated_by ) {
+					printf(
+						/* translators: 1: ISO timestamp, 2: identifier of the last editor (admin login or API key id). */
+						esc_html__( 'Last updated %1$s by %2$s', 'ia-webmaster-bridge' ),
+						'<code>' . esc_html( $updated_at ) . '</code>',
+						'<code>' . esc_html( $updated_by ) . '</code>'
+					);
+				} elseif ( '' !== $updated_at ) {
+					printf(
+						/* translators: %s: ISO timestamp of last update. */
+						esc_html__( 'Last updated %s', 'ia-webmaster-bridge' ),
+						'<code>' . esc_html( $updated_at ) . '</code>'
+					);
+				}
+				?>
+			</p>
+		<?php endif; ?>
+
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
+			<input type="hidden" name="iawm_tab" value="context">
+			<?php wp_nonce_field( self::ACTION ); ?>
+
+			<div class="iawm-card">
+				<h2 class="iawm-card-title"><?php esc_html_e( 'Brand', 'ia-webmaster-bridge' ); ?></h2>
+				<p class="iawm-card-help"><?php esc_html_e( 'Who you are, who you talk to, and how. Claude reads this before writing any copy.', 'ia-webmaster-bridge' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="iawm_ctx_brand_name"><?php esc_html_e( 'Name', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><input id="iawm_ctx_brand_name" type="text" class="regular-text" name="iawm_ctx_brand_name" value="<?php echo esc_attr( $brand['name'] ?? '' ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_brand_tagline"><?php esc_html_e( 'Tagline', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><input id="iawm_ctx_brand_tagline" type="text" class="large-text" name="iawm_ctx_brand_tagline" value="<?php echo esc_attr( $brand['tagline'] ?? '' ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_brand_voice"><?php esc_html_e( 'Voice', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_brand_voice" name="iawm_ctx_brand_voice" rows="3" class="large-text"><?php echo esc_textarea( $brand['voice'] ?? '' ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Editorial tone — concise, formal, playful, expert…', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_brand_audience"><?php esc_html_e( 'Audience', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_brand_audience" name="iawm_ctx_brand_audience" rows="3" class="large-text"><?php echo esc_textarea( $brand['audience'] ?? '' ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Primary persona(s) — who the content is for.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_brand_do_list"><?php esc_html_e( 'Do list', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_brand_do_list" name="iawm_ctx_brand_do_list" rows="5" class="large-text"><?php echo esc_textarea( $do_list_str ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'One editorial "do" per line.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_brand_dont_list"><?php esc_html_e( 'Don\'t list', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_brand_dont_list" name="iawm_ctx_brand_dont_list" rows="5" class="large-text"><?php echo esc_textarea( $dont_list_str ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'One editorial "don\'t" per line.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="iawm-card">
+				<h2 class="iawm-card-title"><?php esc_html_e( 'Content', 'ia-webmaster-bridge' ); ?></h2>
+				<p class="iawm-card-help"><?php esc_html_e( 'Editorial defaults applied to new pages and posts.', 'ia-webmaster-bridge' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="iawm_ctx_content_default_status"><?php esc_html_e( 'Default status', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<select id="iawm_ctx_content_default_status" name="iawm_ctx_content_default_status">
+								<?php foreach ( $status_options as $value => $label ) : ?>
+									<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $default_status, $value ); ?>><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description"><?php esc_html_e( 'Status applied when Claude creates a new page or post.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_content_default_language"><?php esc_html_e( 'Default language', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<input id="iawm_ctx_content_default_language" type="text" class="regular-text" name="iawm_ctx_content_default_language" value="<?php echo esc_attr( $content['default_language'] ?? '' ); ?>" placeholder="fr-FR">
+							<p class="description"><?php esc_html_e( 'BCP-47 tag (e.g. fr-FR, en-US). Leave empty to let the caller decide.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_content_page_naming_convention"><?php esc_html_e( 'Page naming convention', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><input id="iawm_ctx_content_page_naming_convention" type="text" class="large-text" name="iawm_ctx_content_page_naming_convention" value="<?php echo esc_attr( $content['page_naming_convention'] ?? '' ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_content_homepage_pattern"><?php esc_html_e( 'Homepage pattern', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_content_homepage_pattern" name="iawm_ctx_content_homepage_pattern" rows="3" class="large-text"><?php echo esc_textarea( $content['homepage_pattern'] ?? '' ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Free-form summary of the homepage layout.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_content_main_cta_label"><?php esc_html_e( 'Main CTA — label', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><input id="iawm_ctx_content_main_cta_label" type="text" class="regular-text" name="iawm_ctx_content_main_cta_label" value="<?php echo esc_attr( $main_cta['label'] ?? '' ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_content_main_cta_url"><?php esc_html_e( 'Main CTA — URL', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><input id="iawm_ctx_content_main_cta_url" type="url" class="large-text" name="iawm_ctx_content_main_cta_url" value="<?php echo esc_attr( $main_cta['url'] ?? '' ); ?>" placeholder="https://"></td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="iawm-card">
+				<h2 class="iawm-card-title"><?php esc_html_e( 'Design', 'ia-webmaster-bridge' ); ?></h2>
+				<p class="iawm-card-help"><?php esc_html_e( 'High-level design notes — the source of truth for actual values lives in Divi global data.', 'ia-webmaster-bridge' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="iawm_ctx_design_palette_summary"><?php esc_html_e( 'Palette summary', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><textarea id="iawm_ctx_design_palette_summary" name="iawm_ctx_design_palette_summary" rows="3" class="large-text"><?php echo esc_textarea( $design['palette_summary'] ?? '' ); ?></textarea></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_design_fonts_summary"><?php esc_html_e( 'Fonts summary', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><textarea id="iawm_ctx_design_fonts_summary" name="iawm_ctx_design_fonts_summary" rows="3" class="large-text"><?php echo esc_textarea( $design['fonts_summary'] ?? '' ); ?></textarea></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_design_patterns_used"><?php esc_html_e( 'Patterns used', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_design_patterns_used" name="iawm_ctx_design_patterns_used" rows="5" class="large-text"><?php echo esc_textarea( $patterns_used_str ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'One Divi pattern name per line (e.g. hero, features3col, pricing).', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="iawm-card">
+				<h2 class="iawm-card-title"><?php esc_html_e( 'Infrastructure', 'ia-webmaster-bridge' ); ?></h2>
+				<p class="iawm-card-help"><?php esc_html_e( 'Operational preferences and constraints for this site.', 'ia-webmaster-bridge' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="iawm_ctx_infra_plugins_required"><?php esc_html_e( 'Required plugins', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_infra_plugins_required" name="iawm_ctx_infra_plugins_required" rows="5" class="large-text code"><?php echo esc_textarea( $plugins_required_str ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'One plugin slug per line — Claude should keep these active.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_infra_plugins_forbidden"><?php esc_html_e( 'Forbidden plugins', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_infra_plugins_forbidden" name="iawm_ctx_infra_plugins_forbidden" rows="5" class="large-text code"><?php echo esc_textarea( $plugins_forbidden_str ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'One plugin slug per line — Claude must never install these.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_ctx_infra_environment_note"><?php esc_html_e( 'Environment note', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<textarea id="iawm_ctx_infra_environment_note" name="iawm_ctx_infra_environment_note" rows="3" class="large-text"><?php echo esc_textarea( $infra['environment_note'] ?? '' ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Hosting context — e.g. "shared host, no shell access", "LocalWP only".', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="iawm-card">
+				<h2 class="iawm-card-title"><?php esc_html_e( 'Notes', 'ia-webmaster-bridge' ); ?></h2>
+				<p class="iawm-card-help"><?php esc_html_e( 'Free-form Markdown — anything else Claude should know about this site.', 'ia-webmaster-bridge' ); ?></p>
+				<textarea id="iawm_ctx_notes" name="iawm_ctx_notes" rows="10" class="large-text" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px;"><?php echo esc_textarea( $notes ); ?></textarea>
+			</div>
+
+			<p>
+				<button type="submit" name="iawm_op" value="save_context" class="button button-primary"><?php esc_html_e( 'Save site context', 'ia-webmaster-bridge' ); ?></button>
+			</p>
+		</form>
+		<?php
+	}
+
+	/* ----------------------------------------------------------------- */
 	/* Tab: audit                                                         */
 	/* ----------------------------------------------------------------- */
 
@@ -980,6 +1260,32 @@ class IAWM_Admin {
 	/* ----------------------------------------------------------------- */
 	/* Helpers                                                            */
 	/* ----------------------------------------------------------------- */
+
+	/**
+	 * Splits a raw textarea string into a clean list — one trimmed,
+	 * non-empty value per line. Used by the Context tab for fields like
+	 * do_list, dont_list, patterns_used, plugins_required, plugins_forbidden.
+	 *
+	 * @param string $raw Raw textarea payload (already unslashed).
+	 * @return array<int,string>
+	 */
+	private static function lines_to_list( $raw ) {
+		if ( ! is_string( $raw ) || '' === $raw ) {
+			return array();
+		}
+		$lines = preg_split( '/\r\n|\r|\n/', $raw );
+		if ( ! is_array( $lines ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( $lines as $line ) {
+			$line = trim( (string) $line );
+			if ( '' !== $line ) {
+				$out[] = $line;
+			}
+		}
+		return array_values( $out );
+	}
 
 	/**
 	 * Maps a key entry to a status CSS class.
@@ -1117,6 +1423,7 @@ class IAWM_Admin {
 					$pruned
 				),
 			),
+			'context_saved'     => array( 'success', __( 'Site context saved.', 'ia-webmaster-bridge' ) ),
 		);
 
 		if ( ! isset( $messages[ $notice ] ) ) {

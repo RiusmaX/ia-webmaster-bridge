@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       IA Webmaster Bridge
  * Description:       Adapter that lets an AI (Claude) act as a webmaster on this WordPress site. Exposes a controlled, signed REST API under the ia-webmaster/v1 namespace.
- * Version:           1.0.1
+ * Version:           1.1.0
  * Requires at least: 7.0
  * Requires PHP:      7.4
  * Author:            Marius Sergent
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'IAWM_VERSION', '1.0.1' );
+define( 'IAWM_VERSION', '1.1.0' );
 define( 'IAWM_REST_NAMESPACE', 'ia-webmaster/v1' );
 define( 'IAWM_PLUGIN_FILE', __FILE__ );
 define( 'IAWM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -62,6 +62,7 @@ require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-themes.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-core.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-database.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-cron.php';
+require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-context.php';
 
 // Database schema creation / migration on plugin activation.
 register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Audit', 'maybe_upgrade' ) );
@@ -88,6 +89,7 @@ IAWM_Themes::init();
 IAWM_Core::init();
 IAWM_Database::init();
 IAWM_Cron::init();
+IAWM_Context::init();
 IAWM_Seo::init();
 IAWM_Divi::init();
 IAWM_Divi_Theme_Builder::init();

@@ -79,7 +79,7 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] Key rotation procedure documented (`docs/operations.md`)
 - [x] Penetration test checklist documented (`docs/operations.md`); execution still owed before next public release
 
-## Phase 6 — Webmaster layer
+## Phase 6 — Webmaster layer *(complete — v1.1.0)*
 
 - [x] Base Claude Code skills (webmaster, create page, audit)
 - [x] Packaged as a Claude Code plugin + open-source release (GitHub, GPL-3.0)
@@ -88,10 +88,13 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] `seo-wordpress` skill (SEO audit, Rank Math, semantic structure)
 - [x] `create-divi-page` skill (prompt → full Divi page workflow)
 - [x] Normalized SEO API with Rank Math backend
-- [ ] Yoast SEO backend as an alternative (#33)
-- [ ] Per-site context file
-- [ ] Documented webmaster workflows
-- [ ] Possible scheduled routines
+- [ ] Yoast SEO backend as an alternative (#33 — deferred to Phase 8)
+- [x] **Per-site context module** (`IAWM_Context`, `/site-context/*`, admin "Context" tab) — v1.1.0
+- [x] 4 workflow skills: `safe-plugin-update`, `design-system-first`, `site-smoke-test`, `prod-deployment-checklist` — v1.0.0
+- [x] `site-context-discovery` skill (bootstraps the context from observable signals) — v1.1.0
+- [x] `site-status-report` skill (compiled health + content + audit + updates report) — v1.1.0
+- [x] `scheduled-routines` skill (programs periodic checks via the cron module) — v1.1.0
+- [ ] Broken-links scanner — deferred to Phase 8
 
 ## Phase 7 — Production hardening (in progress, target v1.0.0)
 
