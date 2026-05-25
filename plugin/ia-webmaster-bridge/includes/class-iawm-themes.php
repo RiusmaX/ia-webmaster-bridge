@@ -100,7 +100,7 @@ class IAWM_Themes {
 		$slug   = isset( $params['slug'] ) ? (string) $params['slug'] : '';
 
 		if ( ! self::is_valid_slug( $slug ) ) {
-			return IAWM_Support::rest_error( 'invalid_slug', 'Invalid slug.', 400 );
+			return IAWM_Support::rest_error( 'invalid_slug', __( 'Invalid slug.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! function_exists( 'themes_api' ) ) {
@@ -218,7 +218,7 @@ class IAWM_Themes {
 		$activate = ! empty( $params['activate'] );
 
 		if ( ! self::is_valid_slug( $slug ) ) {
-			return IAWM_Support::rest_error( 'invalid_slug', 'Invalid slug.', 400 );
+			return IAWM_Support::rest_error( 'invalid_slug', __( 'Invalid slug.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -230,7 +230,12 @@ class IAWM_Themes {
 		$pre_backup = empty( $params['skip_backup'] )
 			? IAWM_Backup::snapshot_options(
 				self::theme_option_keys_to_snapshot( $slug ),
-				"Before theme install: {$slug}" . ( $activate ? ' (+activate)' : '' ),
+				sprintf(
+					/* translators: 1: theme slug. 2: optional " (+activate)" suffix. */
+					__( 'Before theme install: %1$s%2$s', 'ia-webmaster-bridge' ),
+					$slug,
+					$activate ? __( ' (+activate)', 'ia-webmaster-bridge' ) : ''
+				),
 				(string) $request->get_route()
 			)
 			: null;
@@ -250,7 +255,7 @@ class IAWM_Themes {
 		}
 
 		if ( empty( $info->download_link ) ) {
-			return IAWM_Support::rest_error( 'no_download_link', 'No download link.', 502 );
+			return IAWM_Support::rest_error( 'no_download_link', __( 'No download link.', 'ia-webmaster-bridge' ), 502 );
 		}
 
 		// Already installed?
@@ -278,7 +283,7 @@ class IAWM_Themes {
 			}
 			if ( false === $res ) {
 				$messages = $skin->get_error_messages();
-				return IAWM_Support::rest_error( 'install_failed', $messages ? implode( ' ; ', $messages ) : 'Installation failed.', 500, $result );
+				return IAWM_Support::rest_error( 'install_failed', $messages ? implode( ' ; ', $messages ) : __( 'Installation failed.', 'ia-webmaster-bridge' ), 500, $result );
 			}
 
 			$result['installed'] = true;
@@ -288,10 +293,10 @@ class IAWM_Themes {
 		if ( $activate ) {
 			$candidate = wp_get_theme( $slug );
 			if ( ! $candidate->exists() ) {
-				return IAWM_Support::rest_error( 'theme_missing_after_install', 'Theme not found after install.', 500, $result );
+				return IAWM_Support::rest_error( 'theme_missing_after_install', __( 'Theme not found after install.', 'ia-webmaster-bridge' ), 500, $result );
 			}
 			if ( ! $candidate->is_allowed() ) {
-				return IAWM_Support::rest_error( 'theme_not_allowed', 'Theme is not allowed on this site.', 403, $result );
+				return IAWM_Support::rest_error( 'theme_not_allowed', __( 'Theme is not allowed on this site.', 'ia-webmaster-bridge' ), 403, $result );
 			}
 			switch_theme( $slug );
 			$result['activated'] = ( get_stylesheet() === $slug );
@@ -317,15 +322,20 @@ class IAWM_Themes {
 		$stylesheet = isset( $params['stylesheet'] ) ? (string) $params['stylesheet'] : '';
 
 		if ( '' === $stylesheet || ! self::is_valid_slug( $stylesheet ) ) {
-			return IAWM_Support::rest_error( 'invalid_stylesheet', 'Invalid or missing stylesheet.', 400 );
+			return IAWM_Support::rest_error( 'invalid_stylesheet', __( 'Invalid or missing stylesheet.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$candidate = wp_get_theme( $stylesheet );
 		if ( ! $candidate->exists() ) {
-			return IAWM_Support::rest_error( 'theme_not_installed', "Theme '{$stylesheet}' is not installed.", 404 );
+			return IAWM_Support::rest_error(
+				'theme_not_installed',
+				/* translators: %s: theme stylesheet slug. */
+				sprintf( __( "Theme '%s' is not installed.", 'ia-webmaster-bridge' ), $stylesheet ),
+				404
+			);
 		}
 		if ( ! $candidate->is_allowed() ) {
-			return IAWM_Support::rest_error( 'theme_not_allowed', 'Theme is not allowed on this site.', 403 );
+			return IAWM_Support::rest_error( 'theme_not_allowed', __( 'Theme is not allowed on this site.', 'ia-webmaster-bridge' ), 403 );
 		}
 
 		// No-op if already active.
@@ -344,7 +354,11 @@ class IAWM_Themes {
 		$pre_backup = empty( $params['skip_backup'] )
 			? IAWM_Backup::snapshot_options(
 				self::theme_option_keys_to_snapshot( $stylesheet ),
-				"Before theme activate: {$stylesheet}",
+				sprintf(
+					/* translators: %s: theme stylesheet slug. */
+					__( 'Before theme activate: %s', 'ia-webmaster-bridge' ),
+					$stylesheet
+				),
 				(string) $request->get_route()
 			)
 			: null;
@@ -380,12 +394,17 @@ class IAWM_Themes {
 		$stylesheet = isset( $params['stylesheet'] ) ? (string) $params['stylesheet'] : '';
 
 		if ( '' === $stylesheet || ! self::is_valid_slug( $stylesheet ) ) {
-			return IAWM_Support::rest_error( 'invalid_stylesheet', 'Invalid or missing stylesheet.', 400 );
+			return IAWM_Support::rest_error( 'invalid_stylesheet', __( 'Invalid or missing stylesheet.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$theme = wp_get_theme( $stylesheet );
 		if ( ! $theme->exists() ) {
-			return IAWM_Support::rest_error( 'theme_not_installed', "Theme '{$stylesheet}' is not installed.", 404 );
+			return IAWM_Support::rest_error(
+				'theme_not_installed',
+				/* translators: %s: theme stylesheet slug. */
+				sprintf( __( "Theme '%s' is not installed.", 'ia-webmaster-bridge' ), $stylesheet ),
+				404
+			);
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -413,7 +432,12 @@ class IAWM_Themes {
 		$pre_backup = empty( $params['skip_backup'] )
 			? IAWM_Backup::snapshot_options(
 				self::theme_option_keys_to_snapshot( $stylesheet ),
-				"Before theme update: {$stylesheet} -> {$updates}",
+				sprintf(
+					/* translators: 1: theme stylesheet slug. 2: target version string. */
+					__( 'Before theme update: %1$s -> %2$s', 'ia-webmaster-bridge' ),
+					$stylesheet,
+					$updates
+				),
 				(string) $request->get_route()
 			)
 			: null;
@@ -429,7 +453,7 @@ class IAWM_Themes {
 		}
 		if ( false === $res ) {
 			$messages = $skin->get_error_messages();
-			return IAWM_Support::rest_error( 'update_failed', $messages ? implode( ' ; ', $messages ) : 'Update failed.', 500 );
+			return IAWM_Support::rest_error( 'update_failed', $messages ? implode( ' ; ', $messages ) : __( 'Update failed.', 'ia-webmaster-bridge' ), 500 );
 		}
 
 		// Re-read the theme to get the new version.

@@ -824,7 +824,7 @@ class IAWM_Divi {
 		$rejected = array();
 		foreach ( $branding as $key => $value ) {
 			if ( ! in_array( $key, $allow, true ) ) {
-				$rejected[ $key ] = 'Not in the branding allow-list.';
+				$rejected[ $key ] = __( 'Not in the branding allow-list.', 'ia-webmaster-bridge' );
 				continue;
 			}
 			// URL-like keys should be a URL string (or empty to clear).
@@ -838,7 +838,11 @@ class IAWM_Divi {
 		if ( empty( $applied ) ) {
 			return IAWM_Support::rest_error(
 				'iawm_no_valid_branding',
-				'No valid branding key to apply. Rejected: ' . implode( ', ', array_keys( $rejected ) ) . '.',
+				sprintf(
+					/* translators: %s: comma-separated list of rejected branding keys. */
+					__( 'No valid branding key to apply. Rejected: %s.', 'ia-webmaster-bridge' ),
+					implode( ', ', array_keys( $rejected ) )
+				),
 				400,
 				array( 'rejected' => $rejected )
 			);
@@ -867,7 +871,11 @@ class IAWM_Divi {
 		$pre_backup = empty( $params['skip_backup'] ) && class_exists( 'IAWM_Backup' )
 			? IAWM_Backup::snapshot_options(
 				array( 'et_divi' ),
-				'Before branding update: ' . implode( ', ', array_keys( $applied ) ),
+				sprintf(
+					/* translators: %s: comma-separated list of branding keys being updated. */
+					__( 'Before branding update: %s', 'ia-webmaster-bridge' ),
+					implode( ', ', array_keys( $applied ) )
+				),
 				(string) $request->get_route()
 			)
 			: null;
@@ -911,7 +919,7 @@ class IAWM_Divi {
 		unset( $request );
 		$res = self::call_divi_route( '/outside-vb/theme-options/get', 'POST', array() );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'theme_options_get_failed', 'Could not retrieve theme options.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'theme_options_get_failed', __( 'Could not retrieve theme options.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 		return new WP_REST_Response( array( 'ok' => true, 'theme_options' => $res['data'] ), 200 );
 	}
@@ -946,7 +954,7 @@ class IAWM_Divi {
 		$params  = IAWM_Support::json_params( $request );
 		$updates = isset( $params['options'] ) && is_array( $params['options'] ) ? $params['options'] : null;
 		if ( null === $updates || empty( $updates ) ) {
-			return IAWM_Support::rest_error( 'iawm_missing_options', 'Provide a non-empty `options` object.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_options', __( 'Provide a non-empty `options` object.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		// Fetch current options to populate the dry-run diff.
@@ -1032,12 +1040,17 @@ class IAWM_Divi {
 		$dry_run = ! empty( $params['dry_run'] );
 
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', __( 'post_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
+			return IAWM_Support::rest_error(
+				'post_not_found',
+				/* translators: %d: post ID. */
+				sprintf( __( 'Post %d not found.', 'ia-webmaster-bridge' ), $post_id ),
+				404
+			);
 		}
 
 		// Retrieve the content to write according to the format provided.
@@ -1049,7 +1062,7 @@ class IAWM_Divi {
 		} else {
 			return IAWM_Support::rest_error(
 				'missing_payload',
-				'Provide "content" (serialised string) OR "blocks" (array of blocks).',
+				__( 'Provide "content" (serialised string) OR "blocks" (array of blocks).', 'ia-webmaster-bridge' ),
 				400
 			);
 		}
@@ -1060,7 +1073,7 @@ class IAWM_Divi {
 		} ) );
 
 		if ( empty( $real_blocks ) ) {
-			return IAWM_Support::rest_error( 'empty_layout', 'No Divi block detected in the payload.', 400 );
+			return IAWM_Support::rest_error( 'empty_layout', __( 'No Divi block detected in the payload.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		// Check we either have a root placeholder or only divi/ blocks.
@@ -1076,7 +1089,7 @@ class IAWM_Divi {
 		if ( ! $all_divi ) {
 			return IAWM_Support::rest_error(
 				'non_divi_blocks',
-				'The layout contains blocks outside the divi/ namespace.',
+				__( 'The layout contains blocks outside the divi/ namespace.', 'ia-webmaster-bridge' ),
 				400,
 				array( 'detected' => array_map( function( $b ) { return $b['blockName']; }, $real_blocks ) )
 			);

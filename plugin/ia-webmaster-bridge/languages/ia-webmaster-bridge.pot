@@ -4,12 +4,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: IA Webmaster Bridge\n"
 "Report-Msgid-Bugs-To: https://github.com/RiusmaX/ia-webmaster-bridge/issues\n"
-"POT-Creation-Date: 2026-05-25 14:19+0000\n"
+"POT-Creation-Date: 2026-05-25 14:38+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: tools/extract-pot.mjs\n"
 "X-Domain: ia-webmaster-bridge\n"
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:195
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:237
+#. translators: 1: plugin slug. 2: optional " (+activate)" suffix.
+#. translators: 1: theme slug. 2: optional " (+activate)" suffix.
+msgid " (+activate)"
+msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:498
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:582
@@ -67,6 +75,15 @@ msgstr ""
 msgid "🔍 Diagnostics"
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:441
+#. translators: %s: existing default template ID.
+msgid "A default template already exists (id=%s). Pass replace_existing=true to overwrite."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-core.php:245
+msgid "A page reload may be required for WordPress to fully bootstrap on the new version."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:194
 msgid "A title or content is required."
 msgstr ""
@@ -90,6 +107,7 @@ msgid "After clicking Generate, the secret will be shown <strong>once</strong> i
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:39
+#: plugin/ia-webmaster-bridge/includes/class-iawm-agent-user.php:230
 msgid "Agent"
 msgstr ""
 
@@ -122,6 +140,14 @@ msgstr ""
 msgid "API Keys"
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:270
+msgid "Assignment failed."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:427
+msgid "At least one of header / body / footer must be provided."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:42
 msgid "Audit log"
 msgstr ""
@@ -145,9 +171,54 @@ msgstr ""
 msgid "Backups:"
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:876
+#. translators: %s: comma-separated list of branding keys being updated.
+msgid "Before branding update: %s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:303
+#. translators: %s: plugin file (e.g. "akismet/akismet.php").
+msgid "Before plugin activate: %s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:362
+#. translators: %s: plugin file (e.g. "akismet/akismet.php").
+msgid "Before plugin deactivate: %s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:193
+#. translators: 1: plugin slug. 2: optional " (+activate)" suffix.
+msgid "Before plugin install: %1$s%2$s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:437
+#. translators: 1: plugin file. 2: previous version. 3: new version.
+msgid "Before plugin update: %1$s (%2$s -> %3$s)"
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:184
 #. translators: %s: comma-separated list of risky setting keys being changed.
 msgid "Before risky settings update: %s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:359
+#. translators: %s: theme stylesheet slug.
+msgid "Before theme activate: %s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:235
+#. translators: 1: theme slug. 2: optional " (+activate)" suffix.
+msgid "Before theme install: %1$s%2$s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:437
+#. translators: 1: theme stylesheet slug. 2: target version string.
+msgid "Before theme update: %1$s -> %2$s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-core.php:194
+#. translators: 1: current WP version. 2: target WP version.
+msgid "Before WordPress core update: %1$s -> %2$s"
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:696
@@ -156,6 +227,14 @@ msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:678
 msgid "Blocks ALL write requests. Reads remain allowed. Use it during an incident or when you want to pause the agent."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:291
+msgid "Call to divi-library failed."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:348
+msgid "Call to divi-library/item failed."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:96
@@ -170,6 +249,14 @@ msgstr ""
 msgid "Cleanup"
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-settings.php:82
+msgid "Configuration writes (site settings, users)"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-confirmation.php:177
+msgid "Confirmation token missing, expired, mismatched or already used. Re-issue the call without a token to obtain a fresh one."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:160
 #: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:289
 #: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:202
@@ -180,8 +267,24 @@ msgstr ""
 msgid "Content not found: %d."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-settings.php:80
+msgid "Content writes (pages, posts, media, taxonomies, menus, SEO)"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-core.php:233
+msgid "Core update failed."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:286
 msgid "Could not delete the item."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:507
+msgid "Could not retrieve the Divi design system."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:922
+msgid "Could not retrieve theme options."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:556
@@ -210,6 +313,14 @@ msgstr ""
 msgid "Dedicated agent user"
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:412
+msgid "Default Site Template"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:232
+msgid "Deletion failed."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:940
 msgid "Design system"
 msgstr ""
@@ -217,6 +328,16 @@ msgstr ""
 #: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:268
 #. translators: %s: forbidden SQL keyword (e.g. INTO OUTFILE).
 msgid "Disallowed construct in query: %s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:590
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:654
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:727
+msgid "Divi rejected the update."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-settings.php:81
+msgid "Divi writes (pages, Theme Builder)"
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:190
@@ -234,6 +355,28 @@ msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:247
 msgid "Empty SQL."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:535
+msgid "Failed to assign layouts."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:478
+#. translators: 1: layout zone (header/body/footer). 2: error message returned by wp_insert_post().
+msgid "Failed to create %1$s: %2$s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:177
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:496
+msgid "Failed to create template."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:132
+msgid "Failed to list templates."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:206
+msgid "Failed to update template."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:888
@@ -263,8 +406,30 @@ msgstr ""
 msgid "HTTPS enforcement"
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-agent-user.php:229
+msgid "IA Webmaster"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-agent-user.php:227
+#: plugin/ia-webmaster-bridge/includes/class-iawm-agent-user.php:95
+msgid "IA Webmaster Agent"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:337
+msgid "id required."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:660
 msgid "Idempotent: re-registers the role with the current capability set and re-creates the user if it was removed."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-settings.php:83
+msgid "Infrastructure writes (plugins, themes, core, database, backups)"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:245
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:286
+msgid "Installation failed."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-backup.php:808
@@ -281,12 +446,35 @@ msgstr ""
 msgid "Invalid email address."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:286
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:337
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:398
+msgid "Invalid or missing plugin file."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:325
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:397
+msgid "Invalid or missing stylesheet."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:117
 msgid "Invalid signature."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:108
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:178
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:103
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:221
+msgid "Invalid slug."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:100
 msgid "Invalid timestamp."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:278
+#. translators: %s: comma-separated list of valid type values.
+msgid "Invalid type. Expected: %s"
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:904
@@ -357,6 +545,15 @@ msgstr ""
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1014
 #. translators: %s: timestamp at which the API key was last used.
 msgid "Last used at %s"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:364
+#. translators: %d: layout post ID that was not found.
+msgid "Layout %d not found."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-settings.php:110
+msgid "Legacy key"
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:579
@@ -432,8 +629,20 @@ msgstr ""
 msgid "New key created. The secret is shown once in its row below — copy it now, it cannot be displayed again."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:169
+msgid "New Template"
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:724
 msgid "no"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:277
+msgid "No active SEO plugin detected."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:200
+msgid "No active SEO plugin detected. Install Rank Math or Yoast."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:440
@@ -446,12 +655,34 @@ msgstr ""
 msgid "No changes provided."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:1076
+msgid "No Divi block detected in the payload."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:217
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:258
+msgid "No download link."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:894
 msgid "No entries yet."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:260
+msgid "No fields to update."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:468
 msgid "no linked user"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:500
+msgid "No template id returned."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:843
+#. translators: %s: comma-separated list of rejected branding keys.
+msgid "No valid branding key to apply. Rejected: %s."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:151
@@ -465,6 +696,10 @@ msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:166
 msgid "Not a valid IPv4 or IPv6 address."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:827
+msgid "Not in the branding allow-list."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:807
@@ -505,12 +740,62 @@ msgstr ""
 msgid "Operations runbook, security model, design system primer."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:373
+#. translators: 1: post ID. 2: actual post type.
+msgid "Post %1$d is not a Theme Builder layout (type=%2$s)."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:160
+#. translators: %d: post ID.
+msgid "Post %d is not a Divi 5 page (neither meta _et_pb_use_builder=on, nor wp:divi/ blocks detected)."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:1051
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:147
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:191
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:268
+#. translators: %d: post ID.
+msgid "Post %d not found."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:357
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:1043
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:139
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:183
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:257
+msgid "post_id required."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:217
 msgid "Provide 'url' (link) or 'object_id' (content)."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:1065
+msgid "Provide \"content\" (serialised string) OR \"blocks\" (array of blocks)."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:686
+msgid "Provide `global_variables` as an object with keys among numbers, strings, images, links, colors, fonts."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:814
+msgid "Provide a non-empty `branding` object."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:557
+msgid "Provide a non-empty `global_colors` object."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:957
+msgid "Provide a non-empty `options` object."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:170
 msgid "Provide a non-empty `tables` array."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:621
+msgid "Provide at least one of `heading_font` or `body_font`."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:863
@@ -531,6 +816,14 @@ msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:694
 msgid "Re-enable writes"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-confirmation.php:193
+msgid "Re-issue the exact same call with `confirmation_token` set to this value to actually apply the action."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-settings.php:79
+msgid "Read (all GET endpoints, diagnostics, audit log)"
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:883
@@ -665,6 +958,10 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-agent-user.php:232
+msgid "System user under whom the IA Webmaster Bridge adapter performs writes. Do not delete; do not log in. Authentication is HMAC, not WordPress login."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:433
 #. translators: 1: database table name. 2: column name.
 msgid "Target (%1$s, %2$s) is not in the allow-list."
@@ -720,8 +1017,40 @@ msgstr ""
 msgid "The dedicated agent user could not be located. Click below to (re)install."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:343
+msgid "The IA Webmaster Bridge plugin cannot be deactivated via the API."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:404
+msgid "The IA Webmaster Bridge plugin cannot be updated via its own API. Use the WordPress admin instead."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:1092
+msgid "The layout contains blocks outside the divi/ namespace."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:200
 msgid "The URL does not point to a file with a named extension."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:208
+#: plugin/ia-webmaster-bridge/includes/class-iawm-seo.php:284
+msgid "The Yoast backend is not yet implemented (backlog)."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:333
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:405
+#. translators: %s: theme stylesheet slug.
+msgid "Theme '%s' is not installed."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:299
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:338
+msgid "Theme is not allowed on this site."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:296
+msgid "Theme not found after install."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:50
@@ -749,6 +1078,11 @@ msgstr ""
 msgid "Two daily cron jobs trim the audit log and the backup table to the limits below. Defaults: 90 days of audit, 50 backups."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:697
+#. translators: 1: unknown bucket name. 2: comma-separated list of valid buckets.
+msgid "Unknown bucket: %1$s. Use one of: %2$s"
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:95
 msgid "Unknown key identifier."
 msgstr ""
@@ -756,6 +1090,11 @@ msgstr ""
 #: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:320
 #. translators: %s: theme menu-location slug.
 msgid "Unknown menu location: %s."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi.php:134
+#. translators: %s: unsupported "mode" value.
+msgid "Unknown mode: %s."
 msgstr ""
 
 #: plugin/ia-webmaster-bridge/includes/class-iawm-cron.php:248
@@ -788,6 +1127,15 @@ msgstr ""
 msgid "Unsupported status for writing."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-settings.php:238
+msgid "Untitled key"
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-plugins.php:457
+#: plugin/ia-webmaster-bridge/includes/class-iawm-themes.php:456
+msgid "Update failed."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:638
 msgid "User ID"
 msgstr ""
@@ -802,6 +1150,15 @@ msgstr ""
 msgid "When the <code>IAWM_REQUIRE_HTTPS</code> constant is set to <code>true</code> in <code>wp-config.php</code>, non-HTTPS API calls are refused before any signature work. Configuration via a constant (not an admin toggle) prevents a compromised admin from disabling the protection."
 msgstr ""
 
+#: plugin/ia-webmaster-bridge/includes/class-iawm-core.php:148
+#. translators: 1: WordPress target version. 2: required PHP version. 3: current PHP version on the server.
+msgid "WordPress %1$s requires PHP %2$s or higher; this server runs PHP %3$s. Update PHP first."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-core.php:219
+msgid "WordPress did not return an upgrade offer; cannot apply the update."
+msgstr ""
+
 #: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:145
 msgid "Writes are disabled (kill switch on)."
 msgstr ""
@@ -809,3 +1166,63 @@ msgstr ""
 #: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:722
 msgid "yes"
 msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:296
+msgid "zone must be header, body or footer."
+msgstr ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1047
+#. translators: %d: number of days elapsed since the key was last used.
+msgid "%d d ago"
+msgid_plural "%d d ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:393
+#. translators: %d: number of audit log entries.
+msgid "%d entry"
+msgid_plural "%d entries"
+msgstr[0] ""
+msgstr[1] ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1043
+#. translators: %d: number of hours elapsed since the key was last used.
+msgid "%d h ago"
+msgid_plural "%d h ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1038
+#. translators: %d: number of minutes elapsed since the key was last used.
+msgid "%d min ago"
+msgid_plural "%d min ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1108
+#. translators: %d: number of audit-log rows deleted.
+msgid "Audit log pruned: %d row deleted."
+msgid_plural "Audit log pruned: %d rows deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1116
+#. translators: %d: number of backup records deleted.
+msgid "Backups pruned: %d record deleted."
+msgid_plural "Backups pruned: %d records deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:768
+#. translators: %d: number of allow-list entries.
+msgid "Currently %d entry active."
+msgid_plural "Currently %d entries active."
+msgstr[0] ""
+msgstr[1] ""
+
+#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1099
+#. translators: %d: number of invalid allow-list entries that were dropped.
+msgid "IP allow-list saved with %d invalid entry dropped."
+msgid_plural "IP allow-list saved with %d invalid entries dropped."
+msgstr[0] ""
+msgstr[1] ""

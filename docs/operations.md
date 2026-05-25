@@ -1,6 +1,6 @@
 # Operations runbook
 
-> Status: Living · Last updated: 2026-05-25
+> Status: Living · Last updated: 2026-05-25 (added translation workflow)
 
 Documented procedures for the human operator. Each procedure is
 written assuming the plugin and gateway are healthy; if they are not,
@@ -265,3 +265,64 @@ behaviour is in the right column.
 
 If any row in the table above behaves differently, file an issue
 before publishing the release.
+
+---
+
+## Translation workflow
+
+The plugin's user-visible strings are wrapped in WordPress gettext calls
+(`__`, `esc_html__`, `esc_attr__`, `esc_html_e`, `_n`, …) with the
+text-domain `ia-webmaster-bridge`. The `Text Domain` and `Domain Path`
+plugin headers point WordPress at the `languages/` folder, and a
+`plugins_loaded` callback in `ia-webmaster-bridge.php` registers the
+domain via `load_plugin_textdomain()`.
+
+### Source of truth
+
+- `plugin/ia-webmaster-bridge/languages/ia-webmaster-bridge.pot` — the
+  canonical list of English source strings, regenerated from the PHP
+  source by `tools/extract-pot.mjs`.
+- `plugin/ia-webmaster-bridge/languages/ia-webmaster-bridge-fr_FR.po`
+  — the French translation (paired `.mo` shipped alongside).
+
+### Regenerate the `.pot`
+
+```bash
+node tools/extract-pot.mjs
+```
+
+The script walks every `.php` file in the plugin, extracts every call
+whose text domain is `ia-webmaster-bridge`, preserves the
+`/* translators: ... */` comments that document placeholder usage,
+and writes a sorted POT file. Plurals (`_n`) are emitted as
+`msgid` / `msgid_plural` pairs.
+
+### Update an existing locale
+
+1. Re-run `node tools/extract-pot.mjs` to refresh the POT.
+2. Open `ia-webmaster-bridge-<locale>.po` in a translation editor
+   (Poedit, GTranslator, or any text editor) and synchronise the
+   entries against the new POT — add any missing strings, drop any
+   that disappeared.
+3. Recompile the binary `.mo`:
+
+   ```bash
+   node tools/compile-mo.mjs plugin/ia-webmaster-bridge/languages/ia-webmaster-bridge-<locale>.po
+   ```
+
+   That script is a pure-Node implementation of the GNU gettext MO
+   format; no `msgfmt` or wp-cli required. If you do have `msgfmt`
+   handy, `msgfmt path/to/file.po -o path/to/file.mo` is equivalent.
+
+### Add a new locale
+
+1. Pick the locale slug (BCP-47 with a region, e.g. `es_ES`, `de_DE`).
+2. Copy the POT to `ia-webmaster-bridge-<locale>.po`.
+3. Fill in the PO header (`Language:`, `Plural-Forms:`, …) and
+   translate the `msgstr` values.
+4. Compile the `.mo` (see above).
+5. Commit both the `.po` and the `.mo`.
+
+WordPress loads the `.mo` matching the site's active locale; if no
+matching file is found, the original English strings are displayed —
+no fallback is required.

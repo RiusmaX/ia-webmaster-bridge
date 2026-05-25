@@ -144,7 +144,8 @@ class IAWM_Core {
 			return IAWM_Support::rest_error(
 				'php_too_old',
 				sprintf(
-					'WordPress %s requires PHP %s or higher; this server runs PHP %s. Update PHP first.',
+					/* translators: 1: WordPress target version. 2: required PHP version. 3: current PHP version on the server. */
+					__( 'WordPress %1$s requires PHP %2$s or higher; this server runs PHP %3$s. Update PHP first.', 'ia-webmaster-bridge' ),
 					$available['version'],
 					$available['php_version'],
 					PHP_VERSION
@@ -188,7 +189,12 @@ class IAWM_Core {
 		// plugins, so we capture the plugin activation state for rollback.
 		$pre_backup = empty( $params['skip_backup'] )
 			? IAWM_Backup::snapshot_plugins_state(
-				"Before WordPress core update: {$wp_version} -> {$available['version']}",
+				sprintf(
+					/* translators: 1: current WP version. 2: target WP version. */
+					__( 'Before WordPress core update: %1$s -> %2$s', 'ia-webmaster-bridge' ),
+					$wp_version,
+					$available['version']
+				),
 				(string) $request->get_route()
 			)
 			: null;
@@ -210,7 +216,7 @@ class IAWM_Core {
 		if ( ! $update ) {
 			return IAWM_Support::rest_error(
 				'no_upgrade_offer',
-				'WordPress did not return an upgrade offer; cannot apply the update.',
+				__( 'WordPress did not return an upgrade offer; cannot apply the update.', 'ia-webmaster-bridge' ),
 				502
 			);
 		}
@@ -224,7 +230,7 @@ class IAWM_Core {
 		}
 		if ( false === $res ) {
 			$messages = $skin->get_error_messages();
-			return IAWM_Support::rest_error( 'core_update_failed', $messages ? implode( ' ; ', $messages ) : 'Core update failed.', 500 );
+			return IAWM_Support::rest_error( 'core_update_failed', $messages ? implode( ' ; ', $messages ) : __( 'Core update failed.', 'ia-webmaster-bridge' ), 500 );
 		}
 
 		// The new version string is in $res or via re-reading $wp_version
@@ -236,7 +242,7 @@ class IAWM_Core {
 			'updated'          => true,
 			'previous_version' => (string) $wp_version,
 			'new_version'      => $available['version'],
-			'notice'           => 'A page reload may be required for WordPress to fully bootstrap on the new version.',
+			'notice'           => __( 'A page reload may be required for WordPress to fully bootstrap on the new version.', 'ia-webmaster-bridge' ),
 		);
 		if ( null !== $pre_backup ) {
 			$response['pre_op_backup_id'] = $pre_backup;

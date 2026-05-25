@@ -16,6 +16,7 @@
  *   esc_html_e( 'string', 'ia-webmaster-bridge' )
  *   esc_attr__( 'string', 'ia-webmaster-bridge' )
  *   esc_attr_e( 'string', 'ia-webmaster-bridge' )
+ *   _n( 'singular', 'plural', $count, 'ia-webmaster-bridge' )
  *
  * Usage: `node tools/extract-pot.mjs`
  */
@@ -31,6 +32,9 @@ const OUT = join(PLUGIN_DIR, 'languages', 'ia-webmaster-bridge.pot');
 const TEXT_DOMAIN = 'ia-webmaster-bridge';
 
 const FN_RE = /(?:__|_e|esc_html__|esc_html_e|esc_attr__|esc_attr_e)\s*\(\s*(['"])((?:\\.|(?!\1).)*)\1\s*,\s*(['"])ia-webmaster-bridge\3\s*\)/g;
+
+// _n( 'singular', 'plural', $count, 'ia-webmaster-bridge' )
+const NPLURAL_RE = /_n\s*\(\s*(['"])((?:\\.|(?!\1).)*)\1\s*,\s*(['"])((?:\\.|(?!\3).)*)\3\s*,\s*[^,]+,\s*(['"])ia-webmaster-bridge\5\s*\)/g;
 
 async function walk(dir, ext) {
   const out = [];
@@ -72,6 +76,9 @@ async function main() {
   /** @type {Map<string, { references: Set<string>, comments: Set<string> }>} */
   const entries = new Map();
 
+  /** @type {Map<string, { plural: string, references: Set<string>, comments: Set<string> }>} */
+  const plurals = new Map();
+
   for (const file of files) {
     const src = await readFile(file, 'utf8');
     const rel = file.replace(REPO_ROOT, '').replace(/\\/g, '/').replace(/^\//, '');
@@ -88,6 +95,19 @@ async function main() {
       if (tx) entry.comments.add(tx[1].trim());
       entries.set(raw, entry);
     }
+    // Plurals (_n).
+    while ((m = NPLURAL_RE.exec(src)) !== null) {
+      const singular = unescapePhp(m[2]);
+      const plural = unescapePhp(m[4]);
+      const lineNo = src.slice(0, m.index).split('\n').length;
+      const ref = `${rel}:${lineNo}`;
+      const before = src.slice(Math.max(0, m.index - 200), m.index);
+      const tx = /\/\*\s*translators:\s*([^*]+)\*\//i.exec(before);
+      const entry = plurals.get(singular) ?? { plural, references: new Set(), comments: new Set() };
+      entry.references.add(ref);
+      if (tx) entry.comments.add(tx[1].trim());
+      plurals.set(singular, entry);
+    }
   }
 
   const now = new Date().toISOString().replace('T', ' ').slice(0, 16) + '+0000';
@@ -102,6 +122,7 @@ async function main() {
   lines.push(`"MIME-Version: 1.0\\n"`);
   lines.push(`"Content-Type: text/plain; charset=UTF-8\\n"`);
   lines.push(`"Content-Transfer-Encoding: 8bit\\n"`);
+  lines.push(`"Plural-Forms: nplurals=2; plural=(n != 1);\\n"`);
   lines.push(`"X-Generator: tools/extract-pot.mjs\\n"`);
   lines.push(`"X-Domain: ${TEXT_DOMAIN}\\n"`);
   lines.push('');
@@ -119,10 +140,27 @@ async function main() {
     lines.push('');
   }
 
+  // Plural forms (msgid_plural).
+  const sortedPlurals = [...plurals.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  for (const [singular, meta] of sortedPlurals) {
+    for (const ref of [...meta.references].sort()) {
+      lines.push(`#: ${ref}`);
+    }
+    for (const comment of meta.comments) {
+      lines.push(`#. translators: ${comment}`);
+    }
+    lines.push(`msgid "${escapePo(singular)}"`);
+    lines.push(`msgid_plural "${escapePo(meta.plural)}"`);
+    lines.push(`msgstr[0] ""`);
+    lines.push(`msgstr[1] ""`);
+    lines.push('');
+  }
+
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, lines.join('\n'));
   console.log(`Wrote ${OUT}`);
-  console.log(`Strings extracted: ${entries.size}`);
+  console.log(`Singular strings: ${entries.size}`);
+  console.log(`Plural strings:   ${plurals.size}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

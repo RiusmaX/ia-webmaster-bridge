@@ -1,811 +1,911 @@
 # Copyright (C) 2026 Marius Sergent
 # This file is distributed under the GPL-3.0-or-later license.
+# Marius Sergent <marius.sergent@gmail.com>, 2026.
 msgid ""
 msgstr ""
-"Project-Id-Version: IA Webmaster Bridge\n"
+"Project-Id-Version: IA Webmaster Bridge 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/RiusmaX/ia-webmaster-bridge/issues\n"
-"POT-Creation-Date: 2026-05-25 14:19+0000\n"
+"POT-Creation-Date: 2026-05-25 14:33+0000\n"
+"PO-Revision-Date: 2026-05-25 14:40+0000\n"
+"Last-Translator: Marius Sergent <marius.sergent@gmail.com>\n"
+"Language-Team: French <fr@li.org>\n"
+"Language: fr_FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: tools/extract-pot.mjs\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Domain: ia-webmaster-bridge\n"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:498
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:582
+#. translators: 1: plugin slug. 2: optional " (+activate)" suffix.
+#. translators: 1: theme slug. 2: optional " (+activate)" suffix.
+msgid " (+activate)"
+msgstr " (+activation)"
+
 msgid "— none —"
-msgstr ""
+msgstr "— aucun —"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1061
 msgid "(no scope)"
-msgstr ""
+msgstr "(aucune portée)"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:760
 msgid "# One IP or CIDR per line.\n# Empty list = allow all.\n192.168.1.0/24"
-msgstr ""
+msgstr "# Une IP ou un CIDR par ligne.\n# Liste vide = tout autoriser.\n192.168.1.0/24"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-cron.php:174
-#: plugin/ia-webmaster-bridge/includes/class-iawm-cron.php:239
-#: plugin/ia-webmaster-bridge/includes/class-iawm-cron.php:298
 msgid "`hook` is required."
-msgstr ""
+msgstr "Le paramètre `hook` est requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:309
 msgid "`search` and `replace` are identical."
-msgstr ""
+msgstr "`search` et `replace` sont identiques."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:306
 msgid "`search` is required and cannot be empty."
-msgstr ""
+msgstr "`search` est requis et ne peut pas être vide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:733
 #. translators: Instructional sentence pointing to wp-config.php.
 msgid "<strong>To enforce HTTPS</strong>, add this line to <code>wp-config.php</code>:"
-msgstr ""
+msgstr "<strong>Pour imposer HTTPS</strong>, ajoutez cette ligne dans <code>wp-config.php</code> :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:956
 msgid "♻ Reinstall agent"
-msgstr ""
+msgstr "♻ Réinstaller l’agent"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:968
 msgid "⚠️ Danger zone"
-msgstr ""
+msgstr "⚠️ Zone de danger"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:528
 msgid "⚠️ Legacy key without an explicit scope list (full access). Tick / untick + save to lock down."
-msgstr ""
+msgstr "⚠️ Clé héritée sans liste de portées explicite (accès complet). Cochez / décochez puis enregistrez pour restreindre."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:479
 msgid "⚠️ Secret (copy now — it will not be shown again):"
-msgstr ""
+msgstr "⚠️ Secret (copiez-le maintenant — il ne sera plus affiché) :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:936
 msgid "📋 Documentation"
-msgstr ""
+msgstr "📋 Documentation"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:944
 msgid "🔍 Diagnostics"
-msgstr ""
+msgstr "🔍 Diagnostics"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:194
+#. translators: %s: existing default template ID.
+msgid "A default template already exists (id=%s). Pass replace_existing=true to overwrite."
+msgstr "Un modèle par défaut existe déjà (id=%s). Passez replace_existing=true pour l’écraser."
+
+msgid "A page reload may be required for WordPress to fully bootstrap on the new version."
+msgstr "Un rechargement de page peut être nécessaire pour que WordPress démarre complètement sur la nouvelle version."
+
 msgid "A title or content is required."
-msgstr ""
+msgstr "Un titre ou un contenu est requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:319
 msgid "A user with this login or email already exists."
-msgstr ""
+msgstr "Un utilisateur avec cet identifiant ou cet e-mail existe déjà."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:188
 msgid "A valid type is required (post|page)."
-msgstr ""
+msgstr "Un type valide est requis (post|page)."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:173
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:308
 msgid "Access denied."
-msgstr ""
+msgstr "Accès refusé."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:562
 #. translators: %s: path to the gateway configuration file.
 msgid "After clicking Generate, the secret will be shown <strong>once</strong> in the key&#8217;s row above. Copy it into %s on the operator&#8217;s machine."
-msgstr ""
+msgstr "Après avoir cliqué sur Générer, le secret sera affiché <strong>une seule fois</strong> dans la ligne de la clé ci-dessus. Copiez-le dans %s sur la machine de l’opérateur."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:39
 msgid "Agent"
-msgstr ""
+msgstr "Agent"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1093
 msgid "Agent role and user reinstalled."
-msgstr ""
+msgstr "Rôle et utilisateur de l’agent réinstallés."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:382
 msgid "Agent user:"
-msgstr ""
+msgstr "Utilisateur agent :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1058
 msgid "all (legacy)"
-msgstr ""
+msgstr "toutes (héritée)"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1090
 msgid "All keys revoked. No Claude session can authenticate until a new key is created."
-msgstr ""
+msgstr "Toutes les clés ont été révoquées. Aucune session Claude ne peut s’authentifier tant qu’une nouvelle clé n’est pas créée."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:341
 msgid "API base:"
-msgstr ""
+msgstr "Base de l’API :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:131
 #. translators: %s: name of the required scope (e.g. "content:write").
 msgid "API key does not hold the required scope \"%s\"."
-msgstr ""
+msgstr "La clé d’API ne dispose pas de la portée requise « %s »."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:38
 msgid "API Keys"
-msgstr ""
+msgstr "Clés d’API"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:42
+msgid "Assignment failed."
+msgstr "L’assignation a échoué."
+
+msgid "At least one of header / body / footer must be provided."
+msgstr "Au moins l’un de header / body / footer doit être fourni."
+
 msgid "Audit log"
-msgstr ""
+msgstr "Journal d’audit"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:592
 #. translators: %s: login name of the dedicated agent WordPress user (rendered as <code>iawm-agent</code>).
 msgid "Audit-only — every write still executes as %s."
-msgstr ""
+msgstr "Audit uniquement — chaque écriture est tout de même exécutée en tant que %s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:393
 #. translators: %d: number of audit log entries.
 msgid "Audit:"
-msgstr ""
+msgstr "Audit :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-backup.php:768
 #. translators: %d: backup ID that was not found.
 msgid "Backup not found: %d."
-msgstr ""
+msgstr "Sauvegarde introuvable : %d."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:399
 msgid "Backups:"
-msgstr ""
+msgstr "Sauvegardes :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:184
+#. translators: %s: comma-separated list of branding keys being updated.
+msgid "Before branding update: %s"
+msgstr "Avant mise à jour du branding : %s"
+
+#. translators: %s: plugin file (e.g. "akismet/akismet.php").
+msgid "Before plugin activate: %s"
+msgstr "Avant activation de l’extension : %s"
+
+#. translators: %s: plugin file (e.g. "akismet/akismet.php").
+msgid "Before plugin deactivate: %s"
+msgstr "Avant désactivation de l’extension : %s"
+
+#. translators: 1: plugin slug. 2: optional " (+activate)" suffix.
+msgid "Before plugin install: %1$s%2$s"
+msgstr "Avant installation de l’extension : %1$s%2$s"
+
+#. translators: 1: plugin file. 2: previous version. 3: new version.
+msgid "Before plugin update: %1$s (%2$s -> %3$s)"
+msgstr "Avant mise à jour de l’extension : %1$s (%2$s -> %3$s)"
+
 #. translators: %s: comma-separated list of risky setting keys being changed.
 msgid "Before risky settings update: %s"
-msgstr ""
+msgstr "Avant mise à jour de réglages sensibles : %s"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:696
+#. translators: %s: theme stylesheet slug.
+msgid "Before theme activate: %s"
+msgstr "Avant activation du thème : %s"
+
+#. translators: 1: theme slug. 2: optional " (+activate)" suffix.
+msgid "Before theme install: %1$s%2$s"
+msgstr "Avant installation du thème : %1$s%2$s"
+
+#. translators: 1: theme stylesheet slug. 2: target version string.
+msgid "Before theme update: %1$s -> %2$s"
+msgstr "Avant mise à jour du thème : %1$s -> %2$s"
+
+#. translators: 1: current WP version. 2: target WP version.
+msgid "Before WordPress core update: %1$s -> %2$s"
+msgstr "Avant mise à jour du cœur WordPress : %1$s -> %2$s"
+
 msgid "Block all writes"
-msgstr ""
+msgstr "Bloquer toutes les écritures"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:678
 msgid "Blocks ALL write requests. Reads remain allowed. Use it during an incident or when you want to pause the agent."
-msgstr ""
+msgstr "Bloque TOUTES les requêtes d’écriture. Les lectures restent autorisées. À utiliser pendant un incident ou pour mettre l’agent en pause."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:96
+msgid "Call to divi-library failed."
+msgstr "L’appel à divi-library a échoué."
+
+msgid "Call to divi-library/item failed."
+msgstr "L’appel à divi-library/item a échoué."
+
 msgid "Caller IP is not on the allow-list for this site."
-msgstr ""
+msgstr "L’IP de l’appelant n’est pas dans la liste d’autorisation de ce site."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:76
 msgid "Caller IP not recognised."
-msgstr ""
+msgstr "IP de l’appelant non reconnue."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:41
 msgid "Cleanup"
-msgstr ""
+msgstr "Nettoyage"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:160
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:289
-#: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:202
-#: plugin/ia-webmaster-bridge/includes/class-iawm-taxonomy.php:190
+msgid "Configuration writes (site settings, users)"
+msgstr "Écritures de configuration (réglages du site, utilisateurs)"
+
+msgid "Confirmation token missing, expired, mismatched or already used. Re-issue the call without a token to obtain a fresh one."
+msgstr "Jeton de confirmation manquant, expiré, incorrect ou déjà utilisé. Relancez l’appel sans jeton pour en obtenir un nouveau."
+
 #. translators: %d: content (post or page) ID that could not be found.
 #. translators: %d: ID of the content (post/page) that could not be found.
 #. translators: %d: content (post or page) ID that was not found.
 msgid "Content not found: %d."
-msgstr ""
+msgstr "Contenu introuvable : %d."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:286
+msgid "Content writes (pages, posts, media, taxonomies, menus, SEO)"
+msgstr "Écritures de contenu (pages, articles, médias, taxonomies, menus, SEO)"
+
+msgid "Core update failed."
+msgstr "La mise à jour du cœur a échoué."
+
 msgid "Could not delete the item."
-msgstr ""
+msgstr "Impossible de supprimer l’élément."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:556
+msgid "Could not retrieve the Divi design system."
+msgstr "Impossible de récupérer le design system Divi."
+
+msgid "Could not retrieve theme options."
+msgstr "Impossible de récupérer les options du thème."
+
 msgid "Create a new key"
-msgstr ""
+msgstr "Créer une nouvelle clé"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:441
 msgid "Create one to let Claude Code reach this site."
-msgstr ""
+msgstr "Créez-en une pour permettre à Claude Code d’atteindre ce site."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:720
 msgid "Current page over HTTPS"
-msgstr ""
+msgstr "Page actuelle en HTTPS"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:837
 #. translators: 1: current number of backup records, 2: timestamp of the next prune or "not scheduled".
 msgid "Currently <strong>%1$d</strong> backup records. Next prune: %2$s."
-msgstr ""
+msgstr "Actuellement <strong>%1$d</strong> enregistrements de sauvegarde. Prochaine purge : %2$s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:811
 #. translators: 1: current number of audit entries, 2: timestamp of the next prune or "not scheduled".
 msgid "Currently <strong>%1$d</strong> entries. Next prune: %2$s."
-msgstr ""
+msgstr "Actuellement <strong>%1$d</strong> entrées. Prochaine purge : %2$s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:632
 msgid "Dedicated agent user"
-msgstr ""
+msgstr "Utilisateur dédié de l’agent"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:940
+msgid "Default Site Template"
+msgstr "Modèle de site par défaut"
+
+msgid "Deletion failed."
+msgstr "La suppression a échoué."
+
 msgid "Design system"
-msgstr ""
+msgstr "Design system"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:268
 #. translators: %s: forbidden SQL keyword (e.g. INTO OUTFILE).
 msgid "Disallowed construct in query: %s"
-msgstr ""
+msgstr "Construction interdite dans la requête : %s"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:190
+msgid "Divi rejected the update."
+msgstr "Divi a rejeté la mise à jour."
+
+msgid "Divi writes (pages, Theme Builder)"
+msgstr "Écritures Divi (pages, Theme Builder)"
+
 #. translators: %s: error message returned by WordPress download_url().
 msgid "Download failed: %s"
-msgstr ""
+msgstr "Le téléchargement a échoué : %s"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:576
 msgid "e.g. Alice — content team"
-msgstr ""
+msgstr "p. ex. Alice — équipe contenu"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:424
 msgid "Each target must be [table, column]."
-msgstr ""
+msgstr "Chaque cible doit être [table, colonne]."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:247
 msgid "Empty SQL."
-msgstr ""
+msgstr "SQL vide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:888
+msgid "Failed to assign layouts."
+msgstr "Échec de l’assignation des layouts."
+
+#. translators: 1: layout zone (header/body/footer). 2: error message returned by wp_insert_post().
+msgid "Failed to create %1$s: %2$s"
+msgstr "Échec de création du %1$s : %2$s"
+
+msgid "Failed to create template."
+msgstr "Échec de création du modèle."
+
+msgid "Failed to list templates."
+msgstr "Échec de la liste des modèles."
+
+msgid "Failed to update template."
+msgstr "Échec de mise à jour du modèle."
+
 #. translators: <code> tags wrap the MCP tool name and the SQL table name (kept verbatim).
 msgid "Full audit available via <code>iawm_audit</code> MCP tool or the <code>wp_iawm_audit_log</code> table."
-msgstr ""
+msgstr "Audit complet disponible via l’outil MCP <code>iawm_audit</code> ou la table <code>wp_iawm_audit_log</code>."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:616
 msgid "Generate key"
-msgstr ""
+msgstr "Générer la clé"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:344
 msgid "Generated password: deliver it securely, then require it to be changed."
-msgstr ""
+msgstr "Mot de passe généré : transmettez-le de manière sécurisée puis exigez son changement."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:384
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:640
 msgid "healthy"
-msgstr ""
+msgstr "sain"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-cron.php:182
 #. translators: %s: cron hook name.
 msgid "Hook '%s' is not currently scheduled with the given args."
-msgstr ""
+msgstr "Le hook « %s » n’est pas actuellement planifié avec les arguments fournis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:702
 msgid "HTTPS enforcement"
-msgstr ""
+msgstr "Forçage HTTPS"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:660
+msgid "IA Webmaster"
+msgstr "IA Webmaster"
+
+msgid "IA Webmaster Agent"
+msgstr "Agent IA Webmaster"
+
+msgid "id required."
+msgstr "id requis."
+
 msgid "Idempotent: re-registers the role with the current capability set and re-creates the user if it was removed."
-msgstr ""
+msgstr "Idempotent : ré-enregistre le rôle avec le jeu de capacités actuel et recrée l’utilisateur s’il a été supprimé."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-backup.php:808
+msgid "Infrastructure writes (plugins, themes, core, database, backups)"
+msgstr "Écritures d’infrastructure (extensions, thèmes, cœur, base de données, sauvegardes)"
+
+msgid "Installation failed."
+msgstr "L’installation a échoué."
+
 #. translators: %s: requested backup kind.
 msgid "Invalid backup kind: %s."
-msgstr ""
+msgstr "Type de sauvegarde invalide : %s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:159
 msgid "Invalid CIDR notation."
-msgstr ""
+msgstr "Notation CIDR invalide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:285
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:388
 msgid "Invalid email address."
-msgstr ""
+msgstr "Adresse e-mail invalide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:117
+msgid "Invalid or missing plugin file."
+msgstr "Fichier d’extension invalide ou manquant."
+
+msgid "Invalid or missing stylesheet."
+msgstr "Feuille de style invalide ou manquante."
+
 msgid "Invalid signature."
-msgstr ""
+msgstr "Signature invalide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:100
+msgid "Invalid slug."
+msgstr "Slug invalide."
+
 msgid "Invalid timestamp."
-msgstr ""
+msgstr "Horodatage invalide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:904
+#. translators: %s: comma-separated list of valid type values.
+msgid "Invalid type. Expected: %s"
+msgstr "Type invalide. Attendu : %s"
+
 msgid "IP"
-msgstr ""
+msgstr "IP"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:746
 msgid "IP allow-list"
-msgstr ""
+msgstr "Liste d’IP autorisées"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1094
 msgid "IP allow-list saved."
-msgstr ""
+msgstr "Liste d’IP autorisées enregistrée."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1033
 msgid "just now"
-msgstr ""
+msgstr "à l’instant"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:800
 msgid "Keep audit entries for (days)"
-msgstr ""
+msgstr "Conserver les entrées d’audit pendant (jours)"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:826
 msgid "Keep newest N backups"
-msgstr ""
+msgstr "Conserver les N sauvegardes les plus récentes"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:903
 msgid "Key"
-msgstr ""
+msgstr "Clé"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1089
 msgid "Key revoked."
-msgstr ""
+msgstr "Clé révoquée."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:379
 msgid "Keys:"
-msgstr ""
+msgstr "Clés :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:677
 msgid "Kill switch"
-msgstr ""
+msgstr "Interrupteur d’arrêt"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1092
 msgid "Kill switch disabled: writes are allowed again."
-msgstr ""
+msgstr "Interrupteur d’arrêt désactivé : les écritures sont à nouveau autorisées."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1091
 msgid "Kill switch enabled: all writes are blocked."
-msgstr ""
+msgstr "Interrupteur d’arrêt activé : toutes les écritures sont bloquées."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:373
 msgid "KILL SWITCH ON"
-msgstr ""
+msgstr "INTERRUPTEUR D’ARRÊT ACTIVÉ"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:493
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:575
 msgid "Label"
-msgstr ""
+msgstr "Étiquette"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1088
 msgid "Label / linked user updated."
-msgstr ""
+msgstr "Étiquette / utilisateur lié mis à jour."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:491
 msgid "Label & linked user"
-msgstr ""
+msgstr "Étiquette et utilisateur lié"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1014
 #. translators: %s: timestamp at which the API key was last used.
 msgid "Last used at %s"
-msgstr ""
+msgstr "Dernière utilisation le %s"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:579
+#. translators: %d: layout post ID that was not found.
+msgid "Layout %d not found."
+msgstr "Layout %d introuvable."
+
+msgid "Legacy key"
+msgstr "Clé héritée"
+
 msgid "Linked WP user"
-msgstr ""
+msgstr "Utilisateur WP lié"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:496
 msgid "Linked WP user (audit only)"
-msgstr ""
+msgstr "Utilisateur WP lié (audit uniquement)"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:637
 msgid "Login"
-msgstr ""
+msgstr "Identifiant"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:167
 msgid "Manual DB export"
-msgstr ""
+msgstr "Export manuel de la BDD"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-backup.php:790
 msgid "Manual snapshot"
-msgstr ""
+msgstr "Instantané manuel"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:858
 msgid "Manually run the retention jobs without waiting for the next cron tick."
-msgstr ""
+msgstr "Lancer manuellement les tâches de rétention sans attendre le prochain tick cron."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:127
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:263
 #. translators: %d: media attachment ID.
 msgid "Media not found: %d."
-msgstr ""
+msgstr "Média introuvable : %d."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:267
 #. translators: %d: menu item ID.
 msgid "Menu item not found: %d."
-msgstr ""
+msgstr "Élément de menu introuvable : %d."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:369
 #. translators: %d: navigation menu ID.
 msgid "Menu not found: %d."
-msgstr ""
+msgstr "Menu introuvable : %d."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:900
 msgid "Method"
-msgstr ""
+msgstr "Méthode"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:386
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:652
 msgid "missing"
-msgstr ""
+msgstr "absent"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:89
 msgid "Missing authentication headers."
-msgstr ""
+msgstr "En-têtes d’authentification manquants."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-backup.php:870
 msgid "Missing or invalid id."
-msgstr ""
+msgstr "id manquant ou invalide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:259
 msgid "Multiple statements are not allowed (no `;`)."
-msgstr ""
+msgstr "Les requêtes multiples sont interdites (pas de `;`)."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1025
 msgid "never used"
-msgstr ""
+msgstr "jamais utilisée"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1011
 msgid "Never used yet"
-msgstr ""
+msgstr "Jamais utilisée pour l’instant"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1085
 msgid "New key created. The secret is shown once in its row below — copy it now, it cannot be displayed again."
-msgstr ""
+msgstr "Nouvelle clé créée. Le secret est affiché une seule fois dans sa ligne ci-dessous — copiez-le maintenant, il ne pourra plus être affiché."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:724
+msgid "New Template"
+msgstr "Nouveau modèle"
+
 msgid "no"
-msgstr ""
+msgstr "non"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:440
+msgid "No active SEO plugin detected."
+msgstr "Aucune extension SEO active détectée."
+
+msgid "No active SEO plugin detected. Install Rank Math or Yoast."
+msgstr "Aucune extension SEO active détectée. Installez Rank Math ou Yoast."
+
 msgid "No API key yet"
-msgstr ""
+msgstr "Aucune clé d’API pour l’instant"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:409
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:332
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:282
 msgid "No changes provided."
-msgstr ""
+msgstr "Aucun changement fourni."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:894
+msgid "No Divi block detected in the payload."
+msgstr "Aucun bloc Divi détecté dans la charge utile."
+
+msgid "No download link."
+msgstr "Aucun lien de téléchargement."
+
 msgid "No entries yet."
-msgstr ""
+msgstr "Aucune entrée pour l’instant."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:468
+msgid "No fields to update."
+msgstr "Aucun champ à mettre à jour."
+
 msgid "no linked user"
-msgstr ""
+msgstr "aucun utilisateur lié"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:151
+msgid "No template id returned."
+msgstr "Aucun id de modèle retourné."
+
+#. translators: %s: comma-separated list of rejected branding keys.
+msgid "No valid branding key to apply. Rejected: %s."
+msgstr "Aucune clé de branding valide à appliquer. Rejetée : %s."
+
 #. translators: %s: comma-separated list of rejected setting keys.
 msgid "No valid setting to apply. Rejected: %s."
-msgstr ""
+msgstr "Aucun réglage valide à appliquer. Rejetés : %s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:109
 msgid "Nonce already used (replay detected)."
-msgstr ""
+msgstr "Nonce déjà utilisé (rejeu détecté)."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:166
 msgid "Not a valid IPv4 or IPv6 address."
-msgstr ""
+msgstr "Adresse IPv4 ou IPv6 invalide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:807
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:833
+msgid "Not in the branding allow-list."
+msgstr "Absent de la liste d’autorisation du branding."
+
 msgid "not scheduled"
-msgstr ""
+msgstr "non planifié"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:717
 msgid "not set (any scheme accepted)"
-msgstr ""
+msgstr "non défini (tout schéma accepté)"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:685
 msgid "off — writes allowed"
-msgstr ""
+msgstr "désactivé — écritures autorisées"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:683
 msgid "ON — writes blocked"
-msgstr ""
+msgstr "ACTIVÉ — écritures bloquées"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:751
 #. translators: <code> tags wrap example IP addresses (kept verbatim).
 msgid "One entry per line. Each entry can be an IP literal (<code>198.51.100.42</code>, <code>2001:db8::1</code>) or a CIDR block (<code>192.168.1.0/24</code>, <code>2001:db8::/32</code>). Empty list = allow all. Loopback (<code>127.0.0.1</code>, <code>::1</code>) is always allowed."
-msgstr ""
+msgstr "Une entrée par ligne. Chaque entrée peut être une IP littérale (<code>198.51.100.42</code>, <code>2001:db8::1</code>) ou un bloc CIDR (<code>192.168.1.0/24</code>, <code>2001:db8::/32</code>). Liste vide = tout autoriser. La boucle locale (<code>127.0.0.1</code>, <code>::1</code>) est toujours autorisée."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:262
 msgid "Only SELECT (or WITH ... SELECT) queries are allowed."
-msgstr ""
+msgstr "Seules les requêtes SELECT (ou WITH ... SELECT) sont autorisées."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:375
 msgid "Operational"
-msgstr ""
+msgstr "Opérationnel"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:939
 msgid "Operations"
-msgstr ""
+msgstr "Opérations"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:937
 msgid "Operations runbook, security model, design system primer."
-msgstr ""
+msgstr "Runbook des opérations, modèle de sécurité, introduction au design system."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:217
+#. translators: 1: post ID. 2: actual post type.
+msgid "Post %1$d is not a Theme Builder layout (type=%2$s)."
+msgstr "Le post %1$d n’est pas un layout Theme Builder (type=%2$s)."
+
+#. translators: %d: post ID.
+msgid "Post %d is not a Divi 5 page (neither meta _et_pb_use_builder=on, nor wp:divi/ blocks detected)."
+msgstr "Le post %d n’est pas une page Divi 5 (ni la méta _et_pb_use_builder=on, ni les blocs wp:divi/ détectés)."
+
+#. translators: %d: post ID.
+msgid "Post %d not found."
+msgstr "Post %d introuvable."
+
+msgid "post_id required."
+msgstr "post_id requis."
+
 msgid "Provide 'url' (link) or 'object_id' (content)."
-msgstr ""
+msgstr "Fournissez « url » (lien) ou « object_id » (contenu)."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:170
+msgid "Provide \"content\" (serialised string) OR \"blocks\" (array of blocks)."
+msgstr "Fournissez « content » (chaîne sérialisée) OU « blocks » (tableau de blocs)."
+
+msgid "Provide `global_variables` as an object with keys among numbers, strings, images, links, colors, fonts."
+msgstr "Fournissez `global_variables` comme un objet dont les clés appartiennent à numbers, strings, images, links, colors, fonts."
+
+msgid "Provide a non-empty `branding` object."
+msgstr "Fournissez un objet `branding` non vide."
+
+msgid "Provide a non-empty `global_colors` object."
+msgstr "Fournissez un objet `global_colors` non vide."
+
+msgid "Provide a non-empty `options` object."
+msgstr "Fournissez un objet `options` non vide."
+
 msgid "Provide a non-empty `tables` array."
-msgstr ""
+msgstr "Fournissez un tableau `tables` non vide."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:863
+msgid "Provide at least one of `heading_font` or `body_font`."
+msgstr "Fournissez au moins l’un de `heading_font` ou `body_font`."
+
 msgid "Prune audit log now"
-msgstr ""
+msgstr "Purger le journal d’audit maintenant"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:869
 msgid "Prune backups now"
-msgstr ""
+msgstr "Purger les sauvegardes maintenant"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:857
 msgid "Prune now"
-msgstr ""
+msgstr "Purger maintenant"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:223
 msgid "Query failed."
-msgstr ""
+msgstr "La requête a échoué."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:694
 msgid "Re-enable writes"
-msgstr ""
+msgstr "Réactiver les écritures"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:883
+msgid "Re-issue the exact same call with `confirmation_token` set to this value to actually apply the action."
+msgstr "Relancez exactement le même appel avec `confirmation_token` réglé sur cette valeur pour réellement appliquer l’action."
+
+msgid "Read (all GET endpoints, diagnostics, audit log)"
+msgstr "Lecture (tous les endpoints GET, diagnostics, journal d’audit)"
+
 msgid "Recent activity (last 30)"
-msgstr ""
+msgstr "Activité récente (30 dernières)"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:957
 msgid "Recreates the dedicated user + role."
-msgstr ""
+msgstr "Recrée l’utilisateur et le rôle dédiés."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:962
 msgid "Reinstall"
-msgstr ""
+msgstr "Réinstaller"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:659
 msgid "Reinstall agent role & user"
-msgstr ""
+msgstr "Réinstaller le rôle et l’utilisateur de l’agent"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:103
 msgid "Request expired or timestamp out of tolerance."
-msgstr ""
+msgstr "Requête expirée ou horodatage hors tolérance."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:792
 msgid "Retention policy"
-msgstr ""
+msgstr "Politique de rétention"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1103
 msgid "Retention policy saved."
-msgstr ""
+msgstr "Politique de rétention enregistrée."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:974
 msgid "Revoke ALL keys"
-msgstr ""
+msgstr "Révoquer TOUTES les clés"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:974
 msgid "Revoke ALL keys? This cannot be undone."
-msgstr ""
+msgstr "Révoquer TOUTES les clés ? Cette action est irréversible."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:548
 msgid "Revoke this key"
-msgstr ""
+msgstr "Révoquer cette clé"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:548
 msgid "Revoke this key permanently?"
-msgstr ""
+msgstr "Révoquer définitivement cette clé ?"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:969
 msgid "Revokes every API key on this site at once. The corresponding Claude sessions lose access immediately."
-msgstr ""
+msgstr "Révoque toutes les clés d’API du site en une seule fois. Les sessions Claude correspondantes perdent immédiatement l’accès."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:639
 msgid "Role"
-msgstr ""
+msgstr "Rôle"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:541
 msgid "Rotate secret"
-msgstr ""
+msgstr "Renouveler le secret"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:541
 msgid "Rotate the secret of this key? The gateway will need to be reconfigured."
-msgstr ""
+msgstr "Renouveler le secret de cette clé ? La passerelle devra être reconfigurée."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:901
 msgid "Route"
-msgstr ""
+msgstr "Route"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:949
 #. translators: <code> tags wrap MCP tool names (kept verbatim).
 msgid "Run from Claude Code: <code>iawm_diagnostics_smoke</code> after any destructive op, <code>iawm_diagnostics_check_self</code> after upgrades."
-msgstr ""
+msgstr "À exécuter depuis Claude Code : <code>iawm_diagnostics_smoke</code> après toute opération destructrice, <code>iawm_diagnostics_check_self</code> après les mises à jour."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:761
 msgid "Save allow-list"
-msgstr ""
+msgstr "Enregistrer la liste d’autorisation"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:507
 msgid "Save label / user"
-msgstr ""
+msgstr "Enregistrer l’étiquette / l’utilisateur"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:852
 msgid "Save retention"
-msgstr ""
+msgstr "Enregistrer la rétention"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:532
 msgid "Save scopes"
-msgstr ""
+msgstr "Enregistrer les portées"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-cron.php:263
 msgid "Scheduling failed (event probably already queued)."
-msgstr ""
+msgstr "Échec de la planification (l’événement est probablement déjà en file)."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:517
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:602
 msgid "Scopes"
-msgstr ""
+msgstr "Portées"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1087
 msgid "Scopes updated for this key."
-msgstr ""
+msgstr "Portées mises à jour pour cette clé."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:1086
 msgid "Secret rotated. Copy the new value into the gateway config."
-msgstr ""
+msgstr "Secret renouvelé. Copiez la nouvelle valeur dans la configuration de la passerelle."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:40
 msgid "Security"
-msgstr ""
+msgstr "Sécurité"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:347
 #. translators: %s: file name of the operations runbook (kept verbatim).
 msgid "See %s for the runbook."
-msgstr ""
+msgstr "Voir %s pour le runbook."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-backup.php:814
 msgid "Snapshot produced no payload."
-msgstr ""
+msgstr "L’instantané n’a produit aucune charge utile."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:175
 msgid "Snapshot produced no payload. Check that the table names exist."
-msgstr ""
+msgstr "L’instantané n’a produit aucune charge utile. Vérifiez que les noms de table existent."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:256
 msgid "SQL contains only comments."
-msgstr ""
+msgstr "Le SQL ne contient que des commentaires."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:680
 msgid "State:"
-msgstr ""
+msgstr "État :"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:640
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:902
 msgid "Status"
-msgstr ""
+msgstr "Statut"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-database.php:433
+msgid "System user under whom the IA Webmaster Bridge adapter performs writes. Do not delete; do not log in. Authentication is HMAC, not WordPress login."
+msgstr "Utilisateur système sous lequel l’adaptateur IA Webmaster Bridge effectue les écritures. Ne pas supprimer ; ne pas se connecter. L’authentification est en HMAC, pas via la connexion WordPress."
+
 #. translators: 1: database table name. 2: column name.
 msgid "Target (%1$s, %2$s) is not in the allow-list."
-msgstr ""
+msgstr "La cible (%1$s, %2$s) n’est pas dans la liste d’autorisation."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:197
-#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:224
-#: plugin/ia-webmaster-bridge/includes/class-iawm-divi-theme-builder.php:260
 msgid "template_id required."
-msgstr ""
+msgstr "template_id requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:152
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:281
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:119
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:255
 msgid "The 'id' parameter is required."
-msgstr ""
+msgstr "Le paramètre « id » est requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:282
 msgid "The 'login' and 'email' parameters are required."
-msgstr ""
+msgstr "Les paramètres « login » et « email » sont requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:139
-#: plugin/ia-webmaster-bridge/includes/class-iawm-taxonomy.php:131
 msgid "The 'name' parameter is required."
-msgstr ""
+msgstr "Le paramètre « name » est requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:124
 msgid "The 'settings' parameter (object) is required."
-msgstr ""
+msgstr "Le paramètre « settings » (objet) est requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-taxonomy.php:202
 msgid "The 'terms' parameter (array) is required."
-msgstr ""
+msgstr "Le paramètre « terms » (tableau) est requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:154
 msgid "The 'url' parameter is required."
-msgstr ""
+msgstr "Le paramètre « url » est requis."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:78
 msgid "The adapter is not configured: no API credentials."
-msgstr ""
+msgstr "L’adaptateur n’est pas configuré : aucune identifiant d’API."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:633
 msgid "The adapter performs every write under this single WordPress user, regardless of which API key signed the request. The user has a restricted role with the highest-risk capabilities stripped out."
-msgstr ""
+msgstr "L’adaptateur effectue chaque écriture sous cet unique utilisateur WordPress, quelle que soit la clé d’API qui a signé la requête. L’utilisateur a un rôle restreint, privé des capacités les plus risquées."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:381
 msgid "The dedicated agent user cannot be modified via the API."
-msgstr ""
+msgstr "L’utilisateur dédié de l’agent ne peut pas être modifié via l’API."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:652
 msgid "The dedicated agent user could not be located. Click below to (re)install."
-msgstr ""
+msgstr "L’utilisateur dédié de l’agent est introuvable. Cliquez ci-dessous pour (ré)installer."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-media.php:200
+msgid "The IA Webmaster Bridge plugin cannot be deactivated via the API."
+msgstr "L’extension IA Webmaster Bridge ne peut pas être désactivée via l’API."
+
+msgid "The IA Webmaster Bridge plugin cannot be updated via its own API. Use the WordPress admin instead."
+msgstr "L’extension IA Webmaster Bridge ne peut pas être mise à jour via sa propre API. Utilisez plutôt l’administration WordPress."
+
+msgid "The layout contains blocks outside the divi/ namespace."
+msgstr "Le layout contient des blocs en dehors de l’espace de noms divi/."
+
 msgid "The URL does not point to a file with a named extension."
-msgstr ""
+msgstr "L’URL ne pointe pas vers un fichier avec une extension nommée."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-network.php:50
+msgid "The Yoast backend is not yet implemented (backlog)."
+msgstr "Le backend Yoast n’est pas encore implémenté (en backlog)."
+
+#. translators: %s: theme stylesheet slug.
+msgid "Theme '%s' is not installed."
+msgstr "Le thème « %s » n’est pas installé."
+
+msgid "Theme is not allowed on this site."
+msgstr "Le thème n’est pas autorisé sur ce site."
+
+msgid "Theme not found after install."
+msgstr "Thème introuvable après l’installation."
+
 msgid "This site requires HTTPS for the API. Re-issue your request over https://."
-msgstr ""
+msgstr "Ce site exige HTTPS pour l’API. Renvoyez votre requête en https://."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:646
 #. translators: HTTP 403 error code (iawm_protected_user) shown verbatim.
 msgid "This user cannot be modified or deleted through the API (HTTP 403 <code>iawm_protected_user</code>)."
-msgstr ""
+msgstr "Cet utilisateur ne peut être ni modifié ni supprimé via l’API (HTTP 403 <code>iawm_protected_user</code>)."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:899
 msgid "Time"
-msgstr ""
+msgstr "Date"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:43
 msgid "Tools"
-msgstr ""
+msgstr "Outils"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:715
 msgid "true (enforced)"
-msgstr ""
+msgstr "true (forcé)"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:793
 msgid "Two daily cron jobs trim the audit log and the backup table to the limits below. Defaults: 90 days of audit, 50 backups."
-msgstr ""
+msgstr "Deux tâches cron quotidiennes nettoient le journal d’audit et la table des sauvegardes selon les limites ci-dessous. Par défaut : 90 jours d’audit, 50 sauvegardes."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:95
+#. translators: 1: unknown bucket name. 2: comma-separated list of valid buckets.
+msgid "Unknown bucket: %1$s. Use one of: %2$s"
+msgstr "Bucket inconnu : %1$s. Utilisez l’un de : %2$s"
+
 msgid "Unknown key identifier."
-msgstr ""
+msgstr "Identifiant de clé inconnu."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-menu.php:320
 #. translators: %s: theme menu-location slug.
 msgid "Unknown menu location: %s."
-msgstr ""
+msgstr "Emplacement de menu inconnu : %s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-cron.php:248
+#. translators: %s: unsupported "mode" value.
+msgid "Unknown mode: %s."
+msgstr "Mode inconnu : %s."
+
 #. translators: %s: schedule slug that was rejected.
 msgid "Unknown schedule slug '%s'. Use /cron/schedules to list valid ones."
-msgstr ""
+msgstr "Slug de planification inconnu « %s ». Utilisez /cron/schedules pour lister les slugs valides."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-taxonomy.php:273
 #. translators: %s: taxonomy slug.
 msgid "Unknown taxonomy: %s."
-msgstr ""
+msgstr "Taxonomie inconnue : %s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:458
 msgid "Unnamed"
-msgstr ""
+msgstr "Sans nom"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:93
 #. translators: %s: requested content type.
 msgid "Unsupported content type: %s."
-msgstr ""
+msgstr "Type de contenu non pris en charge : %s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:293
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:401
 #. translators: %s: WordPress role slug that was rejected.
 msgid "Unsupported role: %s."
-msgstr ""
+msgstr "Rôle non pris en charge : %s."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:200
-#: plugin/ia-webmaster-bridge/includes/class-iawm-content.php:322
 msgid "Unsupported status for writing."
-msgstr ""
+msgstr "Statut non pris en charge pour l’écriture."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:638
+msgid "Untitled key"
+msgstr "Clé sans titre"
+
+msgid "Update failed."
+msgstr "La mise à jour a échoué."
+
 msgid "User ID"
-msgstr ""
+msgstr "ID utilisateur"
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-config.php:368
 #. translators: %d: WordPress user ID that was not found.
 msgid "User not found: %d."
-msgstr ""
+msgstr "Utilisateur introuvable : %d."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:707
 #. translators: HTML <code> tags wrap PHP constant + file names; left verbatim.
 msgid "When the <code>IAWM_REQUIRE_HTTPS</code> constant is set to <code>true</code> in <code>wp-config.php</code>, non-HTTPS API calls are refused before any signature work. Configuration via a constant (not an admin toggle) prevents a compromised admin from disabling the protection."
-msgstr ""
+msgstr "Lorsque la constante <code>IAWM_REQUIRE_HTTPS</code> est mise à <code>true</code> dans <code>wp-config.php</code>, les appels d’API non HTTPS sont refusés avant tout travail de signature. La configuration par une constante (et non par un bouton d’admin) empêche un admin compromis de désactiver la protection."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-auth.php:145
+#. translators: 1: WordPress target version. 2: required PHP version. 3: current PHP version on the server.
+msgid "WordPress %1$s requires PHP %2$s or higher; this server runs PHP %3$s. Update PHP first."
+msgstr "WordPress %1$s requiert PHP %2$s ou supérieur ; ce serveur exécute PHP %3$s. Mettez d’abord PHP à jour."
+
+msgid "WordPress did not return an upgrade offer; cannot apply the update."
+msgstr "WordPress n’a pas retourné d’offre de mise à niveau ; impossible d’appliquer la mise à jour."
+
 msgid "Writes are disabled (kill switch on)."
-msgstr ""
+msgstr "Les écritures sont désactivées (interrupteur d’arrêt activé)."
 
-#: plugin/ia-webmaster-bridge/includes/class-iawm-admin.php:722
 msgid "yes"
-msgstr ""
+msgstr "oui"
+
+msgid "zone must be header, body or footer."
+msgstr "zone doit être header, body ou footer."
+
+#. translators: %d: number of days elapsed since the key was last used.
+msgid "%d d ago"
+msgid_plural "%d d ago"
+msgstr[0] "il y a %d j"
+msgstr[1] "il y a %d j"
+
+#. translators: %d: number of audit log entries.
+msgid "%d entry"
+msgid_plural "%d entries"
+msgstr[0] "%d entrée"
+msgstr[1] "%d entrées"
+
+#. translators: %d: number of hours elapsed since the key was last used.
+msgid "%d h ago"
+msgid_plural "%d h ago"
+msgstr[0] "il y a %d h"
+msgstr[1] "il y a %d h"
+
+#. translators: %d: number of minutes elapsed since the key was last used.
+msgid "%d min ago"
+msgid_plural "%d min ago"
+msgstr[0] "il y a %d min"
+msgstr[1] "il y a %d min"
+
+#. translators: %d: number of audit-log rows deleted.
+msgid "Audit log pruned: %d row deleted."
+msgid_plural "Audit log pruned: %d rows deleted."
+msgstr[0] "Journal d’audit purgé : %d ligne supprimée."
+msgstr[1] "Journal d’audit purgé : %d lignes supprimées."
+
+#. translators: %d: number of backup records deleted.
+msgid "Backups pruned: %d record deleted."
+msgid_plural "Backups pruned: %d records deleted."
+msgstr[0] "Sauvegardes purgées : %d enregistrement supprimé."
+msgstr[1] "Sauvegardes purgées : %d enregistrements supprimés."
+
+#. translators: %d: number of allow-list entries.
+msgid "Currently %d entry active."
+msgid_plural "Currently %d entries active."
+msgstr[0] "Actuellement %d entrée active."
+msgstr[1] "Actuellement %d entrées actives."
+
+#. translators: %d: number of invalid allow-list entries that were dropped.
+msgid "IP allow-list saved with %d invalid entry dropped."
+msgid_plural "IP allow-list saved with %d invalid entries dropped."
+msgstr[0] "Liste d’IP autorisées enregistrée avec %d entrée invalide supprimée."
+msgstr[1] "Liste d’IP autorisées enregistrée avec %d entrées invalides supprimées."

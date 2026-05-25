@@ -174,7 +174,7 @@ class IAWM_Confirmation {
 				array(
 					'ok'     => false,
 					'code'   => 'iawm_invalid_confirmation',
-					'message' => 'Confirmation token missing, expired, mismatched or already used. Re-issue the call without a token to obtain a fresh one.',
+					'message' => __( 'Confirmation token missing, expired, mismatched or already used. Re-issue the call without a token to obtain a fresh one.', 'ia-webmaster-bridge' ),
 				),
 				400
 			);
@@ -190,7 +190,7 @@ class IAWM_Confirmation {
 				'confirmation_token'  => $new_token,
 				'expires_in_seconds'  => self::TTL,
 				'summary'             => is_array( $summary ) ? $summary : array(),
-				'next_step'           => 'Re-issue the exact same call with `confirmation_token` set to this value to actually apply the action.',
+				'next_step'           => __( 'Re-issue the exact same call with `confirmation_token` set to this value to actually apply the action.', 'ia-webmaster-bridge' ),
 			),
 			202 // 202 Accepted — work understood, waiting for confirmation.
 		);

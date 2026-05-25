@@ -92,7 +92,7 @@ class IAWM_Agent_User {
 
 		// Remove first so capability tweaks are picked up on upgrade.
 		remove_role( self::ROLE_KEY );
-		add_role( self::ROLE_KEY, 'IA Webmaster Agent', $caps );
+		add_role( self::ROLE_KEY, __( 'IA Webmaster Agent', 'ia-webmaster-bridge' ), $caps );
 	}
 
 	/**
@@ -224,12 +224,12 @@ class IAWM_Agent_User {
 				'user_login'   => self::USER_LOGIN,
 				'user_pass'    => $password,
 				'user_email'   => $email,
-				'display_name' => 'IA Webmaster Agent',
+				'display_name' => __( 'IA Webmaster Agent', 'ia-webmaster-bridge' ),
 				'nickname'     => 'iawm-agent',
-				'first_name'   => 'IA Webmaster',
-				'last_name'    => 'Agent',
+				'first_name'   => __( 'IA Webmaster', 'ia-webmaster-bridge' ),
+				'last_name'    => __( 'Agent', 'ia-webmaster-bridge' ),
 				'role'         => self::ROLE_KEY,
-				'description'  => 'System user under whom the IA Webmaster Bridge adapter performs writes. Do not delete; do not log in. Authentication is HMAC, not WordPress login.',
+				'description'  => __( 'System user under whom the IA Webmaster Bridge adapter performs writes. Do not delete; do not log in. Authentication is HMAC, not WordPress login.', 'ia-webmaster-bridge' ),
 			)
 		);
 

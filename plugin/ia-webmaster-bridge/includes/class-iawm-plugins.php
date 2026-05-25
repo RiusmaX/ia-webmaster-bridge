@@ -105,7 +105,7 @@ class IAWM_Plugins {
 		$slug   = isset( $params['slug'] ) ? (string) $params['slug'] : '';
 
 		if ( ! self::is_valid_slug( $slug ) ) {
-			return IAWM_Support::rest_error( 'invalid_slug', 'Invalid slug.', 400 );
+			return IAWM_Support::rest_error( 'invalid_slug', __( 'Invalid slug.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! function_exists( 'plugins_api' ) ) {
@@ -175,7 +175,7 @@ class IAWM_Plugins {
 		$activate = ! empty( $params['activate'] );
 
 		if ( ! self::is_valid_slug( $slug ) ) {
-			return IAWM_Support::rest_error( 'invalid_slug', 'Invalid slug.', 400 );
+			return IAWM_Support::rest_error( 'invalid_slug', __( 'Invalid slug.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		// Load WP admin dependencies.
@@ -188,7 +188,12 @@ class IAWM_Plugins {
 		// Pre-op safety net: snapshot the plugin activation state.
 		$pre_backup = empty( $params['skip_backup'] )
 			? IAWM_Backup::snapshot_plugins_state(
-				"Before plugin install: {$slug}" . ( $activate ? ' (+activate)' : '' ),
+				sprintf(
+					/* translators: 1: plugin slug. 2: optional " (+activate)" suffix. */
+					__( 'Before plugin install: %1$s%2$s', 'ia-webmaster-bridge' ),
+					$slug,
+					$activate ? __( ' (+activate)', 'ia-webmaster-bridge' ) : ''
+				),
 				(string) $request->get_route()
 			)
 			: null;
@@ -209,7 +214,7 @@ class IAWM_Plugins {
 		}
 
 		if ( empty( $info->download_link ) ) {
-			return IAWM_Support::rest_error( 'no_download_link', 'No download link.', 502 );
+			return IAWM_Support::rest_error( 'no_download_link', __( 'No download link.', 'ia-webmaster-bridge' ), 502 );
 		}
 
 		// Check whether the plugin is already installed (by slug -> look for a file in WP_PLUGIN_DIR/{slug}/*).
@@ -237,7 +242,7 @@ class IAWM_Plugins {
 			}
 			if ( false === $res ) {
 				$messages = $skin->get_error_messages();
-				return IAWM_Support::rest_error( 'install_failed', $messages ? implode( ' ; ', $messages ) : 'Installation failed.', 500 );
+				return IAWM_Support::rest_error( 'install_failed', $messages ? implode( ' ; ', $messages ) : __( 'Installation failed.', 'ia-webmaster-bridge' ), 500 );
 			}
 
 			$result['installed'] = true;
@@ -278,7 +283,7 @@ class IAWM_Plugins {
 		$file   = isset( $params['file'] ) ? (string) $params['file'] : '';
 
 		if ( ! self::is_valid_file( $file ) ) {
-			return IAWM_Support::rest_error( 'invalid_file', 'Invalid or missing plugin file.', 400 );
+			return IAWM_Support::rest_error( 'invalid_file', __( 'Invalid or missing plugin file.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -292,7 +297,14 @@ class IAWM_Plugins {
 
 		// Pre-op safety net.
 		$pre_backup = empty( $params['skip_backup'] )
-			? IAWM_Backup::snapshot_plugins_state( "Before plugin activate: {$file}", (string) $request->get_route() )
+			? IAWM_Backup::snapshot_plugins_state(
+				sprintf(
+					/* translators: %s: plugin file (e.g. "akismet/akismet.php"). */
+					__( 'Before plugin activate: %s', 'ia-webmaster-bridge' ),
+					$file
+				),
+				(string) $request->get_route()
+			)
 			: null;
 
 		IAWM_Support::act_as_agent();
@@ -322,13 +334,13 @@ class IAWM_Plugins {
 		$file   = isset( $params['file'] ) ? (string) $params['file'] : '';
 
 		if ( ! self::is_valid_file( $file ) ) {
-			return IAWM_Support::rest_error( 'invalid_file', 'Invalid or missing plugin file.', 400 );
+			return IAWM_Support::rest_error( 'invalid_file', __( 'Invalid or missing plugin file.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( $file === self::SELF_PLUGIN_FILE ) {
 			return IAWM_Support::rest_error(
 				'cannot_disable_self',
-				'The IA Webmaster Bridge plugin cannot be deactivated via the API.',
+				__( 'The IA Webmaster Bridge plugin cannot be deactivated via the API.', 'ia-webmaster-bridge' ),
 				403
 			);
 		}
@@ -344,7 +356,14 @@ class IAWM_Plugins {
 
 		// Pre-op safety net.
 		$pre_backup = empty( $params['skip_backup'] )
-			? IAWM_Backup::snapshot_plugins_state( "Before plugin deactivate: {$file}", (string) $request->get_route() )
+			? IAWM_Backup::snapshot_plugins_state(
+				sprintf(
+					/* translators: %s: plugin file (e.g. "akismet/akismet.php"). */
+					__( 'Before plugin deactivate: %s', 'ia-webmaster-bridge' ),
+					$file
+				),
+				(string) $request->get_route()
+			)
 			: null;
 
 		IAWM_Support::act_as_agent();
@@ -376,13 +395,13 @@ class IAWM_Plugins {
 		$file   = isset( $params['file'] ) ? (string) $params['file'] : '';
 
 		if ( ! self::is_valid_file( $file ) ) {
-			return IAWM_Support::rest_error( 'invalid_file', 'Invalid or missing plugin file.', 400 );
+			return IAWM_Support::rest_error( 'invalid_file', __( 'Invalid or missing plugin file.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( $file === self::SELF_PLUGIN_FILE ) {
 			return IAWM_Support::rest_error(
 				'cannot_self_update',
-				'The IA Webmaster Bridge plugin cannot be updated via its own API. Use the WordPress admin instead.',
+				__( 'The IA Webmaster Bridge plugin cannot be updated via its own API. Use the WordPress admin instead.', 'ia-webmaster-bridge' ),
 				403
 			);
 		}
@@ -413,7 +432,13 @@ class IAWM_Plugins {
 		// Pre-op safety net.
 		$pre_backup = empty( $params['skip_backup'] )
 			? IAWM_Backup::snapshot_plugins_state(
-				"Before plugin update: {$file} ({$current} -> {$new_version})",
+				sprintf(
+					/* translators: 1: plugin file. 2: previous version. 3: new version. */
+					__( 'Before plugin update: %1$s (%2$s -> %3$s)', 'ia-webmaster-bridge' ),
+					$file,
+					$current,
+					$new_version
+				),
 				(string) $request->get_route()
 			)
 			: null;
@@ -429,7 +454,7 @@ class IAWM_Plugins {
 		}
 		if ( false === $res ) {
 			$messages = $skin->get_error_messages();
-			return IAWM_Support::rest_error( 'update_failed', $messages ? implode( ' ; ', $messages ) : 'Update failed.', 500 );
+			return IAWM_Support::rest_error( 'update_failed', $messages ? implode( ' ; ', $messages ) : __( 'Update failed.', 'ia-webmaster-bridge' ), 500 );
 		}
 
 		// Re-read to surface the actual installed version after the upgrade.

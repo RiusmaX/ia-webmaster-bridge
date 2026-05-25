@@ -180,19 +180,24 @@ class IAWM_Seo {
 		$post_id = isset( $params['post_id'] ) ? (int) $params['post_id'] : 0;
 
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', __( 'post_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
+			return IAWM_Support::rest_error(
+				'post_not_found',
+				/* translators: %d: post ID. */
+				sprintf( __( 'Post %d not found.', 'ia-webmaster-bridge' ), $post_id ),
+				404
+			);
 		}
 
 		$backend = self::detect_backend();
 		if ( self::BACKEND_NONE === $backend ) {
 			return IAWM_Support::rest_error(
 				'no_seo_backend',
-				'No active SEO plugin detected. Install Rank Math or Yoast.',
+				__( 'No active SEO plugin detected. Install Rank Math or Yoast.', 'ia-webmaster-bridge' ),
 				503
 			);
 		}
@@ -200,7 +205,7 @@ class IAWM_Seo {
 		if ( self::BACKEND_YOAST === $backend ) {
 			return IAWM_Support::rest_error(
 				'yoast_not_implemented',
-				'The Yoast backend is not yet implemented (backlog).',
+				__( 'The Yoast backend is not yet implemented (backlog).', 'ia-webmaster-bridge' ),
 				501
 			);
 		}
@@ -249,29 +254,34 @@ class IAWM_Seo {
 		$dry_run = ! empty( $params['dry_run'] );
 
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', __( 'post_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 		if ( empty( $fields ) ) {
-			return IAWM_Support::rest_error( 'no_fields', 'No fields to update.', 400 );
+			return IAWM_Support::rest_error( 'no_fields', __( 'No fields to update.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
+			return IAWM_Support::rest_error(
+				'post_not_found',
+				/* translators: %d: post ID. */
+				sprintf( __( 'Post %d not found.', 'ia-webmaster-bridge' ), $post_id ),
+				404
+			);
 		}
 
 		$backend = self::detect_backend();
 		if ( self::BACKEND_NONE === $backend ) {
 			return IAWM_Support::rest_error(
 				'no_seo_backend',
-				'No active SEO plugin detected.',
+				__( 'No active SEO plugin detected.', 'ia-webmaster-bridge' ),
 				503
 			);
 		}
 		if ( self::BACKEND_YOAST === $backend ) {
 			return IAWM_Support::rest_error(
 				'yoast_not_implemented',
-				'The Yoast backend is not yet implemented (backlog).',
+				__( 'The Yoast backend is not yet implemented (backlog).', 'ia-webmaster-bridge' ),
 				501
 			);
 		}

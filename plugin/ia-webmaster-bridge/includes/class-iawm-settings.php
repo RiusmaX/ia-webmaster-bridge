@@ -76,11 +76,11 @@ class IAWM_Settings {
 	 */
 	public static function known_scopes() {
 		return array(
-			self::SCOPE_READ          => 'Read (all GET endpoints, diagnostics, audit log)',
-			self::SCOPE_CONTENT_WRITE => 'Content writes (pages, posts, media, taxonomies, menus, SEO)',
-			self::SCOPE_DIVI_WRITE    => 'Divi writes (pages, Theme Builder)',
-			self::SCOPE_CONFIG_WRITE  => 'Configuration writes (site settings, users)',
-			self::SCOPE_INFRA_WRITE   => 'Infrastructure writes (plugins, themes, core, database, backups)',
+			self::SCOPE_READ          => __( 'Read (all GET endpoints, diagnostics, audit log)', 'ia-webmaster-bridge' ),
+			self::SCOPE_CONTENT_WRITE => __( 'Content writes (pages, posts, media, taxonomies, menus, SEO)', 'ia-webmaster-bridge' ),
+			self::SCOPE_DIVI_WRITE    => __( 'Divi writes (pages, Theme Builder)', 'ia-webmaster-bridge' ),
+			self::SCOPE_CONFIG_WRITE  => __( 'Configuration writes (site settings, users)', 'ia-webmaster-bridge' ),
+			self::SCOPE_INFRA_WRITE   => __( 'Infrastructure writes (plugins, themes, core, database, backups)', 'ia-webmaster-bridge' ),
 		);
 	}
 
@@ -107,7 +107,7 @@ class IAWM_Settings {
 				$key_id => array(
 					'secret'     => (string) $raw['secret'],
 					'scopes'     => isset( $raw['scopes'] ) ? $raw['scopes'] : null,
-					'label'      => isset( $raw['label'] ) ? (string) $raw['label'] : 'Legacy key',
+					'label'      => isset( $raw['label'] ) ? (string) $raw['label'] : __( 'Legacy key', 'ia-webmaster-bridge' ),
 					'created_at' => isset( $raw['created_at'] ) ? (string) $raw['created_at'] : null,
 					'last_used_at' => null,
 				),
@@ -235,7 +235,7 @@ class IAWM_Settings {
 		$key_id = 'iawm_' . bin2hex( random_bytes( 6 ) );
 		$record = array(
 			'secret'         => bin2hex( random_bytes( 32 ) ),
-			'label'          => is_string( $label ) && '' !== $label ? $label : 'Untitled key',
+			'label'          => is_string( $label ) && '' !== $label ? $label : __( 'Untitled key', 'ia-webmaster-bridge' ),
 			'created_at'     => gmdate( 'c' ),
 			'last_used_at'   => null,
 			'linked_user_id' => is_numeric( $linked_user_id ) ? (int) $linked_user_id : null,
