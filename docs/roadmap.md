@@ -56,7 +56,7 @@ continuously, with Phase 5 being the formal hardening pass.
 
 - [x] Plugin capabilities (install, activate, deactivate) — advanced in Phase 3 to integrate Rank Math
 - [x] Theme capabilities: `/themes/info`, `/themes/list`, `/themes/install`, `/themes/activate`, `/themes/update`. WP.org-only source, slug validation, auto-snapshot of theme-related options before any write
-- [ ] Plugin updates
+- [x] Plugin updates via `/plugins/update`. Self-update of the bridge plugin refused. Auto-snapshot of plugin state pre-op
 - [ ] Controlled database capabilities (export, query, search-replace)
 - [x] Backups and restore — shipped in Phase 5.2 (`/backup/*`)
 - [ ] SSH/WP-CLI fallback channel documented

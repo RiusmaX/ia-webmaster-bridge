@@ -55,6 +55,7 @@ class IAWM_Plugins {
 			'/plugins/install'    => array( 'handle_install', 'guard_write' ),
 			'/plugins/activate'   => array( 'handle_activate', 'guard_write' ),
 			'/plugins/deactivate' => array( 'handle_deactivate', 'guard_write' ),
+			'/plugins/update'     => array( 'handle_update', 'guard_write' ),
 		);
 
 		foreach ( $routes as $path => $config ) {
@@ -355,6 +356,131 @@ class IAWM_Plugins {
 			$response['pre_op_backup_id'] = $pre_backup;
 		}
 		return new WP_REST_Response( $response, 200 );
+	}
+
+	/**
+	 * POST /plugins/update — updates an installed plugin to its latest
+	 * version from the WordPress.org repository.
+	 *
+	 * Body: { file, skip_backup? }
+	 *
+	 * Refuses to self-update the IA Webmaster Bridge plugin: replacing
+	 * the running code mid-request is dangerous and would also break
+	 * the active HTTP handler. Use the WordPress admin for that.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_update( $request ) {
+		$params = IAWM_Support::json_params( $request );
+		$file   = isset( $params['file'] ) ? (string) $params['file'] : '';
+
+		if ( ! self::is_valid_file( $file ) ) {
+			return IAWM_Support::rest_error( 'invalid_file', 'Invalid or missing plugin file.', 400 );
+		}
+
+		if ( $file === self::SELF_PLUGIN_FILE ) {
+			return IAWM_Support::rest_error(
+				'cannot_self_update',
+				'The IA Webmaster Bridge plugin cannot be updated via its own API. Use the WordPress admin instead.',
+				403
+			);
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/misc.php';
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+
+		// Force a fresh update check so the transient reflects WP.org's current state.
+		wp_update_plugins();
+		$new_version = self::available_update_for_plugin( $file );
+		$current     = self::installed_version( $file );
+
+		if ( null === $new_version ) {
+			return new WP_REST_Response(
+				array(
+					'ok'         => true,
+					'file'       => $file,
+					'updated'    => false,
+					'no_update'  => true,
+					'version'    => $current,
+				),
+				200
+			);
+		}
+
+		// Pre-op safety net.
+		$pre_backup = empty( $params['skip_backup'] )
+			? IAWM_Backup::snapshot_plugins_state(
+				"Before plugin update: {$file} ({$current} -> {$new_version})",
+				(string) $request->get_route()
+			)
+			: null;
+
+		IAWM_Support::act_as_agent();
+
+		$skin     = new WP_Ajax_Upgrader_Skin();
+		$upgrader = new Plugin_Upgrader( $skin );
+		$res      = $upgrader->upgrade( $file );
+
+		if ( is_wp_error( $res ) ) {
+			return IAWM_Support::rest_error( 'update_failed', $res->get_error_message(), 500 );
+		}
+		if ( false === $res ) {
+			$messages = $skin->get_error_messages();
+			return IAWM_Support::rest_error( 'update_failed', $messages ? implode( ' ; ', $messages ) : 'Update failed.', 500 );
+		}
+
+		// Re-read to surface the actual installed version after the upgrade.
+		$actual = self::installed_version( $file );
+
+		$response = array(
+			'ok'               => true,
+			'file'             => $file,
+			'updated'          => true,
+			'previous_version' => $current,
+			'new_version'      => $actual,
+		);
+		if ( null !== $pre_backup ) {
+			$response['pre_op_backup_id'] = $pre_backup;
+		}
+
+		return new WP_REST_Response( $response, 200 );
+	}
+
+	/**
+	 * Returns the WP.org-advertised new version for an installed plugin,
+	 * or null if no update is pending.
+	 *
+	 * @param string $file Plugin file (e.g. "akismet/akismet.php").
+	 * @return string|null
+	 */
+	protected static function available_update_for_plugin( $file ) {
+		$transient = get_site_transient( 'update_plugins' );
+		if ( ! is_object( $transient ) || empty( $transient->response[ $file ]->new_version ) ) {
+			return null;
+		}
+		return (string) $transient->response[ $file ]->new_version;
+	}
+
+	/**
+	 * Returns the currently-installed version of a plugin, or null if
+	 * the plugin headers cannot be read.
+	 *
+	 * @param string $file Plugin file.
+	 * @return string|null
+	 */
+	protected static function installed_version( $file ) {
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		$path = WP_PLUGIN_DIR . '/' . $file;
+		if ( ! file_exists( $path ) ) {
+			return null;
+		}
+		$data = get_plugin_data( $path, false, false );
+		return isset( $data['Version'] ) ? (string) $data['Version'] : null;
 	}
 
 	/**

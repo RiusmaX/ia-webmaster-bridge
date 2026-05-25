@@ -99,6 +99,25 @@
 
 ---
 
+## Phase 4 — Plugin updates (plugin v0.22.0)
+
+### Untested as of this writing
+
+- [ ] **No-update path** — `iawm_plugins_update({file: "hello-dolly/hello.php"})`.
+  - Expected: `no_update: true, version: "1.7.2"` (Hello Dolly is already latest).
+  - No `pre_op_backup_id` (snapshot is only taken when there IS an update to apply).
+
+- [ ] **Self-update refusal** — `iawm_plugins_update({file: "ia-webmaster-bridge/ia-webmaster-bridge.php"})`.
+  - Expected: **HTTP 403 `cannot_self_update`** with a clear message pointing to WP admin.
+
+- [ ] **Real update path** — only possible when a plugin on the site has an update available.
+  - Trigger: install an older plugin version manually (or wait for a real WP.org update to land on something we have installed), then call `iawm_plugins_update({file: "..."})`.
+  - Expected: `updated: true`, `previous_version`, `new_version`, `pre_op_backup_id: M`.
+  - Cleanup: optionally `iawm_backup_restore({id: M})` would re-mark the previous active_plugins state, but it does NOT downgrade the on-disk files (we only snapshot state, not bytes).
+
+- [ ] **Invalid file** — `iawm_plugins_update({file: "../etc/passwd"})`.
+  - Expected: **HTTP 400 `invalid_file`**.
+
 ## Phase 4 — Themes module (plugin v0.21.0)
 
 ### Untested as of this writing

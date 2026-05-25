@@ -530,10 +530,17 @@ function registerPlugins(server: McpServer, client: IawmClient): void {
     {
       title: "Install a plugin",
       description:
-        "Installs a plugin from the WordPress.org repository. With activate=true, activates it right after. Returns the path to the installed plugin file.",
+        "Installs a plugin from the WordPress.org repository. With activate=true, activates it right after. Returns the path to the installed plugin file. Automatically snapshots the plugin activation state before doing anything (`pre_op_backup_id` in the response) so the install can be rolled back via /backup/restore.",
       inputSchema: {
         slug: z.string().describe("WordPress.org slug of the plugin to install"),
-        activate: z.boolean().optional().describe("Activate immediately after install (default false)"),
+        activate: z
+          .boolean()
+          .optional()
+          .describe("Activate immediately after install (default false)"),
+        skip_backup: z
+          .boolean()
+          .optional()
+          .describe("Skip the pre-op backup (use only on retries / chained ops)"),
       },
     },
     async (args) => toToolResult("plugins/install", await client.post("/plugins/install", args)),
@@ -544,9 +551,10 @@ function registerPlugins(server: McpServer, client: IawmClient): void {
     {
       title: "Activate a plugin",
       description:
-        "Activates an already-installed plugin. `file` is the path returned by diagnostics/plugins (e.g. rank-math-seo/rank-math.php).",
+        "Activates an already-installed plugin. `file` is the path returned by diagnostics/plugins (e.g. rank-math-seo/rank-math.php). Snapshots the plugin state beforehand (pre_op_backup_id) so the activation can be rolled back.",
       inputSchema: {
         file: z.string().describe("Plugin file (e.g. rank-math-seo/rank-math.php)"),
+        skip_backup: z.boolean().optional(),
       },
     },
     async (args) => toToolResult("plugins/activate", await client.post("/plugins/activate", args)),
@@ -557,12 +565,27 @@ function registerPlugins(server: McpServer, client: IawmClient): void {
     {
       title: "Deactivate a plugin",
       description:
-        "Deactivates a plugin. The IA Webmaster Bridge plugin itself cannot be deactivated via the API (guardrail).",
+        "Deactivates a plugin. The IA Webmaster Bridge plugin itself cannot be deactivated via the API (guardrail). Snapshots the plugin state beforehand (pre_op_backup_id).",
       inputSchema: {
         file: z.string().describe("Plugin file to deactivate"),
+        skip_backup: z.boolean().optional(),
       },
     },
     async (args) => toToolResult("plugins/deactivate", await client.post("/plugins/deactivate", args)),
+  );
+
+  server.registerTool(
+    "iawm_plugins_update",
+    {
+      title: "Update an installed plugin",
+      description:
+        "Updates an installed plugin to its latest version from WordPress.org. Returns `no_update: true` if already up to date. Otherwise snapshots the plugin state first (pre_op_backup_id) and replays the upgrade. The IA Webmaster Bridge plugin cannot self-update via this endpoint — use the WordPress admin for that.",
+      inputSchema: {
+        file: z.string().describe("Plugin file to update (e.g. akismet/akismet.php)"),
+        skip_backup: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("plugins/update", await client.post("/plugins/update", args)),
   );
 }
 
