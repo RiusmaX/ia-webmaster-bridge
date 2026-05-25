@@ -294,4 +294,45 @@
 > returns the wrong field name, a UI element is missing, the auto-backup
 > didn't trigger when it should have, etc.
 
-- _none yet_
+### 2026-05-25 — Partial validation run
+
+**Operating note**: when Claude Code is "restarted", it relaunches its
+processes but the **MCP gateway bundle is read from its installed
+location** (`~/.iawm/gateway/index.js` on Windows). That location is
+**not** automatically synced with the repo's `claude-plugin/
+mcp-gateway/dist/index.js`. To run the full validation after a build,
+copy the fresh bundle over and restart Claude Code a second time:
+
+```powershell
+Copy-Item F:\Dev\wordpress\ia\claude-plugin\mcp-gateway\dist\index.js `
+          $env:USERPROFILE\.iawm\gateway\index.js -Force
+```
+
+(Or run `/plugin install ia-webmaster@ia-webmaster-bridge` again from
+Claude Code, which performs the same copy via the marketplace.)
+
+**Validated this run (plugin v0.28.0 live, old gateway still loaded):**
+
+- [x] Phase 5.1 — self-protection — `iawm_config_users_update(id:3, display_name:"hacked")` → HTTP 403 `iawm_protected_user` ✓
+- [x] Phase 5.4 audit enrichment — entry #175 in `iawm_audit` shows `detail.key_label: "Legacy key"` ✓
+- [x] Design system read (`iawm_divi_global_data`) returns the new `global_fonts` field ✓ (v0.28.0 marker present)
+- [x] Plugin install path from previous session shows in audit log with `pre_op_backup_id` workflow intact (#164 hello-dolly install → still active in diagnostics)
+- [x] Divi 5.5.2 active, Theme = `Divi`, plugin v0.28.0 live
+
+**Blocked on gateway restart with the fresh bundle** (all tools listed below resolve as
+"No such tool available" in the current session because the installed
+gateway bundle pre-dates Phase 5.2):
+
+- All `iawm_backup_*` (list/get/create/restore/delete/prune) — Phase 5.2
+- All `iawm_themes_*` (list/info/install/activate/update) — Phase 4
+- All `iawm_cron_*` (list/schedules/run/schedule/unschedule) — Phase 4
+- All `iawm_core_*` (info/update) — Phase 4
+- All `iawm_database_*` (info/export/query/search_replace) — Phase 4
+- `iawm_divi_modules_catalog`, `iawm_divi_module_info` — Phase 3 registry
+- `iawm_divi_global_colors_update`, `iawm_divi_global_fonts_update`, `iawm_divi_global_variables_update` — Phase 6 design system
+- `iawm_divi_theme_options_get`, `iawm_divi_theme_options_update` — Phase 6 design system
+- `iawm_plugins_update` — Phase 4
+
+Once Claude Code is relaunched with the freshly-copied bundle, re-run
+the checklist from top to bottom — all the items above should green
+through.
