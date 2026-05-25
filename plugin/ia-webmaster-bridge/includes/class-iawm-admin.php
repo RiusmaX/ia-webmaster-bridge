@@ -264,8 +264,10 @@ class IAWM_Admin {
 			case 'save_retention':
 				$days = isset( $_POST['iawm_audit_days'] ) ? (int) $_POST['iawm_audit_days'] : 90;
 				$keep = isset( $_POST['iawm_backup_keep'] ) ? (int) $_POST['iawm_backup_keep'] : 50;
+				$pseudo = isset( $_POST['iawm_audit_pseudonymise'] ) ? 1 : 0;
 				update_option( IAWM_Audit::OPTION_RETENTION_DAYS, max( 1, min( 3650, $days ) ), true );
 				update_option( IAWM_Backup::OPTION_RETENTION_N, max( 1, min( 10000, $keep ) ), true );
+				update_option( IAWM_Audit::OPTION_PSEUDONYMISE, $pseudo, true );
 				$notice = 'retention_saved';
 				break;
 
@@ -852,6 +854,7 @@ class IAWM_Admin {
 		$next_backup= wp_next_scheduled( IAWM_Backup::PRUNE_HOOK );
 		$audit_rows = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . IAWM_Audit::table_name() );
 		$backup_rows= (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . IAWM_Backup::table_name() );
+		$pseudonymise = IAWM_Audit::is_pseudonymise_on();
 		?>
 		<div class="iawm-card">
 			<h2 class="iawm-card-title"><?php esc_html_e( 'Retention policy', 'ia-webmaster-bridge' ); ?></h2>
@@ -908,6 +911,24 @@ class IAWM_Admin {
 										'em'     => array(),
 										'code'   => array(),
 									)
+								);
+								?>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="iawm_audit_pseudonymise"><?php esc_html_e( 'Pseudonymise sensitive parameters', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<label>
+								<input id="iawm_audit_pseudonymise" type="checkbox" name="iawm_audit_pseudonymise" value="1" <?php checked( $pseudonymise ); ?>>
+								<?php esc_html_e( 'Hash sensitive parameters in audit log', 'ia-webmaster-bridge' ); ?>
+							</label>
+							<p class="description">
+								<?php
+								echo wp_kses(
+									/* translators: <code> wraps the redaction sentinel example; left verbatim. */
+									__( 'When enabled, values like user passwords and webhook signing secrets are replaced with <code>&lt;redacted:sha256:abc123…&gt;</code> before being written to the audit log. Existing rows are left untouched. Default: off.', 'ia-webmaster-bridge' ),
+									array( 'code' => array() )
 								);
 								?>
 							</p>

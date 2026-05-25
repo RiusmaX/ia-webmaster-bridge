@@ -1137,3 +1137,1122 @@ export function postNavigation(options: PostNavigationOptions = {}): GutenbergBl
 export function comments(): GutenbergBlock {
   return makeBlock(DiviBlock.Comments, {});
 }
+
+/* ================================================================== */
+/* Phase 9 — extended module builders                                 */
+/* ================================================================== */
+/*
+ * The 22 builders below cover the most operationally useful Divi
+ * native modules that previously lived only in the free-form
+ * registry. Each accepts a small, opinionated interface and emits
+ * sane defaults so a webmaster can compose pages without dropping to
+ * raw attribute hashes.
+ *
+ * Conventions inherited from the rest of this file:
+ *  - All values pass through desktopValue() so Divi inherits to
+ *    other breakpoints unless overridden.
+ *  - Optional fields are conditionally added — empty attribute keys
+ *    are avoided to keep the round-trip readable.
+ *  - Colors flow through colorToString() so DiviColor (hex or
+ *    gcid-*) is handled uniformly.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Fullwidth band / hero family (4)                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Fullwidth Header — large hero band with title, subtitle, body,
+ * optional dual CTA, optional foreground image and optional
+ * background image. Used as the opening section of a page where
+ * the standalone `hero` pattern is not flexible enough.
+ *
+ * Sensible defaults: vertical padding 120 / 80 px, centred layout,
+ * heading typography hooked to the design system.
+ */
+export interface FullwidthHeaderOptions {
+  title: string;
+  subhead?: string;
+  contentHtml?: string;
+  primaryButton?: { text: string; linkUrl: string };
+  secondaryButton?: { text: string; linkUrl: string };
+  /** URL of a foreground image (rendered next to the text). */
+  imageUrl?: string;
+  /** URL of a background image (fills the band). */
+  backgroundImageUrl?: string;
+  backgroundColor?: DiviColor;
+  /** Where the text sits horizontally. Default: "center". */
+  textAlign?: "left" | "center" | "right";
+  /**
+   * Height preset. "screen" sets min-height to 100vh, "large" to
+   * 80vh, "medium" to 60vh. Default: "large".
+   */
+  height?: "screen" | "large" | "medium";
+}
+
+export function fullwidthHeader(options: FullwidthHeaderOptions): GutenbergBlock {
+  const heightMap = { screen: "100vh", large: "80vh", medium: "60vh" };
+  const minHeight = heightMap[options.height ?? "large"];
+  const textAlign = options.textAlign ?? "center";
+
+  const innerContent: Record<string, unknown> = {
+    title: options.title,
+    textAlign,
+  };
+  if (options.subhead) innerContent.subhead = options.subhead;
+  if (options.contentHtml) innerContent.content = options.contentHtml;
+
+  const attrs: Record<string, unknown> = {
+    header: { innerContent: desktopValue(innerContent) },
+    module: {
+      decoration: {
+        sizing: desktopValue({ minHeight }),
+        spacing: desktopValue({
+          padding: { top: "120px", bottom: "80px" },
+        }),
+      },
+    },
+  };
+
+  if (options.imageUrl) {
+    attrs.image = {
+      innerContent: desktopValue({ url: options.imageUrl, alt: options.title }),
+    };
+  }
+
+  if (options.backgroundColor || options.backgroundImageUrl) {
+    const bgValue: Record<string, unknown> = {};
+    if (options.backgroundColor) bgValue.color = colorToString(options.backgroundColor);
+    if (options.backgroundImageUrl) bgValue.image = { url: options.backgroundImageUrl };
+    (attrs.module as Record<string, Record<string, unknown>>).decoration.background = desktopValue(bgValue);
+  }
+
+  if (options.primaryButton) {
+    attrs.buttonOne = {
+      innerContent: desktopValue({
+        text: options.primaryButton.text,
+        linkUrl: options.primaryButton.linkUrl,
+      }),
+    };
+  }
+  if (options.secondaryButton) {
+    attrs.buttonTwo = {
+      innerContent: desktopValue({
+        text: options.secondaryButton.text,
+        linkUrl: options.secondaryButton.linkUrl,
+      }),
+    };
+  }
+
+  return makeBlock(DiviBlock.FullwidthHeader, attrs);
+}
+
+/**
+ * Fullwidth Image — image spanning the full width of the section.
+ * Useful as a decorative band between content sections or as a
+ * standalone hero image. Accepts an optional link and a colour
+ * overlay (typical pattern: dark overlay at 30 % under text).
+ */
+export interface FullwidthImageOptions {
+  imageUrl: string;
+  alt?: string;
+  linkUrl?: string;
+  /** Hex/gcid overlay colour. Combined with `overlayOpacity`. */
+  overlayColor?: DiviColor;
+  /** 0..1; default 0.3 when overlayColor is set. */
+  overlayOpacity?: number;
+  /** Parallax effect. Default: false. */
+  parallax?: boolean;
+}
+
+export function fullwidthImage(options: FullwidthImageOptions): GutenbergBlock {
+  const innerContent: Record<string, unknown> = {
+    url: options.imageUrl,
+    alt: options.alt ?? "",
+  };
+  if (options.linkUrl) innerContent.linkUrl = options.linkUrl;
+
+  const attrs: Record<string, unknown> = {
+    image: { innerContent: desktopValue(innerContent) },
+  };
+
+  const moduleDecoration: Record<string, unknown> = {};
+  if (options.overlayColor) {
+    const opacity = options.overlayOpacity ?? 0.3;
+    moduleDecoration.background = desktopValue({
+      color: colorToString(options.overlayColor),
+      blend: "multiply",
+      opacity: String(opacity),
+    });
+  }
+  if (options.parallax) {
+    moduleDecoration.advanced = desktopValue({ parallax: "on" });
+  }
+  if (Object.keys(moduleDecoration).length > 0) {
+    attrs.module = { decoration: moduleDecoration };
+  }
+
+  return makeBlock(DiviBlock.FullwidthImage, attrs);
+}
+
+/**
+ * Fullwidth Slider — full-width hero slider containing slides. Each
+ * slide reuses the existing `slide()` builder so the API surface
+ * stays small. Sensible defaults: 7 s autoplay, navigation arrows
+ * + dots, viewport-height slides.
+ */
+export interface FullwidthSliderOptions {
+  /** Autoplay rotation. Default: true. */
+  autoplay?: boolean;
+  /** Autoplay delay in ms. Default: 7000. */
+  autoplaySpeed?: number;
+  /** Show prev/next arrows. Default: true. */
+  showArrows?: boolean;
+  /** Show pagination dots. Default: true. */
+  showPagination?: boolean;
+}
+
+export function fullwidthSlider(
+  options: FullwidthSliderOptions,
+  slides: GutenbergBlock[],
+): GutenbergBlock {
+  const sliderAttrs: Record<string, unknown> = {
+    autoplay: options.autoplay === false ? "off" : "on",
+    autoplaySpeed: String(options.autoplaySpeed ?? 7000),
+    showArrows: options.showArrows === false ? "off" : "on",
+    showPagination: options.showPagination === false ? "off" : "on",
+  };
+  return makeBlock(
+    DiviBlock.FullwidthSlider,
+    { slider: { innerContent: desktopValue(sliderAttrs) } },
+    slides,
+  );
+}
+
+/**
+ * Fullwidth Map — Google Map spanning the full width. Useful on
+ * "Contact" / "Find us" pages. Optional pins. Sensible defaults:
+ * grayscale on (sober rendering), mouse-wheel zoom off (prevents
+ * scroll trap), 500 px height.
+ */
+export interface FullwidthMapPin {
+  lat: number;
+  lng: number;
+  title?: string;
+  contentHtml?: string;
+}
+
+export interface FullwidthMapOptions {
+  centerLat: number;
+  centerLng: number;
+  zoom?: number;
+  pins?: FullwidthMapPin[];
+  /** Grayscale rendering. Default: true. */
+  grayscale?: boolean;
+  /** Enable mouse-wheel zoom. Default: false (avoids scroll trap). */
+  mouseWheel?: boolean;
+  /** Height (CSS). Default: "500px". */
+  height?: string;
+}
+
+export function fullwidthMap(options: FullwidthMapOptions): GutenbergBlock {
+  const mapInner: Record<string, unknown> = {
+    addressLat: String(options.centerLat),
+    addressLng: String(options.centerLng),
+    zoomLevel: String(options.zoom ?? 14),
+    grayscale: (options.grayscale ?? true) ? "on" : "off",
+    mouseWheel: (options.mouseWheel ?? false) ? "on" : "off",
+  };
+
+  const innerBlocks: GutenbergBlock[] = (options.pins ?? []).map((pin) =>
+    makeBlock(DiviBlock.MapPin, {
+      pin: {
+        innerContent: desktopValue({
+          title: pin.title ?? "",
+          content: pin.contentHtml ?? "",
+          pinAddressLat: String(pin.lat),
+          pinAddressLng: String(pin.lng),
+        }),
+      },
+    }),
+  );
+
+  return makeBlock(
+    DiviBlock.FullwidthMap,
+    {
+      map: { innerContent: desktopValue(mapInner) },
+      module: {
+        decoration: {
+          sizing: desktopValue({ minHeight: options.height ?? "500px" }),
+        },
+      },
+    },
+    innerBlocks,
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Group containers (2 + 2 inner)                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Group module — generic container that wraps a set of modules as
+ * one stylable / animable unit. Use it to build "card"-style
+ * clusters with shared background, padding, radius and shadow.
+ *
+ * Default look: 30 px padding, radius 12 px, subtle elevation
+ * shadow, optional translateY on hover for interactive cards.
+ */
+export interface GroupOptions {
+  backgroundColor?: DiviColor;
+  /** Border-radius, e.g. "12px" or "1rem". Default: "12px". */
+  borderRadius?: string;
+  /** Padding in CSS. Default: "30px". */
+  padding?: string;
+  /** Drop shadow. Default: true. */
+  shadow?: boolean;
+  /** Translate up on hover. Default: false. */
+  hoverElevation?: boolean;
+}
+
+export function group(options: GroupOptions, modules: GutenbergBlock[]): GutenbergBlock {
+  const decoration: Record<string, unknown> = {
+    spacing: desktopValue({ padding: { top: options.padding ?? "30px", right: options.padding ?? "30px", bottom: options.padding ?? "30px", left: options.padding ?? "30px" } }),
+    border: desktopValue({ radius: { topLeft: options.borderRadius ?? "12px", topRight: options.borderRadius ?? "12px", bottomRight: options.borderRadius ?? "12px", bottomLeft: options.borderRadius ?? "12px" } }),
+  };
+  if (options.backgroundColor) {
+    decoration.background = desktopValue({ color: colorToString(options.backgroundColor) });
+  }
+  if (options.shadow !== false) {
+    decoration.boxShadow = desktopValue({
+      style: "preset3",
+      horizontal: "0px",
+      vertical: "4px",
+      blur: "12px",
+      spread: "0px",
+      color: "rgba(0,0,0,0.08)",
+    });
+  }
+  if (options.hoverElevation) {
+    decoration.transform = {
+      desktop: { hover: { translate: { y: "-4px" } } },
+    };
+  }
+
+  return makeBlock(DiviBlock.Group, { module: { decoration } }, modules);
+}
+
+/**
+ * Group Carousel — carousel where each slide is a full `group()`
+ * cluster (vs the slider+slide pair which is one-quote-per-slide).
+ * Used for features carousels, case-study cards, testimonial cards
+ * that don't fit in the simpler testimonials pattern.
+ */
+export interface GroupCarouselOptions {
+  /** Visible items on desktop. Default: 3. */
+  visibleItems?: number;
+  /** Autoplay rotation. Default: false. */
+  autoplay?: boolean;
+  /** Autoplay delay in ms. Default: 5000. */
+  autoplaySpeed?: number;
+  /** Show navigation arrows. Default: true. */
+  showArrows?: boolean;
+  /** Show pagination dots. Default: true. */
+  showDots?: boolean;
+  /** Gap between items in px. Default: 24. */
+  gap?: number;
+}
+
+export function groupCarousel(
+  options: GroupCarouselOptions,
+  groups: GutenbergBlock[],
+): GutenbergBlock {
+  const carouselAttrs: Record<string, unknown> = {
+    visibleItems: String(options.visibleItems ?? 3),
+    autoplay: options.autoplay ? "on" : "off",
+    autoplaySpeed: String(options.autoplaySpeed ?? 5000),
+    showArrows: options.showArrows === false ? "off" : "on",
+    showPagination: options.showDots === false ? "off" : "on",
+    gap: String(options.gap ?? 24) + "px",
+  };
+  return makeBlock(
+    DiviBlock.GroupCarousel,
+    { carousel: { innerContent: desktopValue(carouselAttrs) } },
+    groups,
+  );
+}
+
+/**
+ * Inner Row — a row nested inside a column (sub-grid). Mirrors the
+ * regular `row` builder; same options minus the constraint that a
+ * row-inner can only live inside a column.
+ */
+export function rowInner(options: RowOptions, columns: GutenbergBlock[]): GutenbergBlock {
+  const colCount = columns.length;
+  const flexColumnStructure = `equal-columns_${colCount === 1 ? 1 : colCount}`;
+  const moduleAttrs: Record<string, unknown> = {
+    advanced: {
+      columnStructure: desktopValue(options.columnStructure),
+      flexColumnStructure: desktopValue(flexColumnStructure),
+    },
+    decoration: {
+      layout: {
+        ...desktopValue({ flexWrap: "nowrap" }),
+        ...(options.flexWrapMobile === "wrap"
+          ? {
+              phone: { value: { flexWrap: "wrap" } },
+              phoneWide: { value: { flexWrap: "wrap" } },
+            }
+          : {}),
+      },
+    },
+  };
+  if (options.spacing) {
+    (moduleAttrs.decoration as Record<string, unknown>).spacing = desktopValue(options.spacing);
+  }
+  return makeBlock(DiviBlock.RowInner, { module: moduleAttrs }, columns);
+}
+
+/**
+ * Inner Column — a column inside a row-inner. Mirrors the regular
+ * `column` builder.
+ */
+export interface ColumnInnerOptions {
+  type: ColumnStructure | string;
+  fullWidthOnMobile?: boolean;
+}
+
+export function columnInner(options: ColumnInnerOptions, modules: GutenbergBlock[]): GutenbergBlock {
+  const attrs: Record<string, unknown> = {
+    module: {
+      advanced: { type: desktopValue(options.type) },
+    },
+  };
+  if (options.fullWidthOnMobile) {
+    (attrs.module as Record<string, Record<string, unknown>>).advanced.sizing = {
+      phone: { value: { width: "100%" } },
+      phoneWide: { value: { width: "100%" } },
+    };
+  }
+  return makeBlock(DiviBlock.ColumnInner, attrs, modules);
+}
+
+/* ------------------------------------------------------------------ */
+/* Post-loop family (4) — shared helper                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Shared options for post-loop modules (blog, portfolio,
+ * filterable-portfolio, post-slider). Each loop's builder picks the
+ * relevant subset and adds its own specifics.
+ */
+interface PostLoopOptions {
+  /** Number of posts to display. Default: 10. */
+  postsNumber?: number;
+  /** Category slugs to include. */
+  categories?: string[];
+  /** Custom post type. Default: implicit per module. */
+  postType?: string;
+  /** Order. Default: "DESC" by date. */
+  order?: "ASC" | "DESC";
+  /** Orderby. Default: "date". */
+  orderby?: "date" | "title" | "menu_order" | "rand";
+}
+
+function postLoopInner(options: PostLoopOptions, extra: Record<string, unknown>): Record<string, unknown> {
+  const inner: Record<string, unknown> = {
+    postsNumber: String(options.postsNumber ?? 10),
+    order: options.order ?? "DESC",
+    orderBy: options.orderby ?? "date",
+    ...extra,
+  };
+  if (options.categories && options.categories.length > 0) {
+    inner.includeCategories = options.categories.join(",");
+  }
+  if (options.postType) {
+    inner.postType = options.postType;
+  }
+  return inner;
+}
+
+/**
+ * Blog module — paginated list of posts (grid or fullwidth).
+ * Defaults: 3-column grid, thumbnail on top, 270-char excerpt,
+ * date + author meta, pagination on.
+ */
+export interface BlogOptions extends PostLoopOptions {
+  /** Full-width single-column layout. Default: false (3-col grid). */
+  fullwidth?: boolean;
+  /** Masonry grid. Default: false. */
+  masonry?: boolean;
+  showThumbnail?: boolean;
+  showExcerpt?: boolean;
+  showAuthor?: boolean;
+  showDate?: boolean;
+  showCategories?: boolean;
+  showReadMore?: boolean;
+  showPagination?: boolean;
+}
+
+export function blog(options: BlogOptions = {}): GutenbergBlock {
+  const inner = postLoopInner(options, {
+    fullwidth: options.fullwidth ? "on" : "off",
+    useMasonryGrid: options.masonry ? "on" : "off",
+    showThumbnail: options.showThumbnail === false ? "off" : "on",
+    showContent: options.showExcerpt === false ? "off" : "on",
+    showAuthor: options.showAuthor === false ? "off" : "on",
+    showDate: options.showDate === false ? "off" : "on",
+    showCategories: options.showCategories === false ? "off" : "on",
+    showReadMore: options.showReadMore === false ? "off" : "on",
+    showPagination: options.showPagination === false ? "off" : "on",
+  });
+  return makeBlock(DiviBlock.Blog, { post: { innerContent: desktopValue(inner) } });
+}
+
+/**
+ * Portfolio module — grid of "project" CPT entries. Defaults: 3
+ * columns, ratio 4:3 covers, overlay-on-hover with magnifier icon,
+ * title H4 centred below.
+ */
+export interface PortfolioOptions extends PostLoopOptions {
+  /** Number of columns. Default: 3. */
+  columns?: 2 | 3 | 4;
+  /** Full-width single-column. Default: false. */
+  fullwidth?: boolean;
+  showTitle?: boolean;
+  showCategories?: boolean;
+}
+
+export function portfolio(options: PortfolioOptions = {}): GutenbergBlock {
+  const inner = postLoopInner(options, {
+    fullwidth: options.fullwidth ? "on" : "off",
+    showTitle: options.showTitle === false ? "off" : "on",
+    showCategories: options.showCategories === false ? "off" : "on",
+  });
+  if (options.columns) {
+    inner.columnsNumber = String(options.columns);
+  }
+  return makeBlock(DiviBlock.Portfolio, { post: { innerContent: desktopValue(inner) } });
+}
+
+/**
+ * Filterable Portfolio — same as portfolio with a horizontal
+ * category-filter bar above. Defaults: 3 columns, isotope animation.
+ */
+export interface FilterablePortfolioOptions extends PortfolioOptions {}
+
+export function filterablePortfolio(options: FilterablePortfolioOptions = {}): GutenbergBlock {
+  const block = portfolio(options);
+  block.blockName = DiviBlock.FilterablePortfolio;
+  return block;
+}
+
+/**
+ * Post Slider — slider of posts (editorial hero / featured posts
+ * carousel). Defaults: 5 latest posts, autoplay 6 s, full-bleed
+ * background image with dark overlay, "Read article" button.
+ */
+export interface PostSliderOptions extends PostLoopOptions {
+  showImage?: boolean;
+  showMeta?: boolean;
+  showButton?: boolean;
+  buttonText?: string;
+  /** Slide background variant. Default: "dark". */
+  backgroundLayout?: "light" | "dark";
+}
+
+export function postSlider(options: PostSliderOptions = {}): GutenbergBlock {
+  const inner = postLoopInner(
+    { postsNumber: 5, ...options },
+    {
+      showImage: options.showImage === false ? "off" : "on",
+      showMeta: options.showMeta === false ? "off" : "on",
+      showMoreButton: options.showButton === false ? "off" : "on",
+      moreText: options.buttonText ?? "Read article",
+      backgroundLayout: options.backgroundLayout ?? "dark",
+    },
+  );
+  return makeBlock(DiviBlock.PostSlider, { post: { innerContent: desktopValue(inner) } });
+}
+
+/* ------------------------------------------------------------------ */
+/* Specialty content (5)                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Before/After Image — comparison slider. Used for retouching,
+ * renovation, transformations, esthetics. Default position 50 %.
+ */
+export interface BeforeAfterOptions {
+  beforeImageUrl: string;
+  afterImageUrl: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  /** Slider handle colour. */
+  sliderColor?: DiviColor;
+  /** Initial position 0-100. Default: 50. */
+  startPosition?: number;
+}
+
+export function beforeAfter(options: BeforeAfterOptions): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    beforeImage: { url: options.beforeImageUrl },
+    afterImage: { url: options.afterImageUrl },
+    beforeLabel: options.beforeLabel ?? "Before",
+    afterLabel: options.afterLabel ?? "After",
+    startPosition: String(options.startPosition ?? 50),
+  };
+  if (options.sliderColor) {
+    inner.sliderColor = colorToString(options.sliderColor);
+  }
+  return makeBlock(DiviBlock.BeforeAfterImage, {
+    image: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * Timeline — vertical chronological track. Use the wrapper to
+ * declare the full list of milestones in one call. Each item
+ * becomes a `timeline-item` child. Defaults: alternating
+ * left/right, primary-colour central line, round icons.
+ */
+export interface TimelineEntry {
+  title: string;
+  date: string;
+  contentHtml?: string;
+  imageUrl?: string;
+  /** Icon unicode (Divi font). */
+  iconUnicode?: string;
+  /** Force a side ("left" / "right"). Default: auto (alternating). */
+  side?: "left" | "right" | "auto";
+}
+
+export function timeline(items: TimelineEntry[]): GutenbergBlock {
+  const innerBlocks = items.map((item, idx) => timelineItem(item, idx % 2 === 0 ? "left" : "right"));
+  return makeBlock(DiviBlock.Timeline, {}, innerBlocks);
+}
+
+/**
+ * Timeline Item — one entry of a timeline. Use directly only when
+ * `timeline()` doesn't fit (e.g. you want to mix custom inner
+ * modules between standard items).
+ */
+export function timelineItem(item: TimelineEntry, defaultSide: "left" | "right" = "left"): GutenbergBlock {
+  const side = item.side === "auto" ? defaultSide : item.side ?? defaultSide;
+  const inner: Record<string, unknown> = {
+    title: item.title,
+    date: item.date,
+    contentHtml: item.contentHtml ?? "",
+    side,
+  };
+  if (item.imageUrl) inner.image = { url: item.imageUrl };
+  if (item.iconUnicode) inner.iconUnicode = item.iconUnicode;
+  return makeBlock(DiviBlock.TimelineItem, {
+    item: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * Lottie — vector animation from a Lottie/JSON file. Defaults:
+ * autoplay, infinite loop, triggered on load, 100 % width,
+ * centred.
+ */
+export interface LottieOptions {
+  /** URL to a .json or .lottie file. */
+  animationUrl: string;
+  loop?: boolean;
+  autoplay?: boolean;
+  /** Playback speed multiplier. Default: 1. */
+  speed?: number;
+  /** What triggers playback. Default: "load". */
+  trigger?: "load" | "hover" | "scroll";
+  /** Render width (CSS). Default: "100%". */
+  width?: string;
+  /** Horizontal alignment. Default: "center". */
+  alignment?: "left" | "center" | "right";
+}
+
+export function lottie(options: LottieOptions): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    src: options.animationUrl,
+    loop: options.loop !== false ? "on" : "off",
+    autoplay: options.autoplay !== false ? "on" : "off",
+    speed: String(options.speed ?? 1),
+    trigger: options.trigger ?? "load",
+  };
+  return makeBlock(DiviBlock.Lottie, {
+    animation: { innerContent: desktopValue(inner) },
+    module: {
+      decoration: {
+        sizing: desktopValue({ width: options.width ?? "100%" }),
+        alignment: desktopValue({ horizontal: options.alignment ?? "center" }),
+      },
+    },
+  });
+}
+
+/**
+ * SVG — inline SVG block. Lighter than `image` for vector
+ * illustrations. Supports a hover colour transition. Default
+ * width 120 px, centred.
+ */
+export interface SvgOptions {
+  /** Raw SVG markup (xml string). */
+  svgCode: string;
+  width?: string;
+  height?: string;
+  color?: DiviColor;
+  hoverColor?: DiviColor;
+  alignment?: "left" | "center" | "right";
+}
+
+export function svg(options: SvgOptions): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    code: options.svgCode,
+  };
+  if (options.color) inner.color = colorToString(options.color);
+  if (options.hoverColor) inner.hoverColor = colorToString(options.hoverColor);
+
+  return makeBlock(DiviBlock.Svg, {
+    svg: { innerContent: desktopValue(inner) },
+    module: {
+      decoration: {
+        sizing: desktopValue({
+          width: options.width ?? "120px",
+          ...(options.height ? { height: options.height } : {}),
+        }),
+        alignment: desktopValue({ horizontal: options.alignment ?? "center" }),
+      },
+    },
+  });
+}
+
+/**
+ * Countdown Timer — counts down to a target date. Defaults: card
+ * style, separators ":", English labels (override via `labels`).
+ */
+export interface CountdownOptions {
+  /** Target end date (ISO 8601). */
+  endDate: string;
+  title?: string;
+  labels?: { days?: string; hours?: string; minutes?: string; seconds?: string };
+  backgroundColor?: DiviColor;
+  textColor?: DiviColor;
+}
+
+export function countdown(options: CountdownOptions): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    endDate: options.endDate,
+  };
+  if (options.title) inner.title = options.title;
+  if (options.labels) {
+    if (options.labels.days) inner.daysText = options.labels.days;
+    if (options.labels.hours) inner.hoursText = options.labels.hours;
+    if (options.labels.minutes) inner.minutesText = options.labels.minutes;
+    if (options.labels.seconds) inner.secondsText = options.labels.seconds;
+  }
+
+  const decoration: Record<string, unknown> = {
+    spacing: desktopValue({ padding: { top: "60px", right: "60px", bottom: "60px", left: "60px" } }),
+  };
+  if (options.backgroundColor) {
+    decoration.background = desktopValue({ color: colorToString(options.backgroundColor) });
+  }
+  if (options.textColor) {
+    decoration.font = desktopValue({ color: colorToString(options.textColor) });
+  }
+
+  return makeBlock(DiviBlock.CountdownTimer, {
+    timer: { innerContent: desktopValue(inner) },
+    module: { decoration },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout + form widgets (4)                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Sidebar — render a WordPress sidebar (widget area). Useful in
+ * blog 2-column layouts. Default sidebar id "sidebar-1" matches
+ * the WP convention.
+ */
+export interface SidebarOptions {
+  /** WP sidebar id. Default: "sidebar-1". */
+  areaId?: string;
+  /** Visual orientation hint (left padding when "right"). */
+  orientation?: "left" | "right";
+  /** Show subtle border. Default: false. */
+  showBorder?: boolean;
+}
+
+export function sidebar(options: SidebarOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    sidebarId: options.areaId ?? "sidebar-1",
+    orientation: options.orientation ?? "left",
+    showBorder: options.showBorder ? "on" : "off",
+  };
+  return makeBlock(DiviBlock.Sidebar, {
+    sidebar: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * Login — front-end WordPress login form. Defaults: redirect to
+ * current page after login, max-width 480 px centred.
+ */
+export interface LoginOptions {
+  title?: string;
+  /** Redirect to the current page after login. Default: true. */
+  currentPageRedirect?: boolean;
+  backgroundColor?: DiviColor;
+  buttonText?: string;
+}
+
+export function login(options: LoginOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    currentPageRedirect: options.currentPageRedirect !== false ? "on" : "off",
+  };
+  if (options.title) inner.title = options.title;
+  if (options.buttonText) inner.buttonText = options.buttonText;
+
+  const decoration: Record<string, unknown> = {
+    sizing: desktopValue({ maxWidth: "480px" }),
+    spacing: desktopValue({ padding: { top: "40px", right: "40px", bottom: "40px", left: "40px" } }),
+    alignment: desktopValue({ horizontal: "center" }),
+  };
+  if (options.backgroundColor) {
+    decoration.background = desktopValue({ color: colorToString(options.backgroundColor) });
+  }
+
+  return makeBlock(DiviBlock.Login, {
+    login: { innerContent: desktopValue(inner) },
+    module: { decoration },
+  });
+}
+
+/**
+ * Dropdown — standalone dropdown selector. Two behaviours:
+ *  - "navigate": pick an option → window.location to its `url`
+ *  - "emit": pick an option → emit a JS custom event (consumed by
+ *    a page-level filter script the operator provides)
+ */
+export interface DropdownOption {
+  value: string;
+  label: string;
+  /** Required if behavior === "navigate". */
+  url?: string;
+}
+
+export interface DropdownOptions {
+  label?: string;
+  options: DropdownOption[];
+  defaultValue?: string;
+  /** Default: "navigate". */
+  behavior?: "navigate" | "emit";
+}
+
+export function dropdown(options: DropdownOptions): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    options: options.options.map((o) => ({
+      value: o.value,
+      label: o.label,
+      ...(o.url ? { url: o.url } : {}),
+    })),
+    behavior: options.behavior ?? "navigate",
+  };
+  if (options.label) inner.label = options.label;
+  if (options.defaultValue) inner.defaultValue = options.defaultValue;
+
+  return makeBlock(DiviBlock.Dropdown, {
+    dropdown: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * Signup Custom Field — extra field for the email-signup module.
+ * The standalone `signup()` builder takes the canonical email-only
+ * form; pass a list of these as `innerBlocks` to it (or compose
+ * manually) to qualify the lead with extra inputs.
+ */
+export interface SignupCustomFieldOptions {
+  fieldId: string;
+  label: string;
+  type?: "input" | "email" | "text" | "checkbox" | "radio" | "select";
+  required?: boolean;
+  /** For select/radio/checkbox. */
+  options?: string[];
+}
+
+export function signupCustomField(options: SignupCustomFieldOptions): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    fieldId: options.fieldId,
+    label: options.label,
+    type: options.type ?? "input",
+    required: options.required ? "on" : "off",
+  };
+  if (options.options && options.options.length > 0) {
+    inner.options = options.options;
+  }
+  return makeBlock(DiviBlock.SignupCustomField, {
+    field: { innerContent: desktopValue(inner) },
+  });
+}
+
+/* ================================================================== */
+/* Phase 9 — WooCommerce module builders                              */
+/* ================================================================== */
+/*
+ * The 10 builders below cover the WooCommerce Divi 5 modules that an
+ * opinionated webmaster reaches for most often when composing a
+ * Theme Builder template (shop / single-product / cart / checkout).
+ *
+ * Most WC modules are dynamic — they pull from the current WC
+ * context (product, cart, order) at render time — so the builders
+ * are deliberately thin: they expose only the layout/visibility
+ * toggles operators actually tune. For finer-grained customisation
+ * the operator drops to the free-form catalogue
+ * (`iawm_divi_module_info`).
+ *
+ * Naming convention: `wc<Module>` prefix to disambiguate from the
+ * post-aware builders (`postTitle` vs `wcProductTitle`).
+ *
+ * Composition site: prefer Theme Builder layouts (via
+ * `iawm_divi_theme_builder_compose`). Standalone pages work but the
+ * modules only render meaningfully when the page itself is being
+ * viewed in the right WC context — see docs/woocommerce-integration.md.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Single-product context (7)                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * WooCommerce Product Title — dynamic title of the current product
+ * (Theme Builder single-product templates). Defaults: H1, hooked to
+ * the design system heading typography.
+ */
+export interface WcProductTitleOptions {
+  /** Heading level. Default: "h1". */
+  headingLevel?: "h1" | "h2" | "h3";
+}
+
+export function wcProductTitle(options: WcProductTitleOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {};
+  if (options.headingLevel) inner.headerLevel = options.headingLevel;
+  const attrs: Record<string, unknown> = {};
+  if (Object.keys(inner).length > 0) {
+    attrs.title = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.WoocommerceProductTitle, attrs);
+}
+
+/**
+ * WooCommerce Product Price — current/sale price. Defaults: stock
+ * Divi rendering with the strikethrough for sale prices.
+ */
+export interface WcProductPriceOptions {
+  /** Optional CSS alignment override. */
+  alignment?: "left" | "center" | "right";
+}
+
+export function wcProductPrice(options: WcProductPriceOptions = {}): GutenbergBlock {
+  const attrs: Record<string, unknown> = {};
+  if (options.alignment) {
+    attrs.module = {
+      decoration: { alignment: desktopValue({ horizontal: options.alignment }) },
+    };
+  }
+  return makeBlock(DiviBlock.WoocommerceProductPrice, attrs);
+}
+
+/**
+ * WooCommerce Product Images — main gallery + lightbox. Defaults:
+ * lightbox on, sale-flash on, square thumbnails.
+ */
+export interface WcProductImagesOptions {
+  /** Show the main image. Default: true. */
+  showProductImage?: boolean;
+  /** Show the gallery strip. Default: true. */
+  showProductGallery?: boolean;
+  /** Show the sale flash. Default: true. */
+  showSaleBadge?: boolean;
+  /** Open in lightbox. Default: true. */
+  lightbox?: boolean;
+}
+
+export function wcProductImages(options: WcProductImagesOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    showProductImage: options.showProductImage === false ? "off" : "on",
+    showProductGallery: options.showProductGallery === false ? "off" : "on",
+    showSaleBadge: options.showSaleBadge === false ? "off" : "on",
+    lightbox: options.lightbox === false ? "off" : "on",
+  };
+  return makeBlock(DiviBlock.WoocommerceProductImages, {
+    image: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * WooCommerce Add-to-Cart — the buy-now button + quantity selector.
+ * Defaults: alignment left, button text uses the WC default
+ * ("Add to cart" / "Read more" depending on product type).
+ */
+export interface WcProductAddToCartOptions {
+  /** Override the button text. */
+  buttonText?: string;
+  /** Show the quantity input. Default: true (in-stock simple products). */
+  showQuantity?: boolean;
+  /** Show stock availability under the button. Default: true. */
+  showStock?: boolean;
+}
+
+export function wcProductAddToCart(options: WcProductAddToCartOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    showQuantity: options.showQuantity === false ? "off" : "on",
+    showStock: options.showStock === false ? "off" : "on",
+  };
+  if (options.buttonText) inner.buttonText = options.buttonText;
+  return makeBlock(DiviBlock.WoocommerceProductAddToCart, {
+    button: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * WooCommerce Product Description — short or long description block.
+ * Default: short description on the cart-side, full description in
+ * the tabs section. Operators pin which one with `descriptionType`.
+ */
+export interface WcProductDescriptionOptions {
+  /** Which description body to render. Default: "short". */
+  descriptionType?: "short" | "long";
+}
+
+export function wcProductDescription(options: WcProductDescriptionOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    descriptionType: options.descriptionType ?? "short",
+  };
+  return makeBlock(DiviBlock.WoocommerceProductDescription, {
+    description: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * WooCommerce Product Tabs — the bottom-of-page tabs (description,
+ * additional information, reviews). Lets the operator pick the
+ * initial tab.
+ */
+export interface WcProductTabsOptions {
+  /** Default open tab. */
+  activeTab?: "description" | "additional_information" | "reviews";
+  /** List of tab keys to display (in order). Default: all three. */
+  includeTabs?: ("description" | "additional_information" | "reviews")[];
+}
+
+export function wcProductTabs(options: WcProductTabsOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {};
+  if (options.activeTab) inner.activeTab = options.activeTab;
+  if (options.includeTabs && options.includeTabs.length > 0) {
+    inner.includeTabs = options.includeTabs.join(",");
+  }
+  const attrs: Record<string, unknown> = {};
+  if (Object.keys(inner).length > 0) {
+    attrs.tabs = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.WoocommerceProductTabs, attrs);
+}
+
+/**
+ * WooCommerce Related Products — grid of related products at the
+ * bottom of a single-product template. Defaults: 4 columns, 4 items,
+ * order by relevance.
+ */
+export interface WcRelatedProductsOptions {
+  /** Maximum items to show. Default: 4. */
+  postsNumber?: number;
+  /** Columns on desktop. Default: 4. */
+  columns?: 2 | 3 | 4 | 5;
+  /** Order. Default: random (WC default). */
+  orderby?: "rand" | "date" | "title" | "popularity" | "rating";
+}
+
+export function wcRelatedProducts(options: WcRelatedProductsOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    postsNumber: String(options.postsNumber ?? 4),
+    columnsNumber: String(options.columns ?? 4),
+    orderBy: options.orderby ?? "rand",
+  };
+  return makeBlock(DiviBlock.WoocommerceRelatedProducts, {
+    related: { innerContent: desktopValue(inner) },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Cart context (2)                                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * WooCommerce Cart Products — line items + thumbnails + quantity
+ * editors. Defaults: with thumbnails, allow quantity edits.
+ */
+export interface WcCartProductsOptions {
+  /** Show product thumbnails. Default: true. */
+  showThumbnail?: boolean;
+  /** Allow quantity editing in the cart. Default: true. */
+  showQuantity?: boolean;
+}
+
+export function wcCartProducts(options: WcCartProductsOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    showThumbnail: options.showThumbnail === false ? "off" : "on",
+    showQuantity: options.showQuantity === false ? "off" : "on",
+  };
+  return makeBlock(DiviBlock.WoocommerceCartProducts, {
+    cart: { innerContent: desktopValue(inner) },
+  });
+}
+
+/**
+ * WooCommerce Cart Totals — subtotal / shipping / tax / total
+ * summary box with proceed-to-checkout button. Few options — the
+ * module pulls everything from the WC totals context.
+ */
+export interface WcCartTotalsOptions {
+  /** Show the proceed-to-checkout button. Default: true. */
+  showProceedButton?: boolean;
+}
+
+export function wcCartTotals(options: WcCartTotalsOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    showProceedButton: options.showProceedButton === false ? "off" : "on",
+  };
+  return makeBlock(DiviBlock.WoocommerceCartTotals, {
+    totals: { innerContent: desktopValue(inner) },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Checkout context (1)                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * WooCommerce Checkout Billing — billing fields block (name, email,
+ * address, phone). Field set itself comes from the WC checkout
+ * config; this builder controls the label/layout knobs.
+ */
+export interface WcCheckoutBillingOptions {
+  /** Show the section title above the fields. Default: true. */
+  showTitle?: boolean;
+  /** Section title override. */
+  title?: string;
+}
+
+export function wcCheckoutBilling(options: WcCheckoutBillingOptions = {}): GutenbergBlock {
+  const inner: Record<string, unknown> = {
+    showTitle: options.showTitle === false ? "off" : "on",
+  };
+  if (options.title) inner.title = options.title;
+  return makeBlock(DiviBlock.WoocommerceCheckoutBilling, {
+    billing: { innerContent: desktopValue(inner) },
+  });
+}

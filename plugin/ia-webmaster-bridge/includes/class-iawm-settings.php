@@ -54,6 +54,19 @@ class IAWM_Settings {
 	/** Option storing the kill switch state. */
 	const OPTION_KILL_SWITCH = 'iawm_kill_switch';
 
+	/**
+	 * Sensitive parameter paths to mask in the audit log, keyed by route
+	 * suffix. Declared here for the day a REST surface exposes key
+	 * creation / rotation (today the admin UI handles those server-side,
+	 * so they never travel through the REST namespace). When such routes
+	 * land, their handlers will call `IAWM_Audit::write` with this list
+	 * — see D-031.
+	 */
+	const SENSITIVE_PARAMS = array(
+		'config/keys/create' => array( 'secret' ),
+		'config/keys/rotate' => array( 'secret' ),
+	);
+
 	/** Scope: read-only access (every GET on the namespace). */
 	const SCOPE_READ = 'read';
 

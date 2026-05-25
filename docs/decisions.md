@@ -655,6 +655,166 @@ new one.
   catalogue; the "Dynamic vs static discovery" section now explains
   why the static path was kept.
 
+## D-030 — Outbound webhooks: HMAC-SHA256 over (ts \n nonce \n body), 5-min drainer, 3-attempt dead-letter
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: Phase 9.4 asked for outbound notifications so external
+  receivers (Slack incoming webhooks, generic JSON endpoints, internal
+  relays) learn about interesting events on the site (smoke-test
+  failure today; audit alert, key-rotation reminder later). Three
+  axes had to be decided: the signing scheme, the trust model around
+  the per-hook shared secret, and the retry policy when a receiver is
+  briefly unavailable.
+- **Decision**:
+  - **Signing scheme**. Every POST carries three headers:
+    `X-IAWM-Webhook-Timestamp` (unix epoch seconds),
+    `X-IAWM-Webhook-Nonce` (16 random hex bytes), and
+    `X-IAWM-Webhook-Signature` (`sha256=` + hex HMAC-SHA256 over
+    `timestamp + "\n" + nonce + "\n" + body`). Receivers verify by
+    checking the timestamp is within ±5 minutes of now and recomputing
+    the HMAC with constant-time compare (`hash_equals` / `crypto.timingSafeEqual`).
+    Body is the canonical JSON envelope `{event, site_url, fired_at, payload}`.
+  - **Trust model**. The `signing_secret` is a 16+ character shared
+    secret, generated and provided by the operator at create time and
+    **never** read back through the API (list/update responses redact
+    it). To rotate, the operator issues an update with a fresh value.
+    Outbound signing protects authenticity and integrity of the
+    delivery — it does NOT authorize the receiver to do anything on
+    the WP site (the inbound HMAC auth model is a separate trust
+    plane). The secret is stored as plaintext in `wp_iawm_webhooks`
+    for v1.3.0 — see trade-offs below.
+  - **Retry policy**. `IAWM_Webhook::fire()` enqueues a row per
+    matching webhook in `wp_iawm_webhook_outbox` with `status='pending'`.
+    A WP-Cron job `iawm_webhook_drain` runs every 5 minutes on a
+    custom `iawm_5min` schedule, draining a small batch each tick.
+    On HTTP 2xx the row flips to `sent`. Any other outcome
+    (non-2xx, transport error, timeout) increments `attempts` and
+    stores `last_error`. Backoff between attempts: 1 minute, then
+    5 minutes, then 30 minutes. After 3 failed attempts the row is
+    dead-lettered (`status='dead'`) and never retried — it surfaces
+    via the list endpoint but no longer consumes drainer cycles.
+- **Rationale**:
+  - HMAC-SHA256 over `timestamp + nonce + body` mirrors the inbound
+    auth scheme (`IAWM_Auth::build_message`), giving operators a
+    single mental model for "how the bridge signs things". The
+    nonce + timestamp pair makes replay attacks ineffective at the
+    receiver side without requiring nonce storage on our end.
+  - Out-of-band delivery (outbox + cron) keeps the firing path
+    cheap — a request that triggers a smoke run still returns in
+    milliseconds even if the receiver is slow or down.
+  - Bounded retries (3 attempts, capped at ~36 minutes total) match
+    the "interesting events" use-case: a 36-minute outage is
+    usually long enough for the operator to notice through another
+    channel anyway.
+- **Trade-offs**:
+  - **Plaintext secret at rest**. Encrypting the secret with a key
+    derived from `wp-config.php`'s `AUTH_KEY` would be nice but it
+    only really helps against an attacker who can dump the DB
+    without also having `wp-config.php`. In practice both sit on
+    the same filesystem, so the marginal benefit is small. v1.4 may
+    add it once the admin UI lands; for v1.3 we ship plaintext and
+    document it loudly here so operators rotate secrets if their DB
+    is ever exposed.
+  - **No admin UI in v1.3**. Endpoints + MCP tools + cron are
+    enough for the Claude-driven workflow we ship; humans without
+    Claude can call the endpoints via wp-cli or `curl`. A future
+    v1.4 will add an admin tab so plain wp-admin operators can
+    manage webhooks without leaving the UI.
+  - **One drain schedule shared with future modules**. The custom
+    `iawm_5min` schedule is registered by `IAWM_Webhook` but other
+    modules can re-use it; this keeps cron clean even as the
+    operations module grows.
+- **Implementation**: `IAWM_Webhook` (`includes/class-iawm-webhook.php`)
+  with two per-site tables (`wp_iawm_webhooks`, `wp_iawm_webhook_outbox`),
+  five `config/webhooks/*` REST routes, five mirrored MCP tools, a
+  cron-registered drainer, and a `class_exists`-wrapped hook call
+  from the diagnostics smoke handler for the first concrete event
+  (`smoke.failed`). Audit-alert event firing is deferred to v1.4
+  once an audit-tail watcher exists.
+
+## D-031 — Audit-log pseudonymisation: opt-in, dot-path-declared, SHA-256 short-prefix sentinel
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: until now, when a handler enriched its audit row with
+  request params (planned for `config/users/create`, webhook secrets,
+  rotated API secrets, etc.), the params were stored verbatim in the
+  `detail` JSON column of `wp_iawm_audit_log`. Most setups have a
+  single full-trust operator reading the audit log, but the v1.2.0
+  scope grew to include read-only monitoring keys and hosting-side
+  log shippers — both of which could now see passwords or signing
+  secrets in cleartext. Spec 02 listed this as the last unresolved
+  open question.
+- **Decision**:
+  - **Opt-in, default off** via the `iawm_audit_pseudonymise` option.
+    Operators upgrading from v1.2.0 see exactly the previous
+    behaviour until they flip the toggle in the cleanup tab of the
+    plugin's settings page. No surprise on upgrade.
+  - **Per-handler declaration** of sensitive paths via a
+    `SENSITIVE_PARAMS` class constant mapping route suffix to a list
+    of dot-notation paths (e.g. `config/users/create => ['password']`,
+    `config/webhooks/create => ['signing_secret']`). The handler
+    forwards the resolved list to `IAWM_Audit::write()` as its
+    fourth argument.
+  - **Dot-notation with `*` wildcards** for nested or list-shaped
+    bodies: `users.*.password` masks the leaf on every entry of a
+    `users` list; `fields.signing_secret` walks a single nested
+    object. Unresolved paths are no-ops (the body comes back
+    unchanged for that branch).
+  - **Sentinel format** `<redacted:sha256:abc123def456>`. The first
+    12 hex of SHA-256 over the (JSON-encoded if non-scalar) value.
+    The short prefix is correlatable — two occurrences of the same
+    value yield the same sentinel, useful for an operator who wants
+    to ask "is this the same secret as on line 42?" without seeing
+    either secret — and not reversible (12 hex characters offer no
+    practical path back to a meaningful value space, and the
+    operator never sees the rest of the digest).
+  - **Backward-compatible reads**: legacy rows written before the
+    toggle was flipped are stored verbatim and left untouched. The
+    sentinel is human-readable so an operator scanning a mixed log
+    doesn't get confused. The audit row gains a
+    `detail.pseudonymised_paths` list when the toggle is on, so a
+    log reader can tell what was masked at the time of writing
+    (vs. what was simply absent).
+- **Rationale**:
+  - **Default off** preserves the v1.2.0 behaviour for existing
+    operators; flipping it on is a conscious operator choice when
+    they add a read-only watcher.
+  - **Per-handler `SENSITIVE_PARAMS`** keeps the declaration colocated
+    with the code that knows what the route accepts — no central
+    "schema of sensitive fields" to drift out of sync.
+  - **Dot-notation + wildcards** gracefully handle current bodies
+    (`password` as a top-level field) and future ones
+    (`users.*.password` if a bulk endpoint lands).
+  - **Short-prefix SHA-256** is the smallest sentinel that still
+    correlates: 48 bits of entropy is plenty to collide within an
+    audit log's lifetime, and the value isn't recoverable from 12
+    hex characters of an unsalted hash unless the attacker already
+    knows the value (in which case they didn't need the log).
+- **Trade-offs**:
+  - **Pseudonymisation is irreversible from the log alone** — no
+    "decrypt with operator passphrase" path. Intentional: an operator
+    who needs to see a secret has access to where the secret
+    originated (the original request, the credentials option). Adding
+    a reversible path would defeat the purpose against the read-only
+    watcher we're protecting against.
+  - **Per-request stash via static** in `IAWM_Audit::write()`: the
+    handler stashes params, the `rest_post_dispatch` filter picks
+    them up and inserts the row. A future move to a queue-based audit
+    pipeline would have to revisit this — flagged in the class
+    docblock.
+- **Implementation**:
+  - `IAWM_Audit::pseudonymise()` static helper + `IAWM_Audit::write()`
+    public entry + `IAWM_Audit::is_pseudonymise_on()` reader.
+  - `IAWM_Config::SENSITIVE_PARAMS` wired into `handle_users_create`
+    and `handle_users_update`.
+  - `IAWM_Settings::SENSITIVE_PARAMS` declared for future
+    `config/keys/*` routes (today key management is purely admin-UI
+    server-side, so nothing currently calls `write()` with it).
+  - Webhook-side wiring (D-030 / task 9.4) declares
+    `config/webhooks/create` and `config/webhooks/update` in its own
+    module and calls `IAWM_Audit::write()` with the resolved list.
+  - Spec 02 open question marked resolved.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

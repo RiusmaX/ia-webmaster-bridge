@@ -30,6 +30,16 @@ import {
   menu, fullwidthMenu, search, breadcrumbs,
   postTitle, postContent, postNavigation, comments,
   placeholder,
+  // Phase 9 native builders
+  fullwidthHeader, fullwidthImage, fullwidthSlider, fullwidthMap,
+  group, groupCarousel, rowInner, columnInner,
+  blog, portfolio, filterablePortfolio, postSlider,
+  beforeAfter, timeline, lottie, svg, countdown,
+  sidebar, login, dropdown, signupCustomField,
+  // Phase 9 WooCommerce builders
+  wcProductTitle, wcProductPrice, wcProductImages, wcProductAddToCart,
+  wcProductDescription, wcProductTabs, wcRelatedProducts,
+  wcCartProducts, wcCartTotals, wcCheckoutBilling,
 } from "./builders.js";
 import type {
   TextOptions, BlurbOptions, CtaOptions, ImageOptions, ButtonOptions,
@@ -42,6 +52,17 @@ import type {
   CountersOptions, MenuOptions, SearchOptions, BreadcrumbsOptions,
   PostTitleOptions, PostNavigationOptions,
   SectionOptions, RowOptions,
+  // Phase 9 — native module option types
+  FullwidthHeaderOptions, FullwidthImageOptions, FullwidthSliderOptions,
+  FullwidthMapOptions, GroupOptions, GroupCarouselOptions, ColumnInnerOptions,
+  BlogOptions, PortfolioOptions, FilterablePortfolioOptions, PostSliderOptions,
+  BeforeAfterOptions, TimelineEntry, LottieOptions, SvgOptions, CountdownOptions,
+  SidebarOptions, LoginOptions, DropdownOptions, SignupCustomFieldOptions,
+  // Phase 9 — WC option types
+  WcProductTitleOptions, WcProductPriceOptions, WcProductImagesOptions,
+  WcProductAddToCartOptions, WcProductDescriptionOptions, WcProductTabsOptions,
+  WcRelatedProductsOptions, WcCartProductsOptions, WcCartTotalsOptions,
+  WcCheckoutBillingOptions,
 } from "./builders.js";
 import type { GutenbergBlock, DiviColor, Spacing, ColumnStructure } from "./types.js";
 
@@ -106,6 +127,39 @@ export type ModuleInput =
   | { module: "icon-list"; items: IconListItemOptions[] }
   | { module: "social-media-follow"; networks: SocialNetworkOptions[] }
   | ({ module: "counters" } & CountersOptions)
+  // Phase 9 — native modules
+  | ({ module: "fullwidth-header" } & FullwidthHeaderOptions)
+  | ({ module: "fullwidth-image" } & FullwidthImageOptions)
+  | ({ module: "fullwidth-slider" } & FullwidthSliderOptions & { slides: SlideOptions[] })
+  | ({ module: "fullwidth-map" } & FullwidthMapOptions)
+  | ({ module: "group" } & GroupOptions & { modules: ModuleInput[] })
+  | ({ module: "group-carousel" } & GroupCarouselOptions & { groups: ({ module: "group" } & GroupOptions & { modules: ModuleInput[] })[] })
+  | ({ module: "row-inner"; columns: ({ type?: string; modules: ModuleInput[] })[] } & RowOptions)
+  | ({ module: "column-inner" } & ColumnInnerOptions & { modules: ModuleInput[] })
+  | ({ module: "blog" } & BlogOptions)
+  | ({ module: "portfolio" } & PortfolioOptions)
+  | ({ module: "filterable-portfolio" } & FilterablePortfolioOptions)
+  | ({ module: "post-slider" } & PostSliderOptions)
+  | ({ module: "before-after" } & BeforeAfterOptions)
+  | { module: "timeline"; items: TimelineEntry[] }
+  | ({ module: "lottie" } & LottieOptions)
+  | ({ module: "svg" } & SvgOptions)
+  | ({ module: "countdown" } & CountdownOptions)
+  | ({ module: "sidebar" } & SidebarOptions)
+  | ({ module: "login" } & LoginOptions)
+  | ({ module: "dropdown" } & DropdownOptions)
+  | ({ module: "signup-custom-field" } & SignupCustomFieldOptions)
+  // Phase 9 — WooCommerce modules
+  | ({ module: "wc-product-title" } & WcProductTitleOptions)
+  | ({ module: "wc-product-price" } & WcProductPriceOptions)
+  | ({ module: "wc-product-images" } & WcProductImagesOptions)
+  | ({ module: "wc-product-add-to-cart" } & WcProductAddToCartOptions)
+  | ({ module: "wc-product-description" } & WcProductDescriptionOptions)
+  | ({ module: "wc-product-tabs" } & WcProductTabsOptions)
+  | ({ module: "wc-related-products" } & WcRelatedProductsOptions)
+  | ({ module: "wc-cart-products" } & WcCartProductsOptions)
+  | ({ module: "wc-cart-totals" } & WcCartTotalsOptions)
+  | ({ module: "wc-checkout-billing" } & WcCheckoutBillingOptions)
   // Escape: raw Gutenberg block
   | { module: "block"; block: GutenbergBlock };
 
@@ -210,6 +264,39 @@ export function composeModule(input: ModuleInput): GutenbergBlock {
     case "icon-list":       return iconList(input.items);
     case "social-media-follow": return socialMediaFollow(input.networks);
     case "counters":        return counters(input);
+    // Phase 9 — native modules
+    case "fullwidth-header":     return fullwidthHeader(input);
+    case "fullwidth-image":      return fullwidthImage(input);
+    case "fullwidth-slider":     return fullwidthSlider(input, input.slides.map((s) => slider([s]).innerBlocks[0]));
+    case "fullwidth-map":        return fullwidthMap(input);
+    case "group":                return group(input, input.modules.map(composeModule));
+    case "group-carousel":       return groupCarousel(input, input.groups.map((g) => group(g, g.modules.map(composeModule))));
+    case "row-inner":            return rowInner(input, input.columns.map((c) => columnInner({ type: c.type ?? "4_4" }, c.modules.map(composeModule))));
+    case "column-inner":         return columnInner(input, input.modules.map(composeModule));
+    case "blog":                 return blog(input);
+    case "portfolio":            return portfolio(input);
+    case "filterable-portfolio": return filterablePortfolio(input);
+    case "post-slider":          return postSlider(input);
+    case "before-after":         return beforeAfter(input);
+    case "timeline":             return timeline(input.items);
+    case "lottie":               return lottie(input);
+    case "svg":                  return svg(input);
+    case "countdown":            return countdown(input);
+    case "sidebar":              return sidebar(input);
+    case "login":                return login(input);
+    case "dropdown":             return dropdown(input);
+    case "signup-custom-field":  return signupCustomField(input);
+    // Phase 9 — WooCommerce modules
+    case "wc-product-title":        return wcProductTitle(input);
+    case "wc-product-price":        return wcProductPrice(input);
+    case "wc-product-images":       return wcProductImages(input);
+    case "wc-product-add-to-cart":  return wcProductAddToCart(input);
+    case "wc-product-description":  return wcProductDescription(input);
+    case "wc-product-tabs":         return wcProductTabs(input);
+    case "wc-related-products":     return wcRelatedProducts(input);
+    case "wc-cart-products":        return wcCartProducts(input);
+    case "wc-cart-totals":          return wcCartTotals(input);
+    case "wc-checkout-billing":     return wcCheckoutBilling(input);
     case "block":           return input.block;
     default: {
       // Exhaustive check — TS detects unhandled cases.

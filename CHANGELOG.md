@@ -12,6 +12,121 @@ where they moved together:
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-05-25 — plugin 1.3.0, gateway 1.3.0
+
+Phase 9 closure — polish + long tail. Resolves every code-side item
+flagged by the v1.2.0 audit pass (testimonials carousel TODO, deeper
+Divi module builders) and closes the three genuinely-open spec
+questions (revisions API, audit-log pseudonymisation, webhook
+signing). Phase 9.7 — small-prod validation — remains an
+operator-gated deployment milestone for the next sprint.
+
+### Added
+
+- **Testimonials carousel variant** (9.1, D-029-era). The
+  `testimonials` pattern accepts `variant: "grid" | "carousel"`
+  (default `"grid"`). Carousel wraps items in a single Divi `slider`
+  with one slide per testimonial; portrait composed inline with a
+  `.iawm-testimonial-portrait` CSS hook so sites can override
+  styling. Resolves the last `TODO` in the codebase.
+- **22 typed Divi native module builders** (9.2). Cover the 33
+  native modules previously exposed only in free-form via the
+  registry, picked by webmaster utility:
+  fullwidth-header / fullwidth-image / fullwidth-slider /
+  fullwidth-map; group / group-carousel / row-inner / column-inner;
+  blog / portfolio / filterable-portfolio / post-slider;
+  before-after / timeline (+ timelineItem) / lottie / svg /
+  countdown; sidebar / login / dropdown / signup-custom-field. Each
+  ships opinionated defaults (typography, spacing, colour hooks to
+  the design system). Net: builders 47 → 69.
+- **10 typed WooCommerce module builders** (9.3). `wc-` prefix to
+  disambiguate from post-aware builders. Cover the highest-leverage
+  modules across the four Theme Builder contexts:
+  wc-product-title / wc-product-price / wc-product-images /
+  wc-product-add-to-cart / wc-product-description / wc-product-tabs /
+  wc-related-products / wc-cart-products / wc-cart-totals /
+  wc-checkout-billing. Documented in `docs/woocommerce-integration.md`.
+  Net: builders 69 → 79.
+- **Webhook signing for outbound notifications** (9.4, D-030).
+  New `IAWM_Webhook` module with per-site tables `wp_iawm_webhooks`
+  (configuration) + `wp_iawm_webhook_outbox` (queue). 5 endpoints:
+  `/config/webhooks/{list,create,update,delete,test}`. HMAC-SHA256
+  signing over `timestamp + "\n" + nonce + "\n" + body`, headers
+  `X-IAWM-Webhook-{Timestamp,Nonce,Signature}`. Retry policy: 3
+  attempts with 1m / 5m / 30m backoff, then dead-lettered. WP-Cron
+  job `iawm_webhook_drain` runs every 5 minutes via a new
+  `iawm_5min` schedule. Smoke-test failures auto-fire
+  `smoke.failed` events. Receiver verification recipe (Node +
+  Python) added to `docs/operations.md`. MCP tools:
+  `iawm_webhooks_{list,create,update,delete,test}`.
+- **Revisions API** (9.5). Three new routes on `IAWM_Content`:
+  `/content/revisions/{list,get,restore}`. `list` returns compact
+  revision records (id, author, date, title, excerpt byte size);
+  `get` returns full revision content + build_mode of the current
+  parent; `restore` is gated by the Phase 5.3 confirmation token
+  (added to `REQUIRES_CONFIRMATION`) and leverages WordPress's
+  native revision creation as the pre-op snapshot
+  (`pre_op_backup_id: "revision:<id>"` — rollback is symmetric).
+  MCP tools: `iawm_content_revisions_{list,get,restore}`. Resolves
+  the spec 03 open question.
+- **Audit log pseudonymisation** (9.6, D-031). `IAWM_Audit::write()`
+  is a new public method that handlers call with a list of
+  dot-notation sensitive paths (`*` wildcard supported);
+  `IAWM_Audit::pseudonymise()` replaces values with
+  `<redacted:sha256:abc123def456>` (12-hex short prefix —
+  correlatable without leaking the value). Gated by the option
+  `iawm_audit_pseudonymise` (default off for back-compat; admin
+  toggle ships under the cleanup tab). Per-module
+  `SENSITIVE_PARAMS` maps declare `config/users/{create,update}` →
+  `password`, `config/webhooks/{create,update}` →
+  `signing_secret`, etc. Legacy audit rows untouched. Resolves the
+  spec 02 open question.
+
+### Changed
+
+- `claude-plugin/mcp-gateway/src/divi/compose.ts` `ModuleInput`
+  union and `composeModule` dispatcher extended to cover the 32 new
+  builders so they are reachable from `iawm_divi_page_compose` /
+  `iawm_divi_theme_builder_compose`.
+- `claude-plugin/mcp-gateway/src/divi/patterns/testimonials.ts`
+  refactored: grid path extracted to `testimonialsGrid()`, new
+  `testimonialsCarousel()` path, shared section header + section
+  wrapper helpers.
+- `claude-plugin/mcp-gateway/src/tools.ts` adds 8 MCP tools
+  (5 webhook + 3 revision). Net: tools 100 → 108.
+- `plugin/ia-webmaster-bridge/ia-webmaster-bridge.php` requires
+  and inits `IAWM_Webhook`, calls its `maybe_upgrade()` inside the
+  per-site installer (multisite-tolerant per D-027).
+- `class-iawm-diagnostics.php` fires `smoke.failed` to the webhook
+  outbox when a smoke run reports `healthy: false`.
+- `docs/decisions.md` log grows by three entries (D-029, D-030,
+  D-031). Counter at the README / CLAUDE.md updated.
+- `docs/woocommerce-integration.md`, `docs/divi5-compose-dsl.md`,
+  `docs/operations.md` updated for the new surface.
+
+### Decisions
+
+- **D-029** — Static gateway catalogue (vs runtime `/capabilities`
+  discovery). Ratified as the long-term shape; recorded the
+  rationale and trade-offs.
+- **D-030** — Outbound webhook signing scheme: HMAC-SHA256 over
+  `timestamp + "\n" + nonce + "\n" + body`, ±5 minute replay
+  window, opt-in subscription per event, 3-attempt retry with
+  dead-lettering.
+- **D-031** — Audit-log pseudonymisation: opt-in,
+  dot-notation-with-wildcards path scheme, irreversible
+  SHA-256-prefix sentinel format. Trade-off accepted: redacted
+  values cannot be recovered from the log alone (by design).
+
+### Notes
+
+Phase 9.7 (production validation on a small prod) remains
+operator-gated: it requires Marius to pick a real client site,
+walk through `docs/production-deployment.md` end-to-end, and run
+the pentest checklist for real. v1.3.0 ships with every code-side
+deliverable complete; 9.7 is the next deployment milestone, not a
+release blocker.
+
 ## [1.2.0] — 2026-05-25 — plugin 1.2.0, gateway 1.2.0
 
 Phase 8 closure — Yoast SEO backend, WooCommerce/Theme Builder helper,

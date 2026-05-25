@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-8 complete; current release **v1.2.0** · Last updated: 2026-05-25
+> Status: Phases 0-9 complete (code-side); current release **v1.3.0**. Phase 9.7 (small-prod validation) remains the next deployment milestone, operator-gated. · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -161,33 +161,28 @@ the cycle. Two long-tail items stay open as Phase 9.
   URL+IP transient dedup at insert time, optional sampling, daily
   prune cron. (Decision D-026, v1.2.0.)
 
-## Phase 9 — Polish + long tail *(planned — target v1.3.0)*
+## Phase 9 — Polish + long tail *(shipped as v1.3.0 except 9.7)*
 
 Master tracker: [`phase-9-action-plan.md`](phase-9-action-plan.md).
 
-The v1.2.0 audit pass on 2026-05-25 left a small, well-scoped set of
-items: one TODO in the code, three genuinely-open spec questions, the
-long tail of Divi module builders, and one operational milestone.
-Phase 9 closes all of them before opening the door to large-prod
-exposure.
-
-- [ ] **9.1** — Testimonials carousel variant (resolve the lone TODO
-  in `patterns/testimonials.ts`)
-- [ ] **9.2** — Top-20 Divi native module builders (typed +
-  opinionated defaults; reduces the 58 free-form-only modules to 38)
-- [ ] **9.3** — Top-10 WooCommerce module builders (typed + opinionated
-  defaults across the four Theme Builder contexts)
-- [ ] **9.4** — Webhook signing for outbound notifications
+- [x] **9.1** — Testimonials carousel variant (resolves the lone TODO
+  that was in `patterns/testimonials.ts`)
+- [x] **9.2** — 22 typed Divi native module builders. Free-form-only
+  natives reduced from 33 to 11.
+- [x] **9.3** — 10 typed WooCommerce module builders (typed +
+  opinionated defaults across the four Theme Builder contexts)
+- [x] **9.4** — Webhook signing for outbound notifications
   (smoke-test failure → Slack, audit alert → email/generic POST,
   HMAC-signed symmetric to inbound). Decision D-030.
-- [ ] **9.5** — Revisions API: `/content/revisions/{list,get,restore}`
+- [x] **9.5** — Revisions API: `/content/revisions/{list,get,restore}`
   with confirmation token on restore. Closes a spec 03 open question.
-- [ ] **9.6** — Audit log pseudonymisation: per-route sensitive-param
+- [x] **9.6** — Audit log pseudonymisation: per-route sensitive-param
   declarations + redaction toggle. Closes a spec 02 open question.
   Decision D-031.
-- [ ] **9.7** — Production validation on a small prod (executes
-  `docs/production-deployment.md` end-to-end + real pentest)
-- [ ] **9.8** — v1.3.0 release
+- [ ] **9.7** — Production validation on a small prod (operator-gated;
+  executes `docs/production-deployment.md` end-to-end + real pentest).
+  Remains the next deployment milestone.
+- [x] **9.8** — v1.3.0 release
 
 ## Deployment milestones
 

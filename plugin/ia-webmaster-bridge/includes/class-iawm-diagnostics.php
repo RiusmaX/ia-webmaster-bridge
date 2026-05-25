@@ -341,15 +341,22 @@ class IAWM_Diagnostics {
 			}
 		}
 
-		return new WP_REST_Response(
-			array(
-				'ok'      => true,
-				'healthy' => $healthy,
-				'checks'  => $checks,
-				'time'    => current_time( 'c' ),
-			),
-			200
+		$smoke_result = array(
+			'ok'      => true,
+			'healthy' => $healthy,
+			'checks'  => $checks,
+			'time'    => current_time( 'c' ),
 		);
+
+		// Phase 9.4 — surface an unhealthy smoke run to subscribed
+		// webhooks. The hook call is wrapped in class_exists so the
+		// module degrades gracefully if the webhook module is absent
+		// (e.g. legacy install that has not yet run maybe_upgrade).
+		if ( ! $healthy && class_exists( 'IAWM_Webhook' ) ) {
+			IAWM_Webhook::fire( 'smoke.failed', $smoke_result );
+		}
+
+		return new WP_REST_Response( $smoke_result, 200 );
 	}
 
 	/**

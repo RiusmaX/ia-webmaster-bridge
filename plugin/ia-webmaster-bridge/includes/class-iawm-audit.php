@@ -34,6 +34,31 @@ class IAWM_Audit {
 	const PRUNE_HOOK = 'iawm_prune_audit_log';
 
 	/**
+	 * Option toggling pseudonymisation of sensitive parameters in the
+	 * audit log. When `1`, declared sensitive paths (e.g. user passwords,
+	 * webhook signing secrets) are replaced with a SHA-256 short prefix
+	 * before being serialised to the `detail` column.
+	 *
+	 * Default off so existing operators don't see a behaviour change on
+	 * upgrade; switching to on only affects future writes (legacy rows
+	 * are left untouched — see D-031).
+	 */
+	const OPTION_PSEUDONYMISE = 'iawm_audit_pseudonymise';
+
+	/**
+	 * Per-request stash filled by handler-side `write()` calls. Mapped
+	 * by route so `record()` can merge the handler-declared params (with
+	 * sensitive paths masked when the toggle is on) into the auto-logged
+	 * row at the end of the request.
+	 *
+	 * Static lifetime is fine: each PHP request is its own process and
+	 * the array is cleared once `record()` has picked it up.
+	 *
+	 * @var array<string, array{params: array, summary: mixed, sensitive_paths: array<int, string>}>
+	 */
+	private static $pending = array();
+
+	/**
 	 * Hooks up the audit log.
 	 *
 	 * @return void
@@ -150,6 +175,146 @@ class IAWM_Audit {
 	}
 
 	/**
+	 * Handler-facing entry: enrich the audit row of the current request
+	 * with the actual request parameters, optionally masking sensitive
+	 * paths.
+	 *
+	 * The auto-recorder (`record()`, hooked on `rest_post_dispatch`)
+	 * stores envelope data (method, route, status, body length). Calling
+	 * `write()` from a handler attaches the JSON params to the same row
+	 * so the audit trail is readable without re-correlating to a request
+	 * log. When the `iawm_audit_pseudonymise` option is on, the
+	 * `$sensitive_paths` list is run through `pseudonymise()` first.
+	 *
+	 * Signature is intentionally permissive: handlers that don't care
+	 * about sensitive masking can pass an empty array for the fourth
+	 * argument (the default). Existing callers that don't call this at
+	 * all keep working — the audit row simply lacks the `params` block.
+	 *
+	 * @param string $route           REST route, e.g. `/ia-webmaster/v1/config/users/create`.
+	 * @param array  $params          Request parameters (typically the JSON body).
+	 * @param mixed  $result_summary  Optional handler-side summary stored alongside the params.
+	 * @param array  $sensitive_paths Dot-notation paths to mask when the toggle is on.
+	 * @return void
+	 */
+	public static function write( $route, array $params, $result_summary = null, array $sensitive_paths = array() ) {
+		$stored = $params;
+		if ( ! empty( $sensitive_paths ) && self::is_pseudonymise_on() ) {
+			$stored = self::pseudonymise( $params, $sensitive_paths );
+		}
+
+		self::$pending[ (string) $route ] = array(
+			'params'          => $stored,
+			'summary'         => $result_summary,
+			'sensitive_paths' => array_values( $sensitive_paths ),
+		);
+	}
+
+	/**
+	 * Walks `$params` along each dot-notation path in `$sensitive_paths`
+	 * and replaces the leaf value with a SHA-256 short prefix so two
+	 * occurrences of the same value can still be correlated across rows
+	 * without leaking the value itself.
+	 *
+	 * Supports `*` as a wildcard array position, e.g. `users.*.password`
+	 * masks `password` on every entry of the `users` list.
+	 *
+	 * Unresolved paths are silently ignored (the params come back
+	 * unchanged for that branch).
+	 *
+	 * @param array $params          Parameters to mask. Returned as a new array.
+	 * @param array $sensitive_paths List of dot-notation paths.
+	 * @return array
+	 */
+	public static function pseudonymise( array $params, array $sensitive_paths ) {
+		foreach ( $sensitive_paths as $path ) {
+			if ( ! is_string( $path ) || '' === $path ) {
+				continue;
+			}
+			$segments = explode( '.', $path );
+			self::mask_at( $params, $segments );
+		}
+		return $params;
+	}
+
+	/**
+	 * Indicates whether the pseudonymisation toggle is enabled.
+	 *
+	 * Reads `iawm_audit_pseudonymise` defaulting to `0`. Cast through
+	 * (int) so a stored `'0'` string is treated as off.
+	 *
+	 * @return bool
+	 */
+	public static function is_pseudonymise_on() {
+		return 1 === (int) get_option( self::OPTION_PSEUDONYMISE, 0 );
+	}
+
+	/**
+	 * Recursive helper: walks `$node` along `$segments` and replaces the
+	 * leaf with the redaction sentinel. The `*` wildcard descends into
+	 * every direct child of an array.
+	 *
+	 * @param array $node     Reference to the current node.
+	 * @param array $segments Remaining path segments.
+	 * @return void
+	 */
+	private static function mask_at( array &$node, array $segments ) {
+		if ( empty( $segments ) ) {
+			return;
+		}
+
+		$head = array_shift( $segments );
+
+		if ( '*' === $head ) {
+			foreach ( $node as $key => &$child ) {
+				if ( empty( $segments ) ) {
+					$node[ $key ] = self::redaction_sentinel( $child );
+				} elseif ( is_array( $child ) ) {
+					self::mask_at( $child, $segments );
+				}
+			}
+			unset( $child );
+			return;
+		}
+
+		if ( ! array_key_exists( $head, $node ) ) {
+			return;
+		}
+
+		if ( empty( $segments ) ) {
+			$node[ $head ] = self::redaction_sentinel( $node[ $head ] );
+			return;
+		}
+
+		if ( is_array( $node[ $head ] ) ) {
+			self::mask_at( $node[ $head ], $segments );
+		}
+	}
+
+	/**
+	 * Builds the redaction sentinel for a value.
+	 *
+	 * Format: `<redacted:sha256:abc123def456>` — human-readable so an
+	 * operator scanning the log doesn't get confused, correlatable so two
+	 * occurrences of the same value share the same 12-hex prefix, and
+	 * non-reversible (the short prefix offers no path back to the value).
+	 *
+	 * Non-scalar values (nested arrays, objects) are first JSON-encoded
+	 * before hashing so the sentinel is still deterministic.
+	 *
+	 * @param mixed $value Original value.
+	 * @return string
+	 */
+	private static function redaction_sentinel( $value ) {
+		if ( is_scalar( $value ) ) {
+			$material = (string) $value;
+		} else {
+			$material = (string) wp_json_encode( $value );
+		}
+		return '<redacted:sha256:' . substr( hash( 'sha256', $material ), 0, 12 ) . '>';
+	}
+
+	/**
 	 * rest_post_dispatch filter: records the request if it targets the adapter.
 	 *
 	 * @param WP_HTTP_Response $response REST response.
@@ -196,6 +361,22 @@ class IAWM_Audit {
 			$data = $response->get_data();
 			if ( is_array( $data ) && isset( $data['code'] ) ) {
 				$detail['error'] = $data['code'];
+			}
+		}
+
+		// Merge any handler-side enrichment stashed via write(). Sensitive
+		// paths have already been masked there if the toggle is on.
+		if ( isset( self::$pending[ $route ] ) ) {
+			$entry = self::$pending[ $route ];
+			unset( self::$pending[ $route ] );
+			if ( is_array( $entry['params'] ) ) {
+				$detail['params'] = $entry['params'];
+			}
+			if ( null !== $entry['summary'] ) {
+				$detail['summary'] = $entry['summary'];
+			}
+			if ( ! empty( $entry['sensitive_paths'] ) && self::is_pseudonymise_on() ) {
+				$detail['pseudonymised_paths'] = $entry['sensitive_paths'];
 			}
 		}
 

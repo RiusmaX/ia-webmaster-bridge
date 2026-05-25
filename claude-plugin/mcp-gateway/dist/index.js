@@ -1464,12 +1464,12 @@ var require_applicability = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.shouldUseRule = exports.shouldUseGroup = exports.schemaHasRulesForType = void 0;
     function schemaHasRulesForType({ schema, self }, type) {
-      const group = self.RULES.types[type];
-      return group && group !== true && shouldUseGroup(schema, group);
+      const group2 = self.RULES.types[type];
+      return group2 && group2 !== true && shouldUseGroup(schema, group2);
     }
     exports.schemaHasRulesForType = schemaHasRulesForType;
-    function shouldUseGroup(schema, group) {
-      return group.rules.some((rule) => shouldUseRule(schema, rule));
+    function shouldUseGroup(schema, group2) {
+      return group2.rules.some((rule) => shouldUseRule(schema, rule));
     }
     exports.shouldUseGroup = shouldUseGroup;
     function shouldUseRule(schema, rule) {
@@ -2499,36 +2499,36 @@ var require_validate = __commonJS({
       if (!opts.jtd)
         checkStrictTypes(it, types);
       gen.block(() => {
-        for (const group of RULES.rules)
-          groupKeywords(group);
+        for (const group2 of RULES.rules)
+          groupKeywords(group2);
         groupKeywords(RULES.post);
       });
-      function groupKeywords(group) {
-        if (!(0, applicability_1.shouldUseGroup)(schema, group))
+      function groupKeywords(group2) {
+        if (!(0, applicability_1.shouldUseGroup)(schema, group2))
           return;
-        if (group.type) {
-          gen.if((0, dataType_2.checkDataType)(group.type, data, opts.strictNumbers));
-          iterateKeywords(it, group);
-          if (types.length === 1 && types[0] === group.type && typeErrors) {
+        if (group2.type) {
+          gen.if((0, dataType_2.checkDataType)(group2.type, data, opts.strictNumbers));
+          iterateKeywords(it, group2);
+          if (types.length === 1 && types[0] === group2.type && typeErrors) {
             gen.else();
             (0, dataType_2.reportTypeError)(it);
           }
           gen.endIf();
         } else {
-          iterateKeywords(it, group);
+          iterateKeywords(it, group2);
         }
         if (!allErrors)
           gen.if((0, codegen_1._)`${names_1.default.errors} === ${errsCount || 0}`);
       }
     }
-    function iterateKeywords(it, group) {
+    function iterateKeywords(it, group2) {
       const { gen, schema, opts: { useDefaults } } = it;
       if (useDefaults)
-        (0, defaults_1.assignDefaults)(it, group.type);
+        (0, defaults_1.assignDefaults)(it, group2.type);
       gen.block(() => {
-        for (const rule of group.rules) {
+        for (const rule of group2.rules) {
           if ((0, applicability_1.shouldUseRule)(schema, rule)) {
-            keywordCode(it, rule.keyword, rule.definition, group.type);
+            keywordCode(it, rule.keyword, rule.definition, group2.type);
           }
         }
       });
@@ -4293,10 +4293,10 @@ var require_core = __commonJS({
         const { RULES } = this;
         delete RULES.keywords[keyword];
         delete RULES.all[keyword];
-        for (const group of RULES.rules) {
-          const i = group.rules.findIndex((rule) => rule.keyword === keyword);
+        for (const group2 of RULES.rules) {
+          const i = group2.rules.findIndex((rule) => rule.keyword === keyword);
           if (i >= 0)
-            group.rules.splice(i, 1);
+            group2.rules.splice(i, 1);
         }
         return this;
       }
@@ -23642,16 +23642,16 @@ var safeDecodeAsync2 = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
 
 // node_modules/zod/v4/classic/schemas.js
 var _installedGroups = /* @__PURE__ */ new WeakMap();
-function _installLazyMethods(inst, group, methods) {
+function _installLazyMethods(inst, group2, methods) {
   const proto = Object.getPrototypeOf(inst);
   let installed = _installedGroups.get(proto);
   if (!installed) {
     installed = /* @__PURE__ */ new Set();
     _installedGroups.set(proto, installed);
   }
-  if (installed.has(group))
+  if (installed.has(group2))
     return;
-  installed.add(group);
+  installed.add(group2);
   for (const key in methods) {
     const fn = methods[key];
     Object.defineProperty(proto, key, {
@@ -32828,6 +32828,511 @@ function postNavigation(options = {}) {
 function comments() {
   return makeBlock(DiviBlock.Comments, {});
 }
+function fullwidthHeader(options) {
+  const heightMap = { screen: "100vh", large: "80vh", medium: "60vh" };
+  const minHeight = heightMap[options.height ?? "large"];
+  const textAlign = options.textAlign ?? "center";
+  const innerContent = {
+    title: options.title,
+    textAlign
+  };
+  if (options.subhead) innerContent.subhead = options.subhead;
+  if (options.contentHtml) innerContent.content = options.contentHtml;
+  const attrs = {
+    header: { innerContent: desktopValue(innerContent) },
+    module: {
+      decoration: {
+        sizing: desktopValue({ minHeight }),
+        spacing: desktopValue({
+          padding: { top: "120px", bottom: "80px" }
+        })
+      }
+    }
+  };
+  if (options.imageUrl) {
+    attrs.image = {
+      innerContent: desktopValue({ url: options.imageUrl, alt: options.title })
+    };
+  }
+  if (options.backgroundColor || options.backgroundImageUrl) {
+    const bgValue = {};
+    if (options.backgroundColor) bgValue.color = colorToString(options.backgroundColor);
+    if (options.backgroundImageUrl) bgValue.image = { url: options.backgroundImageUrl };
+    attrs.module.decoration.background = desktopValue(bgValue);
+  }
+  if (options.primaryButton) {
+    attrs.buttonOne = {
+      innerContent: desktopValue({
+        text: options.primaryButton.text,
+        linkUrl: options.primaryButton.linkUrl
+      })
+    };
+  }
+  if (options.secondaryButton) {
+    attrs.buttonTwo = {
+      innerContent: desktopValue({
+        text: options.secondaryButton.text,
+        linkUrl: options.secondaryButton.linkUrl
+      })
+    };
+  }
+  return makeBlock(DiviBlock.FullwidthHeader, attrs);
+}
+function fullwidthImage(options) {
+  const innerContent = {
+    url: options.imageUrl,
+    alt: options.alt ?? ""
+  };
+  if (options.linkUrl) innerContent.linkUrl = options.linkUrl;
+  const attrs = {
+    image: { innerContent: desktopValue(innerContent) }
+  };
+  const moduleDecoration = {};
+  if (options.overlayColor) {
+    const opacity = options.overlayOpacity ?? 0.3;
+    moduleDecoration.background = desktopValue({
+      color: colorToString(options.overlayColor),
+      blend: "multiply",
+      opacity: String(opacity)
+    });
+  }
+  if (options.parallax) {
+    moduleDecoration.advanced = desktopValue({ parallax: "on" });
+  }
+  if (Object.keys(moduleDecoration).length > 0) {
+    attrs.module = { decoration: moduleDecoration };
+  }
+  return makeBlock(DiviBlock.FullwidthImage, attrs);
+}
+function fullwidthSlider(options, slides) {
+  const sliderAttrs = {
+    autoplay: options.autoplay === false ? "off" : "on",
+    autoplaySpeed: String(options.autoplaySpeed ?? 7e3),
+    showArrows: options.showArrows === false ? "off" : "on",
+    showPagination: options.showPagination === false ? "off" : "on"
+  };
+  return makeBlock(
+    DiviBlock.FullwidthSlider,
+    { slider: { innerContent: desktopValue(sliderAttrs) } },
+    slides
+  );
+}
+function fullwidthMap(options) {
+  const mapInner = {
+    addressLat: String(options.centerLat),
+    addressLng: String(options.centerLng),
+    zoomLevel: String(options.zoom ?? 14),
+    grayscale: options.grayscale ?? true ? "on" : "off",
+    mouseWheel: options.mouseWheel ?? false ? "on" : "off"
+  };
+  const innerBlocks = (options.pins ?? []).map(
+    (pin) => makeBlock(DiviBlock.MapPin, {
+      pin: {
+        innerContent: desktopValue({
+          title: pin.title ?? "",
+          content: pin.contentHtml ?? "",
+          pinAddressLat: String(pin.lat),
+          pinAddressLng: String(pin.lng)
+        })
+      }
+    })
+  );
+  return makeBlock(
+    DiviBlock.FullwidthMap,
+    {
+      map: { innerContent: desktopValue(mapInner) },
+      module: {
+        decoration: {
+          sizing: desktopValue({ minHeight: options.height ?? "500px" })
+        }
+      }
+    },
+    innerBlocks
+  );
+}
+function group(options, modules) {
+  const decoration = {
+    spacing: desktopValue({ padding: { top: options.padding ?? "30px", right: options.padding ?? "30px", bottom: options.padding ?? "30px", left: options.padding ?? "30px" } }),
+    border: desktopValue({ radius: { topLeft: options.borderRadius ?? "12px", topRight: options.borderRadius ?? "12px", bottomRight: options.borderRadius ?? "12px", bottomLeft: options.borderRadius ?? "12px" } })
+  };
+  if (options.backgroundColor) {
+    decoration.background = desktopValue({ color: colorToString(options.backgroundColor) });
+  }
+  if (options.shadow !== false) {
+    decoration.boxShadow = desktopValue({
+      style: "preset3",
+      horizontal: "0px",
+      vertical: "4px",
+      blur: "12px",
+      spread: "0px",
+      color: "rgba(0,0,0,0.08)"
+    });
+  }
+  if (options.hoverElevation) {
+    decoration.transform = {
+      desktop: { hover: { translate: { y: "-4px" } } }
+    };
+  }
+  return makeBlock(DiviBlock.Group, { module: { decoration } }, modules);
+}
+function groupCarousel(options, groups) {
+  const carouselAttrs = {
+    visibleItems: String(options.visibleItems ?? 3),
+    autoplay: options.autoplay ? "on" : "off",
+    autoplaySpeed: String(options.autoplaySpeed ?? 5e3),
+    showArrows: options.showArrows === false ? "off" : "on",
+    showPagination: options.showDots === false ? "off" : "on",
+    gap: String(options.gap ?? 24) + "px"
+  };
+  return makeBlock(
+    DiviBlock.GroupCarousel,
+    { carousel: { innerContent: desktopValue(carouselAttrs) } },
+    groups
+  );
+}
+function rowInner(options, columns) {
+  const colCount = columns.length;
+  const flexColumnStructure = `equal-columns_${colCount === 1 ? 1 : colCount}`;
+  const moduleAttrs = {
+    advanced: {
+      columnStructure: desktopValue(options.columnStructure),
+      flexColumnStructure: desktopValue(flexColumnStructure)
+    },
+    decoration: {
+      layout: {
+        ...desktopValue({ flexWrap: "nowrap" }),
+        ...options.flexWrapMobile === "wrap" ? {
+          phone: { value: { flexWrap: "wrap" } },
+          phoneWide: { value: { flexWrap: "wrap" } }
+        } : {}
+      }
+    }
+  };
+  if (options.spacing) {
+    moduleAttrs.decoration.spacing = desktopValue(options.spacing);
+  }
+  return makeBlock(DiviBlock.RowInner, { module: moduleAttrs }, columns);
+}
+function columnInner(options, modules) {
+  const attrs = {
+    module: {
+      advanced: { type: desktopValue(options.type) }
+    }
+  };
+  if (options.fullWidthOnMobile) {
+    attrs.module.advanced.sizing = {
+      phone: { value: { width: "100%" } },
+      phoneWide: { value: { width: "100%" } }
+    };
+  }
+  return makeBlock(DiviBlock.ColumnInner, attrs, modules);
+}
+function postLoopInner(options, extra) {
+  const inner = {
+    postsNumber: String(options.postsNumber ?? 10),
+    order: options.order ?? "DESC",
+    orderBy: options.orderby ?? "date",
+    ...extra
+  };
+  if (options.categories && options.categories.length > 0) {
+    inner.includeCategories = options.categories.join(",");
+  }
+  if (options.postType) {
+    inner.postType = options.postType;
+  }
+  return inner;
+}
+function blog(options = {}) {
+  const inner = postLoopInner(options, {
+    fullwidth: options.fullwidth ? "on" : "off",
+    useMasonryGrid: options.masonry ? "on" : "off",
+    showThumbnail: options.showThumbnail === false ? "off" : "on",
+    showContent: options.showExcerpt === false ? "off" : "on",
+    showAuthor: options.showAuthor === false ? "off" : "on",
+    showDate: options.showDate === false ? "off" : "on",
+    showCategories: options.showCategories === false ? "off" : "on",
+    showReadMore: options.showReadMore === false ? "off" : "on",
+    showPagination: options.showPagination === false ? "off" : "on"
+  });
+  return makeBlock(DiviBlock.Blog, { post: { innerContent: desktopValue(inner) } });
+}
+function portfolio(options = {}) {
+  const inner = postLoopInner(options, {
+    fullwidth: options.fullwidth ? "on" : "off",
+    showTitle: options.showTitle === false ? "off" : "on",
+    showCategories: options.showCategories === false ? "off" : "on"
+  });
+  if (options.columns) {
+    inner.columnsNumber = String(options.columns);
+  }
+  return makeBlock(DiviBlock.Portfolio, { post: { innerContent: desktopValue(inner) } });
+}
+function filterablePortfolio(options = {}) {
+  const block = portfolio(options);
+  block.blockName = DiviBlock.FilterablePortfolio;
+  return block;
+}
+function postSlider(options = {}) {
+  const inner = postLoopInner(
+    { postsNumber: 5, ...options },
+    {
+      showImage: options.showImage === false ? "off" : "on",
+      showMeta: options.showMeta === false ? "off" : "on",
+      showMoreButton: options.showButton === false ? "off" : "on",
+      moreText: options.buttonText ?? "Read article",
+      backgroundLayout: options.backgroundLayout ?? "dark"
+    }
+  );
+  return makeBlock(DiviBlock.PostSlider, { post: { innerContent: desktopValue(inner) } });
+}
+function beforeAfter(options) {
+  const inner = {
+    beforeImage: { url: options.beforeImageUrl },
+    afterImage: { url: options.afterImageUrl },
+    beforeLabel: options.beforeLabel ?? "Before",
+    afterLabel: options.afterLabel ?? "After",
+    startPosition: String(options.startPosition ?? 50)
+  };
+  if (options.sliderColor) {
+    inner.sliderColor = colorToString(options.sliderColor);
+  }
+  return makeBlock(DiviBlock.BeforeAfterImage, {
+    image: { innerContent: desktopValue(inner) }
+  });
+}
+function timeline(items) {
+  const innerBlocks = items.map((item, idx) => timelineItem(item, idx % 2 === 0 ? "left" : "right"));
+  return makeBlock(DiviBlock.Timeline, {}, innerBlocks);
+}
+function timelineItem(item, defaultSide = "left") {
+  const side = item.side === "auto" ? defaultSide : item.side ?? defaultSide;
+  const inner = {
+    title: item.title,
+    date: item.date,
+    contentHtml: item.contentHtml ?? "",
+    side
+  };
+  if (item.imageUrl) inner.image = { url: item.imageUrl };
+  if (item.iconUnicode) inner.iconUnicode = item.iconUnicode;
+  return makeBlock(DiviBlock.TimelineItem, {
+    item: { innerContent: desktopValue(inner) }
+  });
+}
+function lottie(options) {
+  const inner = {
+    src: options.animationUrl,
+    loop: options.loop !== false ? "on" : "off",
+    autoplay: options.autoplay !== false ? "on" : "off",
+    speed: String(options.speed ?? 1),
+    trigger: options.trigger ?? "load"
+  };
+  return makeBlock(DiviBlock.Lottie, {
+    animation: { innerContent: desktopValue(inner) },
+    module: {
+      decoration: {
+        sizing: desktopValue({ width: options.width ?? "100%" }),
+        alignment: desktopValue({ horizontal: options.alignment ?? "center" })
+      }
+    }
+  });
+}
+function svg(options) {
+  const inner = {
+    code: options.svgCode
+  };
+  if (options.color) inner.color = colorToString(options.color);
+  if (options.hoverColor) inner.hoverColor = colorToString(options.hoverColor);
+  return makeBlock(DiviBlock.Svg, {
+    svg: { innerContent: desktopValue(inner) },
+    module: {
+      decoration: {
+        sizing: desktopValue({
+          width: options.width ?? "120px",
+          ...options.height ? { height: options.height } : {}
+        }),
+        alignment: desktopValue({ horizontal: options.alignment ?? "center" })
+      }
+    }
+  });
+}
+function countdown(options) {
+  const inner = {
+    endDate: options.endDate
+  };
+  if (options.title) inner.title = options.title;
+  if (options.labels) {
+    if (options.labels.days) inner.daysText = options.labels.days;
+    if (options.labels.hours) inner.hoursText = options.labels.hours;
+    if (options.labels.minutes) inner.minutesText = options.labels.minutes;
+    if (options.labels.seconds) inner.secondsText = options.labels.seconds;
+  }
+  const decoration = {
+    spacing: desktopValue({ padding: { top: "60px", right: "60px", bottom: "60px", left: "60px" } })
+  };
+  if (options.backgroundColor) {
+    decoration.background = desktopValue({ color: colorToString(options.backgroundColor) });
+  }
+  if (options.textColor) {
+    decoration.font = desktopValue({ color: colorToString(options.textColor) });
+  }
+  return makeBlock(DiviBlock.CountdownTimer, {
+    timer: { innerContent: desktopValue(inner) },
+    module: { decoration }
+  });
+}
+function sidebar(options = {}) {
+  const inner = {
+    sidebarId: options.areaId ?? "sidebar-1",
+    orientation: options.orientation ?? "left",
+    showBorder: options.showBorder ? "on" : "off"
+  };
+  return makeBlock(DiviBlock.Sidebar, {
+    sidebar: { innerContent: desktopValue(inner) }
+  });
+}
+function login(options = {}) {
+  const inner = {
+    currentPageRedirect: options.currentPageRedirect !== false ? "on" : "off"
+  };
+  if (options.title) inner.title = options.title;
+  if (options.buttonText) inner.buttonText = options.buttonText;
+  const decoration = {
+    sizing: desktopValue({ maxWidth: "480px" }),
+    spacing: desktopValue({ padding: { top: "40px", right: "40px", bottom: "40px", left: "40px" } }),
+    alignment: desktopValue({ horizontal: "center" })
+  };
+  if (options.backgroundColor) {
+    decoration.background = desktopValue({ color: colorToString(options.backgroundColor) });
+  }
+  return makeBlock(DiviBlock.Login, {
+    login: { innerContent: desktopValue(inner) },
+    module: { decoration }
+  });
+}
+function dropdown(options) {
+  const inner = {
+    options: options.options.map((o) => ({
+      value: o.value,
+      label: o.label,
+      ...o.url ? { url: o.url } : {}
+    })),
+    behavior: options.behavior ?? "navigate"
+  };
+  if (options.label) inner.label = options.label;
+  if (options.defaultValue) inner.defaultValue = options.defaultValue;
+  return makeBlock(DiviBlock.Dropdown, {
+    dropdown: { innerContent: desktopValue(inner) }
+  });
+}
+function signupCustomField(options) {
+  const inner = {
+    fieldId: options.fieldId,
+    label: options.label,
+    type: options.type ?? "input",
+    required: options.required ? "on" : "off"
+  };
+  if (options.options && options.options.length > 0) {
+    inner.options = options.options;
+  }
+  return makeBlock(DiviBlock.SignupCustomField, {
+    field: { innerContent: desktopValue(inner) }
+  });
+}
+function wcProductTitle(options = {}) {
+  const inner = {};
+  if (options.headingLevel) inner.headerLevel = options.headingLevel;
+  const attrs = {};
+  if (Object.keys(inner).length > 0) {
+    attrs.title = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.WoocommerceProductTitle, attrs);
+}
+function wcProductPrice(options = {}) {
+  const attrs = {};
+  if (options.alignment) {
+    attrs.module = {
+      decoration: { alignment: desktopValue({ horizontal: options.alignment }) }
+    };
+  }
+  return makeBlock(DiviBlock.WoocommerceProductPrice, attrs);
+}
+function wcProductImages(options = {}) {
+  const inner = {
+    showProductImage: options.showProductImage === false ? "off" : "on",
+    showProductGallery: options.showProductGallery === false ? "off" : "on",
+    showSaleBadge: options.showSaleBadge === false ? "off" : "on",
+    lightbox: options.lightbox === false ? "off" : "on"
+  };
+  return makeBlock(DiviBlock.WoocommerceProductImages, {
+    image: { innerContent: desktopValue(inner) }
+  });
+}
+function wcProductAddToCart(options = {}) {
+  const inner = {
+    showQuantity: options.showQuantity === false ? "off" : "on",
+    showStock: options.showStock === false ? "off" : "on"
+  };
+  if (options.buttonText) inner.buttonText = options.buttonText;
+  return makeBlock(DiviBlock.WoocommerceProductAddToCart, {
+    button: { innerContent: desktopValue(inner) }
+  });
+}
+function wcProductDescription(options = {}) {
+  const inner = {
+    descriptionType: options.descriptionType ?? "short"
+  };
+  return makeBlock(DiviBlock.WoocommerceProductDescription, {
+    description: { innerContent: desktopValue(inner) }
+  });
+}
+function wcProductTabs(options = {}) {
+  const inner = {};
+  if (options.activeTab) inner.activeTab = options.activeTab;
+  if (options.includeTabs && options.includeTabs.length > 0) {
+    inner.includeTabs = options.includeTabs.join(",");
+  }
+  const attrs = {};
+  if (Object.keys(inner).length > 0) {
+    attrs.tabs = { innerContent: desktopValue(inner) };
+  }
+  return makeBlock(DiviBlock.WoocommerceProductTabs, attrs);
+}
+function wcRelatedProducts(options = {}) {
+  const inner = {
+    postsNumber: String(options.postsNumber ?? 4),
+    columnsNumber: String(options.columns ?? 4),
+    orderBy: options.orderby ?? "rand"
+  };
+  return makeBlock(DiviBlock.WoocommerceRelatedProducts, {
+    related: { innerContent: desktopValue(inner) }
+  });
+}
+function wcCartProducts(options = {}) {
+  const inner = {
+    showThumbnail: options.showThumbnail === false ? "off" : "on",
+    showQuantity: options.showQuantity === false ? "off" : "on"
+  };
+  return makeBlock(DiviBlock.WoocommerceCartProducts, {
+    cart: { innerContent: desktopValue(inner) }
+  });
+}
+function wcCartTotals(options = {}) {
+  const inner = {
+    showProceedButton: options.showProceedButton === false ? "off" : "on"
+  };
+  return makeBlock(DiviBlock.WoocommerceCartTotals, {
+    totals: { innerContent: desktopValue(inner) }
+  });
+}
+function wcCheckoutBilling(options = {}) {
+  const inner = {
+    showTitle: options.showTitle === false ? "off" : "on"
+  };
+  if (options.title) inner.title = options.title;
+  return makeBlock(DiviBlock.WoocommerceCheckoutBilling, {
+    billing: { innerContent: desktopValue(inner) }
+  });
+}
 
 // src/divi/patterns/hero.ts
 function hero(options) {
@@ -32998,11 +33503,11 @@ function testimonialsGrid(options) {
       groups.push(options.items.slice(i, i + 3));
     }
   }
-  for (const group of groups) {
+  for (const group2 of groups) {
     rows.push(
       row(
         { columnStructure: structure, flexWrapMobile: "wrap" },
-        group.map((item) => column({ type: colType }, [testimonial(item)]))
+        group2.map((item) => column({ type: colType }, [testimonial(item)]))
       )
     );
   }
@@ -33330,11 +33835,11 @@ function teamGrid(options) {
   const count = explicitCount ?? Math.min(4, Math.max(1, options.members.length));
   const { structure, colType } = COLUMN_STRUCTURES[count];
   for (let i = 0; i < options.members.length; i += count) {
-    const group = options.members.slice(i, i + count);
+    const group2 = options.members.slice(i, i + count);
     rows.push(
       row(
         { columnStructure: structure, flexWrapMobile: "wrap" },
-        group.map((m) => column({ type: colType }, [teamMember(m)]))
+        group2.map((m) => column({ type: colType }, [teamMember(m)]))
       )
     );
   }
@@ -33525,6 +34030,70 @@ function composeModule(input) {
       return socialMediaFollow(input.networks);
     case "counters":
       return counters(input);
+    // Phase 9 — native modules
+    case "fullwidth-header":
+      return fullwidthHeader(input);
+    case "fullwidth-image":
+      return fullwidthImage(input);
+    case "fullwidth-slider":
+      return fullwidthSlider(input, input.slides.map((s) => slider([s]).innerBlocks[0]));
+    case "fullwidth-map":
+      return fullwidthMap(input);
+    case "group":
+      return group(input, input.modules.map(composeModule));
+    case "group-carousel":
+      return groupCarousel(input, input.groups.map((g) => group(g, g.modules.map(composeModule))));
+    case "row-inner":
+      return rowInner(input, input.columns.map((c) => columnInner({ type: c.type ?? "4_4" }, c.modules.map(composeModule))));
+    case "column-inner":
+      return columnInner(input, input.modules.map(composeModule));
+    case "blog":
+      return blog(input);
+    case "portfolio":
+      return portfolio(input);
+    case "filterable-portfolio":
+      return filterablePortfolio(input);
+    case "post-slider":
+      return postSlider(input);
+    case "before-after":
+      return beforeAfter(input);
+    case "timeline":
+      return timeline(input.items);
+    case "lottie":
+      return lottie(input);
+    case "svg":
+      return svg(input);
+    case "countdown":
+      return countdown(input);
+    case "sidebar":
+      return sidebar(input);
+    case "login":
+      return login(input);
+    case "dropdown":
+      return dropdown(input);
+    case "signup-custom-field":
+      return signupCustomField(input);
+    // Phase 9 — WooCommerce modules
+    case "wc-product-title":
+      return wcProductTitle(input);
+    case "wc-product-price":
+      return wcProductPrice(input);
+    case "wc-product-images":
+      return wcProductImages(input);
+    case "wc-product-add-to-cart":
+      return wcProductAddToCart(input);
+    case "wc-product-description":
+      return wcProductDescription(input);
+    case "wc-product-tabs":
+      return wcProductTabs(input);
+    case "wc-related-products":
+      return wcRelatedProducts(input);
+    case "wc-cart-products":
+      return wcCartProducts(input);
+    case "wc-cart-totals":
+      return wcCartTotals(input);
+    case "wc-checkout-billing":
+      return wcCheckoutBilling(input);
     case "block":
       return input.block;
     default: {
@@ -33733,6 +34302,42 @@ function registerContent(server, client) {
       const { language: _language, ...payload } = args;
       return toToolResult("content/update", await client.post("/content/update", payload));
     }
+  );
+  server.registerTool(
+    "iawm_content_revisions_list",
+    {
+      title: "List a post's revisions",
+      description: "Enumerates the native WordPress revisions stored for a post or page, newest first. Works on Gutenberg and Divi pages alike \u2014 revisions snapshot post_content regardless of build mode. Returns compact records (revision id, author, date, title, byte size, excerpt).",
+      inputSchema: {
+        post_id: external_exports.number().int().describe("Id of the parent post or page"),
+        limit: external_exports.number().int().min(1).max(100).optional().describe("Maximum number of revisions to return (default: 20)")
+      }
+    },
+    async (args) => toToolResult("content/revisions/list", await client.post("/content/revisions/list", args))
+  );
+  server.registerTool(
+    "iawm_content_revisions_get",
+    {
+      title: "Read one revision",
+      description: "Returns the full content of a single revision (title, post_content, excerpt, author, date) along with the parent post's id, current status, and detected build_mode \u2014 useful to know which write path a restore would land on.",
+      inputSchema: {
+        revision_id: external_exports.number().int().describe("Revision id (as returned by iawm_content_revisions_list)")
+      }
+    },
+    async (args) => toToolResult("content/revisions/get", await client.post("/content/revisions/get", args))
+  );
+  server.registerTool(
+    "iawm_content_revisions_restore",
+    {
+      title: "Restore a revision",
+      description: "Restores a previous revision onto its parent post. Two-step pattern: call once without a confirmation_token to receive a token and a summary of the change; call again with that token to actually apply. dry_run=true previews the diff (title/byte-size before vs after) without mutating. WordPress itself creates a fresh revision capturing the pre-restore state, which is surfaced as pre_op_backup_id (format 'revision:<id>') so rollback is just another iawm_content_revisions_restore call against that id.",
+      inputSchema: {
+        revision_id: external_exports.number().int().describe("Id of the revision to restore"),
+        confirmation_token: external_exports.string().optional().describe("Token returned by the first call; required to actually apply"),
+        dry_run: external_exports.boolean().optional().describe("True to preview without applying \u2014 does not require a token")
+      }
+    },
+    async (args) => toToolResult("content/revisions/restore", await client.post("/content/revisions/restore", args))
   );
 }
 function registerMedia(server, client) {
@@ -34033,6 +34638,73 @@ function registerConfig(server, client) {
       }
     },
     async (args) => toToolResult("config/users/update", await client.post("/config/users/update", args))
+  );
+}
+function registerWebhooks(server, client) {
+  server.registerTool(
+    "iawm_webhooks_list",
+    {
+      title: "List outbound webhooks",
+      description: "Returns every configured outbound webhook (label, destination URL, subscribed events, enabled flag, timestamps). The signing_secret is intentionally REDACTED \u2014 it is never read back; to rotate, call `iawm_webhooks_update` with a fresh signing_secret. Scope: read."
+    },
+    async () => toToolResult("config/webhooks/list", await client.post("/config/webhooks/list", {}))
+  );
+  server.registerTool(
+    "iawm_webhooks_create",
+    {
+      title: "Create an outbound webhook",
+      description: "Registers a new outbound webhook. The plugin will POST a signed JSON envelope to `destination_url` whenever any of the subscribed `events` fire. Use the literal `*` in the events array to subscribe to every event. The signing_secret must be at least 16 characters; receivers use it to verify the `X-IAWM-Webhook-Signature` header. Scope: config:write.",
+      inputSchema: {
+        destination_url: external_exports.string().url().describe("Absolute http(s) URL receiving the signed POST"),
+        signing_secret: external_exports.string().min(16).describe(
+          "Shared secret used to sign outbound notifications. Min 16 chars. Never returned by the API once stored."
+        ),
+        events: external_exports.union([external_exports.array(external_exports.string()), external_exports.string()]).describe(
+          "Subscribed event names \u2014 array or comma-separated string. Currently emitted: 'smoke.failed'. Use '*' to subscribe to everything."
+        ),
+        label: external_exports.string().optional().describe("Human-readable label (defaults to the destination host)"),
+        enabled: external_exports.boolean().optional().describe("Defaults to true. Set false to register a webhook without enabling delivery.")
+      }
+    },
+    async (args) => toToolResult("config/webhooks/create", await client.post("/config/webhooks/create", args))
+  );
+  server.registerTool(
+    "iawm_webhooks_update",
+    {
+      title: "Update an outbound webhook",
+      description: "Updates a webhook record. Pass only the fields you want to change. To rotate the signing secret, send a fresh `signing_secret` value (min 16 chars). Toggling `enabled` is the recommended way to pause notifications without losing the configuration. Scope: config:write.",
+      inputSchema: {
+        id: external_exports.number().int().describe("Webhook id"),
+        label: external_exports.string().optional(),
+        destination_url: external_exports.string().url().optional(),
+        signing_secret: external_exports.string().min(16).optional(),
+        events: external_exports.union([external_exports.array(external_exports.string()), external_exports.string()]).optional(),
+        enabled: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("config/webhooks/update", await client.post("/config/webhooks/update", args))
+  );
+  server.registerTool(
+    "iawm_webhooks_delete",
+    {
+      title: "Delete an outbound webhook",
+      description: "Permanently removes a webhook and any pending outbox rows tied to it. For a reversible pause, prefer `iawm_webhooks_update` with `enabled: false`. Scope: config:write.",
+      inputSchema: {
+        id: external_exports.number().int().describe("Webhook id to delete")
+      }
+    },
+    async (args) => toToolResult("config/webhooks/delete", await client.post("/config/webhooks/delete", args))
+  );
+  server.registerTool(
+    "iawm_webhooks_test",
+    {
+      title: "Send a test ping to an outbound webhook",
+      description: "Posts a signed `test.ping` envelope to the webhook's destination immediately (bypassing the outbox + cron). Returns the receiver's HTTP status and a short body excerpt \u2014 handy for verifying a fresh configuration without waiting for the 5-minute drain tick. Scope: config:write.",
+      inputSchema: {
+        id: external_exports.number().int().describe("Webhook id to ping")
+      }
+    },
+    async (args) => toToolResult("config/webhooks/test", await client.post("/config/webhooks/test", args))
   );
 }
 function registerPlugins(server, client) {
@@ -34952,6 +35624,7 @@ function registerTools(server, client) {
   registerMenu(server, client);
   registerDiagnostics(server, client);
   registerConfig(server, client);
+  registerWebhooks(server, client);
   registerPlugins(server, client);
   registerThemes(server, client);
   registerCore(server, client);

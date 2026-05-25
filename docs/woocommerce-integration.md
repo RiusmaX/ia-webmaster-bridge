@@ -158,6 +158,81 @@ build me a single-product Theme Builder template"*:
    `use_on: ["singular:product"]`. Visit any product in the
    front-end to confirm the layout takes effect.
 
+## Typed builders (Phase 9.3)
+
+10 of the 25 WooCommerce modules now have **typed builders** in the
+gateway, accessible via `iawm_divi_page_compose` /
+`iawm_divi_theme_builder_compose` under the `wc-*` module names
+(prefix avoids collision with the post-aware builders, e.g.
+`post-title` vs `wc-product-title`).
+
+| Builder | Registry name | Typical context | Key options |
+|---|---|---|---|
+| `wc-product-title` | `divi/woocommerce-product-title` | single-product | `headingLevel?: "h1"\|"h2"\|"h3"` |
+| `wc-product-price` | `divi/woocommerce-product-price` | single-product, archive | `alignment?` |
+| `wc-product-images` | `divi/woocommerce-product-images` | single-product | `showProductImage?`, `showProductGallery?`, `showSaleBadge?`, `lightbox?` |
+| `wc-product-add-to-cart` | `divi/woocommerce-product-add-to-cart` | single-product | `buttonText?`, `showQuantity?`, `showStock?` |
+| `wc-product-description` | `divi/woocommerce-product-description` | single-product | `descriptionType?: "short"\|"long"` |
+| `wc-product-tabs` | `divi/woocommerce-product-tabs` | single-product | `activeTab?`, `includeTabs?` |
+| `wc-related-products` | `divi/woocommerce-related-products` | single-product | `postsNumber?`, `columns?`, `orderby?` |
+| `wc-cart-products` | `divi/woocommerce-cart-products` | cart | `showThumbnail?`, `showQuantity?` |
+| `wc-cart-totals` | `divi/woocommerce-cart-totals` | cart | `showProceedButton?` |
+| `wc-checkout-billing` | `divi/woocommerce-checkout-billing` | checkout | `showTitle?`, `title?` |
+
+The remaining 15 WooCommerce modules (cross-sells, checkout-shipping,
+product-meta, product-stock, product-rating, etc.) stay reachable
+free-form via `{ module: "block", block: ... }` or directly via the
+registry. They are valuable but their option surface is small enough
+that typed defaults add little.
+
+**Example** — minimal single-product template body with only typed
+builders, no free-form attribute dumps:
+
+```jsonc
+{
+  "title": "Single product",
+  "body": {
+    "sections": [
+      {
+        "section": {
+          "rows": [
+            {
+              "structure": "4_4",
+              "columns": [
+                [
+                  { "module": "wc-product-images" },
+                  { "module": "wc-product-title" },
+                  { "module": "wc-product-price" },
+                  { "module": "wc-product-description", "descriptionType": "short" },
+                  { "module": "wc-product-add-to-cart", "showQuantity": true }
+                ]
+              ]
+            },
+            {
+              "structure": "4_4",
+              "columns": [
+                [
+                  { "module": "wc-product-tabs", "activeTab": "description" }
+                ]
+              ]
+            },
+            {
+              "structure": "4_4",
+              "columns": [
+                [
+                  { "module": "wc-related-products", "columns": 4, "postsNumber": 4 }
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "assign": { "use_on": ["singular:product"] }
+}
+```
+
 ## Composing WC modules in standalone pages
 
 The 25 WooCommerce modules also work inside standalone pages via

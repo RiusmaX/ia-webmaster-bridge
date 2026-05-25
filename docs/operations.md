@@ -491,3 +491,152 @@ and writes a sorted POT file. Plurals (`_n`) are emitted as
 WordPress loads the `.mo` matching the site's active locale; if no
 matching file is found, the original English strings are displayed —
 no fallback is required.
+
+---
+
+## Consuming an IA Webmaster webhook
+
+When you register an outbound webhook via `iawm_webhooks_create`
+(Phase 9.4), the plugin POSTs signed JSON envelopes to your
+`destination_url` whenever any of the subscribed `events` fire (today
+that's just `smoke.failed`; future versions will add `audit.alert`
+and key-rotation reminders). Receivers verify the signature to make
+sure the request really came from this site.
+
+See [`D-030`](decisions.md#d-030--outbound-webhooks-hmac-sha256-over-ts--n-nonce--n-body-5-min-drainer-3-attempt-dead-letter)
+for the full design rationale and trade-offs.
+
+### Envelope
+
+The body is `application/json` and looks like:
+
+```json
+{
+  "event": "smoke.failed",
+  "site_url": "https://example.com",
+  "fired_at": "2026-05-25T14:32:18Z",
+  "payload": {
+    "ok": true,
+    "healthy": false,
+    "checks": { "...": "..." },
+    "time": "2026-05-25T14:32:17+00:00"
+  }
+}
+```
+
+### Headers
+
+Every POST carries three custom headers in addition to the usual
+`Content-Type: application/json`:
+
+| Header | Value |
+|--------|-------|
+| `X-IAWM-Webhook-Timestamp` | Unix epoch seconds at signing time |
+| `X-IAWM-Webhook-Nonce`     | 16 random bytes, hex-encoded (32 chars) |
+| `X-IAWM-Webhook-Signature` | `sha256=` + hex HMAC-SHA256 of the canonical string (see below), using the `signing_secret` you set at create time |
+
+### Canonical signing string
+
+The string fed into HMAC-SHA256 is exactly three lines, joined with
+literal `\n` (LF) newlines, in this order:
+
+```
+<timestamp>
+<nonce>
+<raw request body, byte-for-byte>
+```
+
+There is no leading or trailing newline. The body is the raw bytes
+you receive — do not re-serialize the parsed JSON before hashing or
+the signature will not match.
+
+### Verification (Node example)
+
+```js
+import crypto from "node:crypto";
+import express from "express";
+
+const app = express();
+// Important: capture the raw body so the HMAC is computed over
+// exactly what we received, byte for byte.
+app.use(
+  express.raw({ type: "application/json", limit: "1mb" }),
+);
+
+const SECRET = process.env.IAWM_WEBHOOK_SECRET; // same value you gave to iawm_webhooks_create
+const MAX_SKEW_SECONDS = 5 * 60;
+
+app.post("/iawm-hook", (req, res) => {
+  const ts        = String(req.header("X-IAWM-Webhook-Timestamp") || "");
+  const nonce     = String(req.header("X-IAWM-Webhook-Nonce") || "");
+  const signature = String(req.header("X-IAWM-Webhook-Signature") || "");
+  const body      = req.body instanceof Buffer ? req.body : Buffer.from("");
+
+  // 1. Timestamp must be within ±5 minutes of now.
+  const skew = Math.abs(Math.floor(Date.now() / 1000) - Number(ts));
+  if (!ts || Number.isNaN(skew) || skew > MAX_SKEW_SECONDS) {
+    return res.status(401).send("stale or missing timestamp");
+  }
+
+  // 2. Recompute the signature.
+  const message = `${ts}\n${nonce}\n${body.toString("utf8")}`;
+  const expected = "sha256=" + crypto
+    .createHmac("sha256", SECRET)
+    .update(message)
+    .digest("hex");
+
+  // 3. Constant-time compare.
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signature);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).send("bad signature");
+  }
+
+  // 4. (Optional) Cache the nonce for at least 10 minutes to harden
+  //    against replay. The timestamp check alone is enough for most
+  //    use cases — see D-030.
+
+  const envelope = JSON.parse(body.toString("utf8"));
+  console.log("verified", envelope.event, envelope.fired_at);
+  res.status(200).end();
+});
+
+app.listen(3000);
+```
+
+### Verification (Python pseudo-code)
+
+```python
+import hmac, hashlib, time
+
+def verify(headers, raw_body: bytes, secret: str) -> bool:
+    ts    = headers.get("X-IAWM-Webhook-Timestamp", "")
+    nonce = headers.get("X-IAWM-Webhook-Nonce", "")
+    sig   = headers.get("X-IAWM-Webhook-Signature", "")
+
+    if not ts or abs(int(time.time()) - int(ts)) > 5 * 60:
+        return False
+
+    msg = f"{ts}\n{nonce}\n".encode("utf-8") + raw_body
+    expected = "sha256=" + hmac.new(
+        secret.encode("utf-8"), msg, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, sig)
+```
+
+### Operational notes
+
+- A receiver that returns any non-2xx status is treated as a delivery
+  failure. The plugin retries with exponential backoff (1m, 5m, 30m)
+  for up to 3 attempts before dead-lettering the row.
+- Receivers must respond within the 10-second HTTP timeout. Long
+  processing belongs in a queue on your side, not in the
+  request handler.
+- Test a freshly-registered webhook with `iawm_webhooks_test` — it
+  sends a synthetic `test.ping` envelope immediately (bypassing the
+  outbox) and returns the receiver's HTTP status + a short body
+  excerpt.
+- To rotate the signing secret without losing history, call
+  `iawm_webhooks_update` with a fresh `signing_secret`. Update the
+  receiver to accept either the old or the new secret for the
+  duration of the rotation window, then drop the old one.

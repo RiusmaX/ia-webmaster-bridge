@@ -45,12 +45,13 @@ See [`docs/decisions.md`](docs/decisions.md). In short:
 
 ## Project status
 
-Phases 0–8 closed. **Current release: v1.2.0** (plugin + gateway both
-1.2.0, 100 MCP tools, 15 Claude Code skills, 28 decisions on file).
-**Phase 9 — polish + long tail — is the next sprint**, targeting
-**v1.3.0**. The sub-phase tracker lives in
+Phases 0–9 closed (code-side). **Current release: v1.3.0** (plugin +
+gateway both 1.3.0, **108 MCP tools**, **79 typed Divi builders**, **15
+Claude Code skills**, **31 decisions** on file). Phase 9.7 — small-prod
+validation — remains the next deployment milestone (operator-gated).
+The sub-phase tracker lives in
 [`docs/phase-9-action-plan.md`](docs/phase-9-action-plan.md); the
-historical roadmap (Phases 0 → 8) is in
+historical roadmap (Phases 0 → 9) is in
 [`docs/roadmap.md`](docs/roadmap.md); Phase 7's tracker is preserved
 as a closed reference at
 [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md).
@@ -60,8 +61,10 @@ Current high-level capabilities:
 - Full WordPress management (content, media, taxonomies, menus,
   configuration, diagnostics, plugins, themes, core, database, cron,
   backups, broken-links scanner, 404 tracker).
-- Divi 5: 105 auto-discovered modules (incl. 25 WooCommerce), 47
-  typed builders, 13 parametric patterns, full Theme Builder,
+- Divi 5: 105 auto-discovered modules (incl. 25 WooCommerce), **79
+  typed builders** (69 native + 10 WooCommerce since Phase 9), 13
+  parametric patterns (testimonials with grid + carousel variants),
+  full Theme Builder,
   bit-faithful round-trip, unified declarative composer
   (`iawm_divi_page_compose`), design system writes (colors / fonts /
   variables / theme options / branding).
@@ -73,6 +76,14 @@ Current high-level capabilities:
 - **Multisite-tolerant**: global agent user, per-site role + tables,
   auto-provisioning of new sub-sites via `wp_initialize_site`. Network
   Admin Settings page surfaces every sub-site's state.
+- **Outbound webhook signing** (Phase 9.4): HMAC-signed notifications
+  to Slack / generic JSON receivers when smoke tests fail or audit
+  alerts trigger; retry with backoff + dead-letter queue.
+- **Revisions API** (Phase 9.5): list/get/restore for post revisions,
+  with confirmation-token gate on restore.
+- **Audit-log pseudonymisation** (Phase 9.6): opt-in SHA-256 short-
+  prefix sentinel redaction for sensitive params (passwords, signing
+  secrets) — per-route declarations.
 - Multi-key auth, scoped per request, with audit log, automatic
   pre-op backups, confirmation tokens, kill switch, HTTPS
   enforcement, IP allow-list. Eight-layer defence in depth — see

@@ -113,6 +113,82 @@ Each module = `{ module: "<name>", ...options }`.
 { module: "toggle",  title, contentHtml }
 ```
 
+### Phase 9 — extended module builders
+
+The 22 builders below cover the most operationally useful Divi native modules. See `claude-plugin/mcp-gateway/src/divi/builders.ts` for full TS-typed options. Defaults are opinionated for a webmaster context.
+
+#### Hero / fullwidth band
+```js
+{ module: "fullwidth-header", title, subhead?, contentHtml?, primaryButton?: {text,linkUrl}, secondaryButton?, imageUrl?, backgroundImageUrl?, backgroundColor?, textAlign?, height?: "screen"|"large"|"medium" }
+{ module: "fullwidth-image",  imageUrl, alt?, linkUrl?, overlayColor?, overlayOpacity?, parallax? }
+{ module: "fullwidth-slider", slides: [<slide>], autoplay?: true, autoplaySpeed?: 7000, showArrows?: true, showPagination?: true }
+{ module: "fullwidth-map",    centerLat, centerLng, zoom?: 14, pins?: [{lat,lng,title?,contentHtml?}], grayscale?: true, mouseWheel?: false, height?: "500px" }
+```
+
+#### Group containers
+```js
+{ module: "group",            backgroundColor?, borderRadius?: "12px", padding?: "30px", shadow?: true, hoverElevation?: false, modules: [...] }
+{ module: "group-carousel",   visibleItems?: 3, autoplay?: false, autoplaySpeed?: 5000, showArrows?: true, showDots?: true, gap?: 24, groups: [<group>] }
+{ module: "row-inner",        columnStructure, columns: [<column-inner>] }
+{ module: "column-inner",     type: "1_2", modules: [...] }
+```
+
+#### Post loops
+```js
+{ module: "blog",                 postsNumber?: 10, categories?: [], fullwidth?: false, masonry?: false, showThumbnail?: true, showExcerpt?: true, showAuthor?: true, showDate?: true, showCategories?: true, showReadMore?: true, showPagination?: true }
+{ module: "portfolio",            postsNumber?: 10, categories?: [], columns?: 3, fullwidth?: false, showTitle?: true, showCategories?: true }
+{ module: "filterable-portfolio", ...same as portfolio }
+{ module: "post-slider",          postsNumber?: 5, showImage?: true, showMeta?: true, showButton?: true, buttonText?: "Read article", backgroundLayout?: "dark" }
+```
+
+#### Specialty content
+```js
+{ module: "before-after",   beforeImageUrl, afterImageUrl, beforeLabel?: "Before", afterLabel?: "After", sliderColor?, startPosition?: 50 }
+{ module: "timeline",       items: [{title, date, contentHtml?, imageUrl?, iconUnicode?, side?: "left"|"right"|"auto"}] }
+{ module: "lottie",         animationUrl, loop?: true, autoplay?: true, speed?: 1, trigger?: "load"|"hover"|"scroll", width?: "100%", alignment?: "center" }
+{ module: "svg",            svgCode, width?: "120px", color?, hoverColor?, alignment?: "center" }
+{ module: "countdown",      endDate /* ISO */, title?, labels?: {days?,hours?,minutes?,seconds?}, backgroundColor?, textColor? }
+```
+
+#### Layout + form widgets
+```js
+{ module: "sidebar",                areaId?: "sidebar-1", orientation?: "left"|"right", showBorder?: false }
+{ module: "login",                  title?, currentPageRedirect?: true, backgroundColor?, buttonText? }
+{ module: "dropdown",               label?, options: [{value, label, url?}], defaultValue?, behavior?: "navigate"|"emit" }
+{ module: "signup-custom-field",    fieldId, label, type?: "input"|"email"|"text"|"checkbox"|"radio"|"select", required?: false, options?: [string] }
+```
+
+#### WooCommerce (Phase 9.3 — for Theme Builder layouts)
+
+10 of the 25 WooCommerce modules are wrapped as typed builders.
+Compose them inside an `iawm_divi_theme_builder_compose` call
+assigned to `singular:product`, `archive:product`, `page:cart` or
+`page:checkout`. See `docs/woocommerce-integration.md` for the full
+walkthrough.
+
+```js
+// Single-product context
+{ module: "wc-product-title",         headingLevel?: "h1" }
+{ module: "wc-product-price",         alignment?: "left"|"center"|"right" }
+{ module: "wc-product-images",        showProductImage?: true, showProductGallery?: true, showSaleBadge?: true, lightbox?: true }
+{ module: "wc-product-add-to-cart",   buttonText?, showQuantity?: true, showStock?: true }
+{ module: "wc-product-description",   descriptionType?: "short"|"long" }
+{ module: "wc-product-tabs",          activeTab?: "description"|"additional_information"|"reviews", includeTabs?: [...] }
+{ module: "wc-related-products",      postsNumber?: 4, columns?: 4, orderby?: "rand"|"date"|"title"|"popularity"|"rating" }
+
+// Cart context
+{ module: "wc-cart-products",         showThumbnail?: true, showQuantity?: true }
+{ module: "wc-cart-totals",           showProceedButton?: true }
+
+// Checkout context
+{ module: "wc-checkout-billing",      showTitle?: true, title? }
+```
+
+The 15 remaining WC modules (cross-sells, checkout-shipping,
+product-meta, product-stock, product-rating, etc.) stay reachable
+via the free-form `{ module: "block", block: ... }` escape hatch or
+the raw registry.
+
 ### Forms
 ```js
 { module: "signup", title, contentHtml }

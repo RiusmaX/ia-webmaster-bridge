@@ -4,20 +4,23 @@
 > action signed.
 
 ![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)
-![Plugin](https://img.shields.io/badge/plugin-1.2.0-brightgreen)
-![Gateway](https://img.shields.io/badge/gateway-1.2.0-brightgreen)
-![Status](https://img.shields.io/badge/status-v1.2.0-brightgreen)
-![Tools](https://img.shields.io/badge/MCP%20tools-100-blue)
+![Plugin](https://img.shields.io/badge/plugin-1.3.0-brightgreen)
+![Gateway](https://img.shields.io/badge/gateway-1.3.0-brightgreen)
+![Status](https://img.shields.io/badge/status-v1.3.0-brightgreen)
+![Tools](https://img.shields.io/badge/MCP%20tools-108-blue)
 ![Skills](https://img.shields.io/badge/skills-15-blue)
 ![Divi modules](https://img.shields.io/badge/Divi%205%20modules-105-blue)
 
 ## Status
 
-**v1.2.0 — production ready, full webmaster layer + Phase 8.** Phases
-0-8 closed; specs 01-07 all Implemented. Numbers at a glance:
+**v1.3.0 — production ready, polish complete.** Phases 0-9 closed
+code-side (9.7 small-prod validation is the next deployment
+milestone); specs 01-07 all Implemented. Numbers at a glance:
 
-- **100 MCP tools** exposed to Claude (≈100 signed REST routes on the
-  WordPress side, grouped in 24 modules).
+- **108 MCP tools** exposed to Claude (≈108 signed REST routes on the
+  WordPress side, grouped in 25 modules).
+- **79 typed Divi 5 builders** (47 → 79 in Phase 9) covering native
+  modules + 10 WooCommerce modules with opinionated defaults.
 - **15 Claude Code skills** covering content, design, marketing, SEO,
   Divi authoring, safe plugin updates, design-system-first builds,
   smoke testing, production deployment, per-site context discovery,
@@ -54,7 +57,7 @@ switch.
 
 ## What you can ask Claude to do
 
-A condensed tour. The full catalogue of the **100 MCP tools** with
+A condensed tour. The full catalogue of the **108 MCP tools** with
 example prompts is in [`docs/capabilities.md`](docs/capabilities.md);
 the **15 Claude Code skills** that compose those tools into
 recognisable workflows are documented in
@@ -175,7 +178,7 @@ documented in [`docs/security-model.md`](docs/security-model.md).
 Operator-facing:
 
 - [`docs/capabilities.md`](docs/capabilities.md) — comprehensive
-  tour of the 100 capabilities with example prompts.
+  tour of the 108 capabilities with example prompts.
 - [`docs/skills.md`](docs/skills.md) — the 15 Claude Code skills
   that compose the tools into operator workflows.
 - [`docs/operations.md`](docs/operations.md) — operator runbook (key
@@ -198,11 +201,10 @@ Reference:
   composer DSL.
 - [`docs/architecture.md`](docs/architecture.md) — three-component
   architecture.
-- [`docs/decisions.md`](docs/decisions.md) — 28 structuring
-  decisions (D-001 → D-028).
+- [`docs/decisions.md`](docs/decisions.md) — 31 structuring
+  decisions (D-001 → D-031).
 - [`docs/roadmap.md`](docs/roadmap.md) — phase-by-phase history,
-  Phase 8 closed in v1.2.0, Phase 9 backlog (deeper Divi builders +
-  webhook signing).
+  Phases 0-9 closed in v1.3.0; small-prod validation (9.7) pending.
 - [`docs/glossary.md`](docs/glossary.md) — vocabulary primer.
 
 ## Contributing

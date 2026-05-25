@@ -1,7 +1,7 @@
 # Spec 02 — Security & guardrails
 
-- **Status**: Implemented (Phase 5.1 + 5.2 + 5.3 + 5.4 shipped; ops runbook documented)
-- **Phase**: Cross-cutting (built from Phase 1, hardened in Phase 5)
+- **Status**: Implemented (Phase 5.1 + 5.2 + 5.3 + 5.4 shipped; ops runbook documented; audit pseudonymisation added in Phase 9.6)
+- **Phase**: Cross-cutting (built from Phase 1, hardened in Phase 5, audit hardening in Phase 9)
 - **Priority**: High
 - **Last updated**: 2026-05-25
 
@@ -97,11 +97,6 @@ and guardrails against dangerous operations (decision D-005).
 The original list of open questions is mostly settled by decisions
 D-013 → D-022. The remaining items:
 
-- **Sensitive-parameter pseudonymisation in the audit log**. Today
-  `parameters_summary` is stored as plain JSON in `wp_iawm_audit_log`.
-  For a setup where a third party can read the audit log (e.g. a
-  read-only key used by a monitoring sidecar), pseudonymising values
-  marked sensitive in the schema would be safer. P1 backlog.
 - **Automated key expiry**. Rotation procedure is documented in
   `operations.md`; the **policy** (frequency, procedure) is the
   operator's call. The plugin does not currently enforce a TTL on a
@@ -116,7 +111,9 @@ D-013 → D-022. The remaining items:
 Settled and removed from this list (see `docs/decisions.md` for
 context): audit-log storage (custom table — D-013 era), risky-action
 classification (per-route allow-list, D-015 + D-022), confirmation
-token mechanism (D-015: single-use, 5-min TTL, body-bound).
+token mechanism (D-015: single-use, 5-min TTL, body-bound),
+sensitive-parameter pseudonymisation in the audit log (D-031: opt-in,
+dot-path-declared, SHA-256 short-prefix sentinel).
 
 ## Dependencies & risks
 

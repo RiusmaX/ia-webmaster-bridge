@@ -179,6 +179,48 @@ function registerContent(server: McpServer, client: IawmClient): void {
       return toToolResult("content/update", await client.post("/content/update", payload));
     },
   );
+
+  server.registerTool(
+    "iawm_content_revisions_list",
+    {
+      title: "List a post's revisions",
+      description:
+        "Enumerates the native WordPress revisions stored for a post or page, newest first. Works on Gutenberg and Divi pages alike — revisions snapshot post_content regardless of build mode. Returns compact records (revision id, author, date, title, byte size, excerpt).",
+      inputSchema: {
+        post_id: z.number().int().describe("Id of the parent post or page"),
+        limit: z.number().int().min(1).max(100).optional().describe("Maximum number of revisions to return (default: 20)"),
+      },
+    },
+    async (args) => toToolResult("content/revisions/list", await client.post("/content/revisions/list", args)),
+  );
+
+  server.registerTool(
+    "iawm_content_revisions_get",
+    {
+      title: "Read one revision",
+      description:
+        "Returns the full content of a single revision (title, post_content, excerpt, author, date) along with the parent post's id, current status, and detected build_mode — useful to know which write path a restore would land on.",
+      inputSchema: {
+        revision_id: z.number().int().describe("Revision id (as returned by iawm_content_revisions_list)"),
+      },
+    },
+    async (args) => toToolResult("content/revisions/get", await client.post("/content/revisions/get", args)),
+  );
+
+  server.registerTool(
+    "iawm_content_revisions_restore",
+    {
+      title: "Restore a revision",
+      description:
+        "Restores a previous revision onto its parent post. Two-step pattern: call once without a confirmation_token to receive a token and a summary of the change; call again with that token to actually apply. dry_run=true previews the diff (title/byte-size before vs after) without mutating. WordPress itself creates a fresh revision capturing the pre-restore state, which is surfaced as pre_op_backup_id (format 'revision:<id>') so rollback is just another iawm_content_revisions_restore call against that id.",
+      inputSchema: {
+        revision_id: z.number().int().describe("Id of the revision to restore"),
+        confirmation_token: z.string().optional().describe("Token returned by the first call; required to actually apply"),
+        dry_run: z.boolean().optional().describe("True to preview without applying — does not require a token"),
+      },
+    },
+    async (args) => toToolResult("content/revisions/restore", await client.post("/content/revisions/restore", args)),
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -535,6 +577,114 @@ function registerConfig(server: McpServer, client: IawmClient): void {
       },
     },
     async (args) => toToolResult("config/users/update", await client.post("/config/users/update", args)),
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Outbound webhooks (Phase 9.4)                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Outbound webhook subscriptions. The plugin POSTs signed JSON
+ * envelopes to receivers when interesting events happen
+ * (`smoke.failed`, future `audit.alert`, …). Signing scheme: three
+ * headers — `X-IAWM-Webhook-Timestamp`, `X-IAWM-Webhook-Nonce`,
+ * `X-IAWM-Webhook-Signature` — over the body, with HMAC-SHA256 using
+ * the per-hook `signing_secret`. See `docs/operations.md#consuming-an-ia-webmaster-webhook`
+ * for the receiver-side verification pseudo-code.
+ *
+ * The `signing_secret` is write-only: it never comes back in list /
+ * update responses; rotating is done by re-issuing an update with a
+ * fresh secret.
+ */
+function registerWebhooks(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_webhooks_list",
+    {
+      title: "List outbound webhooks",
+      description:
+        "Returns every configured outbound webhook (label, destination URL, subscribed events, enabled flag, timestamps). The signing_secret is intentionally REDACTED — it is never read back; to rotate, call `iawm_webhooks_update` with a fresh signing_secret. Scope: read.",
+    },
+    async () => toToolResult("config/webhooks/list", await client.post("/config/webhooks/list", {})),
+  );
+
+  server.registerTool(
+    "iawm_webhooks_create",
+    {
+      title: "Create an outbound webhook",
+      description:
+        "Registers a new outbound webhook. The plugin will POST a signed JSON envelope to `destination_url` whenever any of the subscribed `events` fire. Use the literal `*` in the events array to subscribe to every event. The signing_secret must be at least 16 characters; receivers use it to verify the `X-IAWM-Webhook-Signature` header. Scope: config:write.",
+      inputSchema: {
+        destination_url: z
+          .string()
+          .url()
+          .describe("Absolute http(s) URL receiving the signed POST"),
+        signing_secret: z
+          .string()
+          .min(16)
+          .describe(
+            "Shared secret used to sign outbound notifications. Min 16 chars. Never returned by the API once stored.",
+          ),
+        events: z
+          .union([z.array(z.string()), z.string()])
+          .describe(
+            "Subscribed event names — array or comma-separated string. Currently emitted: 'smoke.failed'. Use '*' to subscribe to everything.",
+          ),
+        label: z
+          .string()
+          .optional()
+          .describe("Human-readable label (defaults to the destination host)"),
+        enabled: z
+          .boolean()
+          .optional()
+          .describe("Defaults to true. Set false to register a webhook without enabling delivery."),
+      },
+    },
+    async (args) => toToolResult("config/webhooks/create", await client.post("/config/webhooks/create", args)),
+  );
+
+  server.registerTool(
+    "iawm_webhooks_update",
+    {
+      title: "Update an outbound webhook",
+      description:
+        "Updates a webhook record. Pass only the fields you want to change. To rotate the signing secret, send a fresh `signing_secret` value (min 16 chars). Toggling `enabled` is the recommended way to pause notifications without losing the configuration. Scope: config:write.",
+      inputSchema: {
+        id: z.number().int().describe("Webhook id"),
+        label: z.string().optional(),
+        destination_url: z.string().url().optional(),
+        signing_secret: z.string().min(16).optional(),
+        events: z.union([z.array(z.string()), z.string()]).optional(),
+        enabled: z.boolean().optional(),
+      },
+    },
+    async (args) => toToolResult("config/webhooks/update", await client.post("/config/webhooks/update", args)),
+  );
+
+  server.registerTool(
+    "iawm_webhooks_delete",
+    {
+      title: "Delete an outbound webhook",
+      description:
+        "Permanently removes a webhook and any pending outbox rows tied to it. For a reversible pause, prefer `iawm_webhooks_update` with `enabled: false`. Scope: config:write.",
+      inputSchema: {
+        id: z.number().int().describe("Webhook id to delete"),
+      },
+    },
+    async (args) => toToolResult("config/webhooks/delete", await client.post("/config/webhooks/delete", args)),
+  );
+
+  server.registerTool(
+    "iawm_webhooks_test",
+    {
+      title: "Send a test ping to an outbound webhook",
+      description:
+        "Posts a signed `test.ping` envelope to the webhook's destination immediately (bypassing the outbox + cron). Returns the receiver's HTTP status and a short body excerpt — handy for verifying a fresh configuration without waiting for the 5-minute drain tick. Scope: config:write.",
+      inputSchema: {
+        id: z.number().int().describe("Webhook id to ping"),
+      },
+    },
+    async (args) => toToolResult("config/webhooks/test", await client.post("/config/webhooks/test", args)),
   );
 }
 
@@ -1818,6 +1968,7 @@ export function registerTools(server: McpServer, client: IawmClient): void {
   registerMenu(server, client);
   registerDiagnostics(server, client);
   registerConfig(server, client);
+  registerWebhooks(server, client);
   registerPlugins(server, client);
   registerThemes(server, client);
   registerCore(server, client);

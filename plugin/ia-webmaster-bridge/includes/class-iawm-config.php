@@ -46,6 +46,28 @@ class IAWM_Config {
 	const USER_ROLES = array( 'subscriber', 'contributor', 'author', 'editor', 'administrator' );
 
 	/**
+	 * Sensitive parameter paths to mask in the audit log, keyed by route
+	 * suffix. Consumed by handlers via `audit_sensitive()` below and the
+	 * `iawm_audit_pseudonymise` toggle — see D-031.
+	 *
+	 * Use dot notation; `*` wildcards a list index (e.g. `users.*.pass`).
+	 */
+	const SENSITIVE_PARAMS = array(
+		'config/users/create' => array( 'password' ),
+		'config/users/update' => array( 'password' ),
+	);
+
+	/**
+	 * Resolves the sensitive-path list for the given route suffix.
+	 *
+	 * @param string $suffix Route suffix without namespace, e.g. `config/users/create`.
+	 * @return array
+	 */
+	private static function audit_sensitive( $suffix ) {
+		return isset( self::SENSITIVE_PARAMS[ $suffix ] ) ? self::SENSITIVE_PARAMS[ $suffix ] : array();
+	}
+
+	/**
 	 * Hooks up route registration.
 	 *
 	 * @return void
@@ -275,6 +297,7 @@ class IAWM_Config {
 	 */
 	public static function handle_users_create( $request ) {
 		$params = IAWM_Support::json_params( $request );
+		IAWM_Audit::write( (string) $request->get_route(), $params, null, self::audit_sensitive( 'config/users/create' ) );
 
 		$login = isset( $params['login'] ) ? sanitize_user( (string) $params['login'] ) : '';
 		$email = isset( $params['email'] ) ? sanitize_email( (string) $params['email'] ) : '';
@@ -358,7 +381,9 @@ class IAWM_Config {
 	 */
 	public static function handle_users_update( $request ) {
 		$params = IAWM_Support::json_params( $request );
-		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
+		IAWM_Audit::write( (string) $request->get_route(), $params, null, self::audit_sensitive( 'config/users/update' ) );
+
+		$id = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		$user = $id > 0 ? get_user_by( 'id', $id ) : false;
 		if ( ! $user ) {

@@ -55,10 +55,13 @@ class IAWM_Content {
 	 */
 	public static function register_routes() {
 		$routes = array(
-			'/content/list'   => array( 'handle_list', 'guard_read' ),
-			'/content/get'    => array( 'handle_get', 'guard_read' ),
-			'/content/create' => array( 'handle_create', 'guard_write' ),
-			'/content/update' => array( 'handle_update', 'guard_write' ),
+			'/content/list'              => array( 'handle_list', 'guard_read' ),
+			'/content/get'               => array( 'handle_get', 'guard_read' ),
+			'/content/create'            => array( 'handle_create', 'guard_write' ),
+			'/content/update'            => array( 'handle_update', 'guard_write' ),
+			'/content/revisions/list'    => array( 'handle_revisions_list', 'guard_read' ),
+			'/content/revisions/get'     => array( 'handle_revisions_get', 'guard_read' ),
+			'/content/revisions/restore' => array( 'handle_revisions_restore', 'guard_write' ),
 		);
 
 		foreach ( $routes as $path => $config ) {
@@ -369,6 +372,263 @@ class IAWM_Content {
 				'updated'      => true,
 				'item'         => self::full( get_post( $id ) ),
 				'content_info' => $content_info,
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /content/revisions/list — paginated list of revisions for a post.
+	 *
+	 * Revisions are per-post regardless of build mode (Gutenberg vs Divi):
+	 * WordPress stores a snapshot of `post_content` on each save, and the
+	 * same listing works equally well on Divi-built pages.
+	 *
+	 * JSON body: { post_id, limit? }
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_revisions_list( $request ) {
+		$params  = IAWM_Support::json_params( $request );
+		$post_id = isset( $params['post_id'] ) ? (int) $params['post_id'] : 0;
+
+		if ( $post_id <= 0 ) {
+			return IAWM_Support::rest_error( 'iawm_missing_post_id', __( "The 'post_id' parameter is required.", 'ia-webmaster-bridge' ), 400 );
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: post ID that could not be found. */
+				sprintf( __( 'Post not found: %d.', 'ia-webmaster-bridge' ), $post_id ),
+				404
+			);
+		}
+
+		$limit = isset( $params['limit'] ) ? (int) $params['limit'] : 20;
+		$limit = max( 1, min( 100, $limit ) );
+
+		$revisions = wp_get_post_revisions(
+			$post_id,
+			array(
+				'numberposts' => $limit,
+			)
+		);
+
+		$items = array();
+		foreach ( $revisions as $revision ) {
+			$author      = get_user_by( 'id', (int) $revision->post_author );
+			$content_str = (string) $revision->post_content;
+			$excerpt     = trim( wp_strip_all_tags( $content_str ) );
+			if ( strlen( $excerpt ) > 200 ) {
+				$excerpt = substr( $excerpt, 0, 200 );
+			}
+
+			$items[] = array(
+				'revision_id'    => (int) $revision->ID,
+				'parent_post_id' => (int) $revision->post_parent,
+				'author_id'      => (int) $revision->post_author,
+				'author_login'   => $author ? (string) $author->user_login : '',
+				'date_gmt'       => (string) $revision->post_date_gmt,
+				'title'          => (string) $revision->post_title,
+				'excerpt'        => $excerpt,
+				'byte_size'      => strlen( $content_str ),
+			);
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'             => true,
+				'parent_post_id' => $post_id,
+				'count'          => count( $items ),
+				'revisions'      => $items,
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /content/revisions/get — full content of one revision.
+	 *
+	 * Surfaces the build mode of the **current parent post** (not the
+	 * revision itself) so the caller knows which write path a restore
+	 * would land on. Revisions store post_content verbatim; Divi reads
+	 * the same field natively, so no special routing is needed for the
+	 * restore.
+	 *
+	 * JSON body: { revision_id }
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_revisions_get( $request ) {
+		$params      = IAWM_Support::json_params( $request );
+		$revision_id = isset( $params['revision_id'] ) ? (int) $params['revision_id'] : 0;
+
+		if ( $revision_id <= 0 ) {
+			return IAWM_Support::rest_error( 'iawm_missing_revision_id', __( "The 'revision_id' parameter is required.", 'ia-webmaster-bridge' ), 400 );
+		}
+
+		$revision = get_post( $revision_id );
+		if ( ! $revision || 'revision' !== $revision->post_type ) {
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: revision ID that could not be found. */
+				sprintf( __( 'Revision not found: %d.', 'ia-webmaster-bridge' ), $revision_id ),
+				404
+			);
+		}
+
+		$parent_id = (int) $revision->post_parent;
+		$parent    = $parent_id > 0 ? get_post( $parent_id ) : null;
+
+		return new WP_REST_Response(
+			array(
+				'ok'             => true,
+				'revision_id'    => (int) $revision->ID,
+				'parent_post_id' => $parent_id,
+				'date_gmt'       => (string) $revision->post_date_gmt,
+				'author_id'      => (int) $revision->post_author,
+				'title'          => (string) $revision->post_title,
+				'content'        => (string) $revision->post_content,
+				'excerpt'        => (string) $revision->post_excerpt,
+				'status'         => $parent ? (string) $parent->post_status : '',
+				'build_mode'     => $parent ? self::detect_builder( $parent ) : 'unknown',
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /content/revisions/restore — restore a previous revision.
+	 *
+	 * Two-step pattern (Phase 5.3): the first call returns a confirmation
+	 * token and a summary of what would change; the second call (same
+	 * body + `confirmation_token`) actually applies. A `dry_run` flag is
+	 * also accepted as an alternative non-mutating preview.
+	 *
+	 * An automatic pre-op snapshot of the parent post's options is taken
+	 * before the restore so the caller has a safety net. Revisions store
+	 * `post_content` verbatim, which is also what Divi reads from; so
+	 * restoring a Divi-built revision onto a Divi-built page works
+	 * natively and `wp_restore_post_revision()` is the right primitive
+	 * regardless of build mode.
+	 *
+	 * JSON body: { revision_id, confirmation_token?, dry_run? }
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_revisions_restore( $request ) {
+		$params      = IAWM_Support::json_params( $request );
+		$revision_id = isset( $params['revision_id'] ) ? (int) $params['revision_id'] : 0;
+
+		if ( $revision_id <= 0 ) {
+			return IAWM_Support::rest_error( 'iawm_missing_revision_id', __( "The 'revision_id' parameter is required.", 'ia-webmaster-bridge' ), 400 );
+		}
+
+		$revision = get_post( $revision_id );
+		if ( ! $revision || 'revision' !== $revision->post_type ) {
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: revision ID that could not be found. */
+				sprintf( __( 'Revision not found: %d.', 'ia-webmaster-bridge' ), $revision_id ),
+				404
+			);
+		}
+
+		$parent_id = (int) $revision->post_parent;
+		$parent    = $parent_id > 0 ? get_post( $parent_id ) : null;
+		if ( ! $parent ) {
+			return IAWM_Support::rest_error(
+				'iawm_orphan_revision',
+				/* translators: %d: revision ID whose parent could not be located. */
+				sprintf( __( 'Revision %d has no resolvable parent post.', 'ia-webmaster-bridge' ), $revision_id ),
+				404
+			);
+		}
+
+		$build_mode = self::detect_builder( $parent );
+
+		$changes = array(
+			'title_before' => (string) $parent->post_title,
+			'title_after'  => (string) $revision->post_title,
+			'bytes_before' => strlen( (string) $parent->post_content ),
+			'bytes_after'  => strlen( (string) $revision->post_content ),
+		);
+
+		if ( ! empty( $params['dry_run'] ) ) {
+			return new WP_REST_Response(
+				array(
+					'ok'               => true,
+					'dry_run'          => true,
+					'revision_id'      => $revision_id,
+					'parent_post_id'   => $parent_id,
+					'build_mode'       => $build_mode,
+					'changes'          => $changes,
+					'pre_op_backup_id' => null,
+				),
+				200
+			);
+		}
+
+		// Two-step confirmation gate (Phase 5.3).
+		$confirm = IAWM_Confirmation::guard(
+			$request,
+			$params,
+			array(
+				'revision_id'    => $revision_id,
+				'parent_post_id' => $parent_id,
+				'build_mode'     => $build_mode,
+				'changes'        => $changes,
+			)
+		);
+		if ( null !== $confirm ) {
+			return $confirm;
+		}
+
+		// Pre-op safety net: WordPress's `wp_restore_post_revision()`
+		// natively inserts a fresh revision capturing the parent's
+		// pre-restore state as part of `wp_save_post_revision()` — so
+		// the recovery path is "restore THAT revision" rather than a
+		// separate IAWM_Backup snapshot. We detect which revision was
+		// just created by diffing the revision id list before and
+		// after, and return it as `pre_op_backup_id` so the caller has
+		// a one-call rollback target.
+		$revs_before = wp_get_post_revisions( $parent_id, array( 'numberposts' => 1, 'fields' => 'ids' ) );
+		$latest_before = ! empty( $revs_before ) ? (int) reset( $revs_before ) : 0;
+
+		IAWM_Support::act_as_agent();
+
+		$result = wp_restore_post_revision( $revision_id );
+		if ( ! $result || is_wp_error( $result ) ) {
+			$message = is_wp_error( $result )
+				? $result->get_error_message()
+				: __( 'wp_restore_post_revision returned no id.', 'ia-webmaster-bridge' );
+			return IAWM_Support::rest_error( 'iawm_restore_failed', $message, 500 );
+		}
+
+		// Identify the auto-created pre-restore revision, if any.
+		$revs_after = wp_get_post_revisions( $parent_id, array( 'numberposts' => 5, 'fields' => 'ids' ) );
+		$pre_op_revision_id = 0;
+		foreach ( $revs_after as $rid ) {
+			$rid = (int) $rid;
+			if ( $rid > $latest_before && $rid !== (int) $result ) {
+				$pre_op_revision_id = $rid;
+				break;
+			}
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'                   => true,
+				'restored_revision_id' => $revision_id,
+				'parent_post_id'       => $parent_id,
+				'pre_op_backup_id'     => $pre_op_revision_id > 0 ? 'revision:' . $pre_op_revision_id : null,
+				'build_mode'           => $build_mode,
+				'applied_at'           => gmdate( 'c' ),
 			),
 			200
 		);

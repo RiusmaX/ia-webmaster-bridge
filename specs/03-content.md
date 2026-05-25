@@ -1,7 +1,7 @@
 # Spec 03 — Content plan
 
 - **Status**: Implemented
-- **Phase**: 2
+- **Phase**: 2 (revisions API added in Phase 9.5)
 - **Priority**: High
 - **Last updated**: 2026-05-25
 
@@ -56,6 +56,38 @@ menus, taxonomies, and content as Gutenberg blocks.
   block-based navigation (`wp_navigation`) reuses the content routes.
 - **Taxonomies**: `IAWM_Taxonomy` (`/list`, `/create`, `/assign`).
 
+### Revisions API (Phase 9.5)
+
+Three routes expose WordPress's native revision history so the agent
+can audit and roll back content changes without leaving the bridge:
+
+- `POST /content/revisions/list` (`read`) — paginated list of
+  revisions for a given `post_id`. Each entry carries the revision
+  id, author, GMT timestamp, title, a 200-char text excerpt and the
+  byte size of `post_content`. Build mode is irrelevant — revisions
+  snapshot `post_content` regardless of Gutenberg vs Divi.
+- `POST /content/revisions/get` (`read`) — full content of one
+  revision (title, `post_content`, excerpt, author, GMT date) plus
+  the parent post's current status and detected `build_mode`. The
+  build mode is reported off the *current parent*, not the revision
+  itself, so the caller knows which write path a restore would land
+  on.
+- `POST /content/revisions/restore` (`content:write`) — restores a
+  revision onto its parent. Gated by the **two-step confirmation
+  token** (added to `IAWM_Confirmation::REQUIRES_CONFIRMATION`): the
+  first call returns a token and a `changes` summary
+  (`title_before` / `title_after`, `bytes_before` / `bytes_after`);
+  the second call applies. `dry_run=true` is an alternative
+  non-mutating preview. WordPress itself inserts a fresh revision
+  capturing the pre-restore state of the parent during
+  `wp_restore_post_revision()`; its id is surfaced as
+  `pre_op_backup_id` in the form `revision:<id>` so rollback is one
+  more `revisions/restore` call.
+
+Out of scope for v1.3.0: attachment revisions, autosave entries, and
+a dedicated diff endpoint (the caller can fetch two revisions and
+diff client-side).
+
 ## Multi-language
 
 The content language is independent of the codebase language (which is
@@ -68,10 +100,14 @@ outside the API surface.
 
 ## Open questions
 
-- **Revisions management** — expose history and restoration as a
+- ~~**Revisions management** — expose history and restoration as a
   first-class capability? Today the agent can read the current state
-  but cannot restore yesterday's version of a post. Listed in the
-  Phase 9 backlog (P1).
+  but cannot restore yesterday's version of a post.~~ **Resolved in
+  Phase 9.5** — see "Revisions API" above. The three new routes
+  (`/content/revisions/list`, `/get`, `/restore`) cover history
+  enumeration and one-call rollback, with a confirmation-token gate
+  on the restore and a native pre-restore revision surfaced as
+  `pre_op_backup_id`.
 - **Custom post types discovery** — implicit today via the `type`
   parameter on `/content/list`; a dedicated `/content/types` endpoint
   would let the agent enumerate available CPTs on a fresh install
