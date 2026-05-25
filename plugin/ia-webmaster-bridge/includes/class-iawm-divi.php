@@ -67,6 +67,8 @@ class IAWM_Divi {
 			'/divi/global-data/variables/update' => array( 'handle_global_variables_update', 'guard_write' ),
 			'/divi/theme-options/get'          => array( 'handle_theme_options_get', 'guard_read' ),
 			'/divi/theme-options/update'       => array( 'handle_theme_options_update', 'guard_write' ),
+			'/divi/branding/get'               => array( 'handle_branding_get', 'guard_read' ),
+			'/divi/branding/update'            => array( 'handle_branding_update', 'guard_write' ),
 		);
 
 		foreach ( $routes as $path => $config ) {
@@ -702,6 +704,160 @@ class IAWM_Divi {
 			),
 			200
 		);
+	}
+
+	/* ---------------------------------------------------------------- */
+	/* Branding (logo, favicon, brand-level et_divi keys)                */
+	/* ---------------------------------------------------------------- */
+
+	/**
+	 * Keys we let the agent read/write inside the `et_divi` option.
+	 * Divi's narrow `theme-options/update` allow-list excludes these
+	 * (it only covers customizer keys); branding settings live in the
+	 * `et_divi` WP option directly.
+	 *
+	 * Curated rather than wildcard so we cannot accidentally clobber
+	 * unrelated et_divi sub-keys (color schemes, social IDs, etc.) the
+	 * site owner may have configured manually.
+	 *
+	 * @return string[]
+	 */
+	protected static function branding_allowlist() {
+		return array(
+			'divi_logo',          // Header / general logo URL.
+			'divi_favicon',       // Favicon URL.
+			'divi_logo_dark',     // Dark-mode logo, if the theme uses one.
+			'divi_logo_mobile',   // Mobile-specific logo, if used.
+			'divi_logo_phone',    // Phone-specific logo (Divi variant).
+			'divi_logo_tablet',   // Tablet-specific logo.
+		);
+	}
+
+	/**
+	 * POST /divi/branding/get — reads the branding-related slice of
+	 * the `et_divi` WP option.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response
+	 */
+	public static function handle_branding_get( $request ) {
+		unset( $request );
+
+		$et_divi = get_option( 'et_divi', array() );
+		if ( ! is_array( $et_divi ) ) {
+			$et_divi = array();
+		}
+
+		$branding = array();
+		foreach ( self::branding_allowlist() as $key ) {
+			$branding[ $key ] = array_key_exists( $key, $et_divi ) ? $et_divi[ $key ] : null;
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'       => true,
+				'branding' => $branding,
+				'allowed'  => self::branding_allowlist(),
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /divi/branding/update — writes the branding-related slice of
+	 * the `et_divi` WP option.
+	 *
+	 * Body: { branding: { key: value, ... }, dry_run? }
+	 *
+	 * Only keys on the allow-list are accepted; everything else is
+	 * reported under `rejected`. Auto-backup of the `et_divi` option
+	 * is taken before writing (pre_op_backup_id returned).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function handle_branding_update( $request ) {
+		$params   = IAWM_Support::json_params( $request );
+		$branding = isset( $params['branding'] ) && is_array( $params['branding'] ) ? $params['branding'] : null;
+		if ( null === $branding || empty( $branding ) ) {
+			return IAWM_Support::rest_error( 'iawm_missing_branding', 'Provide a non-empty `branding` object.', 400 );
+		}
+
+		$allow    = self::branding_allowlist();
+		$current  = get_option( 'et_divi', array() );
+		if ( ! is_array( $current ) ) {
+			$current = array();
+		}
+
+		$applied  = array();
+		$rejected = array();
+		foreach ( $branding as $key => $value ) {
+			if ( ! in_array( $key, $allow, true ) ) {
+				$rejected[ $key ] = 'Not in the branding allow-list.';
+				continue;
+			}
+			// URL-like keys should be a URL string (or empty to clear).
+			if ( '' === $value || null === $value ) {
+				$applied[ $key ] = '';
+				continue;
+			}
+			$applied[ $key ] = esc_url_raw( (string) $value );
+		}
+
+		if ( empty( $applied ) ) {
+			return IAWM_Support::rest_error(
+				'iawm_no_valid_branding',
+				'No valid branding key to apply. Rejected: ' . implode( ', ', array_keys( $rejected ) ) . '.',
+				400,
+				array( 'rejected' => $rejected )
+			);
+		}
+
+		if ( ! empty( $params['dry_run'] ) ) {
+			$diff = array();
+			foreach ( $applied as $key => $value ) {
+				$diff[ $key ] = array(
+					'from' => array_key_exists( $key, $current ) ? $current[ $key ] : null,
+					'to'   => $value,
+				);
+			}
+			return new WP_REST_Response(
+				array(
+					'ok'           => true,
+					'dry_run'      => true,
+					'would_change' => $diff,
+					'rejected'     => $rejected,
+				),
+				200
+			);
+		}
+
+		// Pre-op safety net: snapshot the entire et_divi option.
+		$pre_backup = empty( $params['skip_backup'] ) && class_exists( 'IAWM_Backup' )
+			? IAWM_Backup::snapshot_options(
+				array( 'et_divi' ),
+				'Before branding update: ' . implode( ', ', array_keys( $applied ) ),
+				(string) $request->get_route()
+			)
+			: null;
+
+		IAWM_Support::act_as_agent();
+
+		$merged = array_merge( $current, $applied );
+		update_option( 'et_divi', $merged );
+
+		$response = array(
+			'ok'           => true,
+			'updated'      => true,
+			'applied'      => $applied,
+			'rejected'     => $rejected,
+			'changed_keys' => array_keys( $applied ),
+		);
+		if ( null !== $pre_backup ) {
+			$response['pre_op_backup_id'] = $pre_backup;
+		}
+
+		return new WP_REST_Response( $response, 200 );
 	}
 
 	/* ---------------------------------------------------------------- */

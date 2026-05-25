@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       IA Webmaster Bridge
  * Description:       Adapter that lets an AI (Claude) act as a webmaster on this WordPress site. Exposes a controlled, signed REST API under the ia-webmaster/v1 namespace.
- * Version:           0.31.0
+ * Version:           0.33.0
  * Requires at least: 7.0
  * Requires PHP:      7.4
  * Author:            Marius Sergent
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'IAWM_VERSION', '0.31.0' );
+define( 'IAWM_VERSION', '0.33.0' );
 define( 'IAWM_REST_NAMESPACE', 'ia-webmaster/v1' );
 define( 'IAWM_PLUGIN_FILE', __FILE__ );
 define( 'IAWM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );

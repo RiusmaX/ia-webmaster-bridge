@@ -34276,6 +34276,27 @@ function registerDivi(server, client) {
     async (args) => toToolResult("divi/global-data/variables/update", await client.post("/divi/global-data/variables/update", args))
   );
   server.registerTool(
+    "iawm_divi_branding_get",
+    {
+      title: "Read Divi branding (logo / favicon)",
+      description: "Returns the branding-related sub-keys of the `et_divi` WP option: divi_logo, divi_favicon, plus dark/mobile/tablet/phone logo variants. These keys live OUTSIDE the narrow theme-options allow-list and are managed through this dedicated endpoint."
+    },
+    async () => toToolResult("divi/branding/get", await client.post("/divi/branding/get", {}))
+  );
+  server.registerTool(
+    "iawm_divi_branding_update",
+    {
+      title: "Update Divi branding (logo / favicon)",
+      description: "Updates branding keys in the `et_divi` WP option (divi_logo, divi_favicon, divi_logo_dark, divi_logo_mobile, divi_logo_tablet, divi_logo_phone). Pass a `branding` object; the wrapper validates each key against the allow-list and reports outcomes under `applied` / `rejected`. URLs are sanitised via esc_url_raw. Auto-snapshots the entire `et_divi` option before writing (pre_op_backup_id) so a botched logo can be rolled back via /backup/restore.",
+      inputSchema: {
+        branding: external_exports.record(external_exports.string(), external_exports.string()).describe("{ divi_logo: '<URL>', divi_favicon: '<URL>', ... }"),
+        dry_run: external_exports.boolean().optional(),
+        skip_backup: external_exports.boolean().optional()
+      }
+    },
+    async (args) => toToolResult("divi/branding/update", await client.post("/divi/branding/update", args))
+  );
+  server.registerTool(
     "iawm_divi_theme_options_get",
     {
       title: "Read Divi's theme options (ePanel)",
