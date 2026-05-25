@@ -35,12 +35,12 @@ class IAWM_Admin {
 	 */
 	private static function tabs() {
 		return array(
-			'keys'     => array( 'label' => 'API Keys',  'icon' => '\f160' ), // dashicons-admin-network
-			'agent'    => array( 'label' => 'Agent',     'icon' => '\f110' ), // dashicons-businessman
-			'security' => array( 'label' => 'Security',  'icon' => '\f332' ), // dashicons-shield
-			'cleanup'  => array( 'label' => 'Cleanup',   'icon' => '\f182' ), // dashicons-trash
-			'audit'    => array( 'label' => 'Audit log', 'icon' => '\f105' ), // dashicons-list-view
-			'tools'    => array( 'label' => 'Tools',     'icon' => '\f308' ), // dashicons-admin-tools
+			'keys'     => array( 'label' => __( 'API Keys', 'ia-webmaster-bridge' ),  'icon' => '\f160' ), // dashicons-admin-network
+			'agent'    => array( 'label' => __( 'Agent', 'ia-webmaster-bridge' ),     'icon' => '\f110' ), // dashicons-businessman
+			'security' => array( 'label' => __( 'Security', 'ia-webmaster-bridge' ),  'icon' => '\f332' ), // dashicons-shield
+			'cleanup'  => array( 'label' => __( 'Cleanup', 'ia-webmaster-bridge' ),   'icon' => '\f182' ), // dashicons-trash
+			'audit'    => array( 'label' => __( 'Audit log', 'ia-webmaster-bridge' ), 'icon' => '\f105' ), // dashicons-list-view
+			'tools'    => array( 'label' => __( 'Tools', 'ia-webmaster-bridge' ),     'icon' => '\f308' ), // dashicons-admin-tools
 		);
 	}
 
@@ -170,7 +170,7 @@ class IAWM_Admin {
 	 */
 	public static function handle_post() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html( 'Access denied.' ) );
+			wp_die( esc_html__( 'Access denied.', 'ia-webmaster-bridge' ) );
 		}
 
 		check_admin_referer( self::ACTION );
@@ -305,7 +305,7 @@ class IAWM_Admin {
 	 */
 	public static function render_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html( 'Access denied.' ) );
+			wp_die( esc_html__( 'Access denied.', 'ia-webmaster-bridge' ) );
 		}
 
 		$current_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : self::DEFAULT_TAB;
@@ -338,9 +338,16 @@ class IAWM_Admin {
 			</div>
 
 			<p style="color:#646970;font-size:12px;margin-top:24px;">
-				API base: <code><?php echo esc_html( get_rest_url( null, IAWM_REST_NAMESPACE ) ); ?></code>
+				<?php esc_html_e( 'API base:', 'ia-webmaster-bridge' ); ?> <code><?php echo esc_html( get_rest_url( null, IAWM_REST_NAMESPACE ) ); ?></code>
 				· <a href="https://github.com/RiusmaX/ia-webmaster-bridge" target="_blank" rel="noopener">GitHub</a>
-				· See <code>docs/operations.md</code> for the runbook.
+				·
+				<?php
+				printf(
+					/* translators: %s: file name of the operations runbook (kept verbatim). */
+					esc_html__( 'See %s for the runbook.', 'ia-webmaster-bridge' ),
+					'<code>docs/operations.md</code>'
+				);
+				?>
 			</p>
 		</div>
 		<?php
@@ -363,27 +370,33 @@ class IAWM_Admin {
 		<div class="<?php echo esc_attr( $class ); ?>">
 			<div class="iawm-status-item">
 				<?php if ( $kill ) : ?>
-					<span class="iawm-pill iawm-pill-danger">KILL SWITCH ON</span>
+					<span class="iawm-pill iawm-pill-danger"><?php esc_html_e( 'KILL SWITCH ON', 'ia-webmaster-bridge' ); ?></span>
 				<?php else : ?>
-					<span class="iawm-pill iawm-pill-ok">Operational</span>
+					<span class="iawm-pill iawm-pill-ok"><?php esc_html_e( 'Operational', 'ia-webmaster-bridge' ); ?></span>
 				<?php endif; ?>
 			</div>
 			<div class="iawm-status-item">
-				<strong>Keys:</strong> <?php echo (int) $keys_count; ?>
+				<strong><?php esc_html_e( 'Keys:', 'ia-webmaster-bridge' ); ?></strong> <?php echo (int) $keys_count; ?>
 			</div>
 			<div class="iawm-status-item">
-				<strong>Agent user:</strong>
+				<strong><?php esc_html_e( 'Agent user:', 'ia-webmaster-bridge' ); ?></strong>
 				<?php if ( $agent_ok ) : ?>
-					<span class="iawm-pill iawm-pill-ok">healthy</span>
+					<span class="iawm-pill iawm-pill-ok"><?php esc_html_e( 'healthy', 'ia-webmaster-bridge' ); ?></span>
 				<?php else : ?>
-					<span class="iawm-pill iawm-pill-danger">missing</span>
+					<span class="iawm-pill iawm-pill-danger"><?php esc_html_e( 'missing', 'ia-webmaster-bridge' ); ?></span>
 				<?php endif; ?>
 			</div>
 			<div class="iawm-status-item">
-				<strong>Audit:</strong> <?php echo (int) $audit_count; ?> entries
+				<?php
+				printf(
+					/* translators: %d: number of audit log entries. */
+					'<strong>' . esc_html__( 'Audit:', 'ia-webmaster-bridge' ) . '</strong> ' . esc_html( _n( '%d entry', '%d entries', (int) $audit_count, 'ia-webmaster-bridge' ) ),
+					(int) $audit_count
+				);
+				?>
 			</div>
 			<div class="iawm-status-item">
-				<strong>Backups:</strong> <?php echo (int) $backups_count; ?>
+				<strong><?php esc_html_e( 'Backups:', 'ia-webmaster-bridge' ); ?></strong> <?php echo (int) $backups_count; ?>
 			</div>
 		</div>
 		<?php
@@ -424,8 +437,8 @@ class IAWM_Admin {
 		if ( empty( $all ) ) {
 			?>
 			<div class="iawm-empty-state">
-				<h3>No API key yet</h3>
-				<p>Create one to let Claude Code reach this site.</p>
+				<h3><?php esc_html_e( 'No API key yet', 'ia-webmaster-bridge' ); ?></h3>
+				<p><?php esc_html_e( 'Create one to let Claude Code reach this site.', 'ia-webmaster-bridge' ); ?></p>
 			</div>
 			<?php
 		}
@@ -442,7 +455,7 @@ class IAWM_Admin {
 				<summary class="iawm-key-summary" style="list-style:none;cursor:pointer;">
 					<div class="iawm-key-status <?php echo esc_attr( $status_class ); ?>" title="<?php echo esc_attr( self::key_status_title( $entry ) ); ?>"></div>
 					<div>
-						<div class="iawm-key-label"><?php echo esc_html( $entry['label'] ?? 'Unnamed' ); ?></div>
+						<div class="iawm-key-label"><?php echo esc_html( $entry['label'] ?? __( 'Unnamed', 'ia-webmaster-bridge' ) ); ?></div>
 						<div class="iawm-key-id"><?php echo esc_html( $key_id ); ?></div>
 					</div>
 					<div class="iawm-key-scopes">
@@ -452,7 +465,7 @@ class IAWM_Admin {
 						<?php if ( $linked_user instanceof WP_User ) : ?>
 							👤 <?php echo esc_html( $linked_user->display_name ); ?>
 						<?php else : ?>
-							<span style="color:#a7aaad;">no linked user</span>
+							<span style="color:#a7aaad;"><?php esc_html_e( 'no linked user', 'ia-webmaster-bridge' ); ?></span>
 						<?php endif; ?>
 					</div>
 					<div style="font-size:12px;color:#646970;text-align:right;">
@@ -463,7 +476,7 @@ class IAWM_Admin {
 				<div class="iawm-key-details">
 					<?php if ( $is_highlight && isset( $entry['secret'] ) ) : ?>
 						<div class="iawm-secret-display">
-							<p>⚠️ Secret (copy now — it will not be shown again):</p>
+							<p><?php esc_html_e( '⚠️ Secret (copy now — it will not be shown again):', 'ia-webmaster-bridge' ); ?></p>
 							<input type="text" class="large-text code" readonly value="<?php echo esc_attr( $entry['secret'] ); ?>" onclick="this.select();">
 						</div>
 					<?php endif; ?>
@@ -475,14 +488,14 @@ class IAWM_Admin {
 						<?php wp_nonce_field( self::ACTION ); ?>
 
 						<fieldset>
-							<legend><strong>Label &amp; linked user</strong></legend>
+							<legend><strong><?php esc_html_e( 'Label & linked user', 'ia-webmaster-bridge' ); ?></strong></legend>
 							<p>
-								<label>Label
+								<label><?php esc_html_e( 'Label', 'ia-webmaster-bridge' ); ?>
 									<input type="text" name="iawm_label" value="<?php echo esc_attr( $entry['label'] ?? '' ); ?>" class="regular-text">
 								</label>
-								<label style="margin-left:1em;">Linked WP user (audit only)
+								<label style="margin-left:1em;"><?php esc_html_e( 'Linked WP user (audit only)', 'ia-webmaster-bridge' ); ?>
 									<select name="iawm_linked_user">
-										<option value="0">— none —</option>
+										<option value="0"><?php esc_html_e( '— none —', 'ia-webmaster-bridge' ); ?></option>
 										<?php foreach ( $candidate_users as $cu ) : ?>
 											<option value="<?php echo (int) $cu->ID; ?>" <?php selected( $linked_id, (int) $cu->ID ); ?>>
 												<?php echo esc_html( $cu->display_name . ' (' . $cu->user_login . ')' ); ?>
@@ -491,7 +504,7 @@ class IAWM_Admin {
 									</select>
 								</label>
 							</p>
-							<button type="submit" name="iawm_op" value="update_metadata" class="button">Save label / user</button>
+							<button type="submit" name="iawm_op" value="update_metadata" class="button"><?php esc_html_e( 'Save label / user', 'ia-webmaster-bridge' ); ?></button>
 						</fieldset>
 					</form>
 
@@ -501,7 +514,7 @@ class IAWM_Admin {
 						<input type="hidden" name="iawm_tab" value="keys">
 						<?php wp_nonce_field( self::ACTION ); ?>
 						<fieldset>
-							<legend><strong>Scopes</strong></legend>
+							<legend><strong><?php esc_html_e( 'Scopes', 'ia-webmaster-bridge' ); ?></strong></legend>
 							<?php foreach ( $known_scopes as $scope => $label ) :
 								$checked = null === $scopes_field ? true : in_array( $scope, (array) $scopes_field, true );
 								?>
@@ -512,11 +525,11 @@ class IAWM_Admin {
 							<?php endforeach; ?>
 							<?php if ( null === $scopes_field ) : ?>
 								<p style="color:#856404;font-size:12px;margin-top:8px;">
-									⚠️ Legacy key without an explicit scope list (full access). Tick / untick + save to lock down.
+									<?php esc_html_e( '⚠️ Legacy key without an explicit scope list (full access). Tick / untick + save to lock down.', 'ia-webmaster-bridge' ); ?>
 								</p>
 							<?php endif; ?>
 						</fieldset>
-						<button type="submit" name="iawm_op" value="update_scopes" class="button">Save scopes</button>
+						<button type="submit" name="iawm_op" value="update_scopes" class="button"><?php esc_html_e( 'Save scopes', 'ia-webmaster-bridge' ); ?></button>
 					</form>
 
 					<div class="iawm-key-actions">
@@ -525,14 +538,14 @@ class IAWM_Admin {
 							<input type="hidden" name="iawm_key_id" value="<?php echo esc_attr( $key_id ); ?>">
 							<input type="hidden" name="iawm_tab" value="keys">
 							<?php wp_nonce_field( self::ACTION ); ?>
-							<button type="submit" name="iawm_op" value="rotate_secret" class="button" onclick="return confirm('Rotate the secret of this key? The gateway will need to be reconfigured.');">Rotate secret</button>
+							<button type="submit" name="iawm_op" value="rotate_secret" class="button" onclick="return confirm('<?php echo esc_js( __( 'Rotate the secret of this key? The gateway will need to be reconfigured.', 'ia-webmaster-bridge' ) ); ?>');"><?php esc_html_e( 'Rotate secret', 'ia-webmaster-bridge' ); ?></button>
 						</form>
 						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
 							<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 							<input type="hidden" name="iawm_key_id" value="<?php echo esc_attr( $key_id ); ?>">
 							<input type="hidden" name="iawm_tab" value="keys">
 							<?php wp_nonce_field( self::ACTION ); ?>
-							<button type="submit" name="iawm_op" value="revoke_key" class="button button-link-delete" onclick="return confirm('Revoke this key permanently?');">Revoke this key</button>
+							<button type="submit" name="iawm_op" value="revoke_key" class="button button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Revoke this key permanently?', 'ia-webmaster-bridge' ) ); ?>');"><?php esc_html_e( 'Revoke this key', 'ia-webmaster-bridge' ); ?></button>
 						</form>
 					</div>
 				</div>
@@ -540,31 +553,53 @@ class IAWM_Admin {
 		<?php endforeach; ?>
 
 		<div class="iawm-card" style="margin-top:24px;">
-			<h2 class="iawm-card-title">Create a new key</h2>
-			<p class="iawm-card-help">After clicking Generate, the secret will be shown <strong>once</strong> in the key's row above. Copy it into <code>~/.iawm/config.json</code> on the operator's machine.</p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'Create a new key', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help">
+				<?php
+				printf(
+					/* translators: %s: path to the gateway configuration file. */
+					wp_kses(
+						__( 'After clicking Generate, the secret will be shown <strong>once</strong> in the key&#8217;s row above. Copy it into %s on the operator&#8217;s machine.', 'ia-webmaster-bridge' ),
+						array( 'strong' => array() )
+					),
+					'<code>~/.iawm/config.json</code>'
+				);
+				?>
+			</p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="keys">
 				<?php wp_nonce_field( self::ACTION ); ?>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><label for="iawm_label">Label</label></th>
-						<td><input id="iawm_label" type="text" name="iawm_label" class="regular-text" placeholder="e.g. Alice — content team"></td>
+						<th scope="row"><label for="iawm_label"><?php esc_html_e( 'Label', 'ia-webmaster-bridge' ); ?></label></th>
+						<td><input id="iawm_label" type="text" name="iawm_label" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. Alice — content team', 'ia-webmaster-bridge' ); ?>"></td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="iawm_linked_user">Linked WP user</label></th>
+						<th scope="row"><label for="iawm_linked_user"><?php esc_html_e( 'Linked WP user', 'ia-webmaster-bridge' ); ?></label></th>
 						<td>
 							<select id="iawm_linked_user" name="iawm_linked_user">
-								<option value="0">— none —</option>
+								<option value="0"><?php esc_html_e( '— none —', 'ia-webmaster-bridge' ); ?></option>
 								<?php foreach ( $candidate_users as $cu ) : ?>
 									<option value="<?php echo (int) $cu->ID; ?>"><?php echo esc_html( $cu->display_name . ' (' . $cu->user_login . ')' ); ?></option>
 								<?php endforeach; ?>
 							</select>
-							<p class="description">Audit-only — every write still executes as <code><?php echo esc_html( IAWM_Agent_User::USER_LOGIN ); ?></code>.</p>
+							<p class="description">
+								<?php
+								echo wp_kses(
+									sprintf(
+										/* translators: %s: login name of the dedicated agent WordPress user (rendered as <code>iawm-agent</code>). */
+										__( 'Audit-only — every write still executes as %s.', 'ia-webmaster-bridge' ),
+										'<code>' . esc_html( IAWM_Agent_User::USER_LOGIN ) . '</code>'
+									),
+									array( 'code' => array() )
+								);
+								?>
+							</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Scopes</th>
+						<th scope="row"><?php esc_html_e( 'Scopes', 'ia-webmaster-bridge' ); ?></th>
 						<td>
 							<fieldset>
 								<?php foreach ( $known_scopes as $scope => $label ) : ?>
@@ -578,7 +613,7 @@ class IAWM_Admin {
 					</tr>
 				</table>
 				<p>
-					<button type="submit" name="iawm_op" value="create_key" class="button button-primary">Generate key</button>
+					<button type="submit" name="iawm_op" value="create_key" class="button button-primary"><?php esc_html_e( 'Generate key', 'ia-webmaster-bridge' ); ?></button>
 				</p>
 			</form>
 		</div>
@@ -594,27 +629,35 @@ class IAWM_Admin {
 		$agent_user = $agent_id > 0 ? get_userdata( $agent_id ) : null;
 		?>
 		<div class="iawm-card">
-			<h2 class="iawm-card-title">Dedicated agent user</h2>
-			<p class="iawm-card-help">The adapter performs every write under this single WordPress user, regardless of which API key signed the request. The user has a restricted role with the highest-risk capabilities stripped out.</p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'Dedicated agent user', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help"><?php esc_html_e( 'The adapter performs every write under this single WordPress user, regardless of which API key signed the request. The user has a restricted role with the highest-risk capabilities stripped out.', 'ia-webmaster-bridge' ); ?></p>
 
 			<?php if ( $agent_user instanceof WP_User ) : ?>
 				<table class="iawm-help-table">
-					<tr><th>Login</th><td><strong><?php echo esc_html( $agent_user->user_login ); ?></strong></td></tr>
-					<tr><th>User ID</th><td><code><?php echo (int) $agent_id; ?></code></td></tr>
-					<tr><th>Role</th><td><code><?php echo esc_html( IAWM_Agent_User::ROLE_KEY ); ?></code></td></tr>
-					<tr><th>Status</th><td><span class="iawm-pill iawm-pill-ok">healthy</span></td></tr>
+					<tr><th><?php esc_html_e( 'Login', 'ia-webmaster-bridge' ); ?></th><td><strong><?php echo esc_html( $agent_user->user_login ); ?></strong></td></tr>
+					<tr><th><?php esc_html_e( 'User ID', 'ia-webmaster-bridge' ); ?></th><td><code><?php echo (int) $agent_id; ?></code></td></tr>
+					<tr><th><?php esc_html_e( 'Role', 'ia-webmaster-bridge' ); ?></th><td><code><?php echo esc_html( IAWM_Agent_User::ROLE_KEY ); ?></code></td></tr>
+					<tr><th><?php esc_html_e( 'Status', 'ia-webmaster-bridge' ); ?></th><td><span class="iawm-pill iawm-pill-ok"><?php esc_html_e( 'healthy', 'ia-webmaster-bridge' ); ?></span></td></tr>
 				</table>
-				<p style="font-size:12px;color:#646970;">This user cannot be modified or deleted through the API (HTTP 403 <code>iawm_protected_user</code>).</p>
+				<p style="font-size:12px;color:#646970;">
+					<?php
+					echo wp_kses(
+						/* translators: HTTP 403 error code (iawm_protected_user) shown verbatim. */
+						__( 'This user cannot be modified or deleted through the API (HTTP 403 <code>iawm_protected_user</code>).', 'ia-webmaster-bridge' ),
+						array( 'code' => array() )
+					);
+					?>
+				</p>
 			<?php else : ?>
-				<p><span class="iawm-pill iawm-pill-danger">missing</span> The dedicated agent user could not be located. Click below to (re)install.</p>
+				<p><span class="iawm-pill iawm-pill-danger"><?php esc_html_e( 'missing', 'ia-webmaster-bridge' ); ?></span> <?php esc_html_e( 'The dedicated agent user could not be located. Click below to (re)install.', 'ia-webmaster-bridge' ); ?></p>
 			<?php endif; ?>
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="agent">
 				<?php wp_nonce_field( self::ACTION ); ?>
-				<button type="submit" name="iawm_op" value="reinstall_agent" class="button">Reinstall agent role &amp; user</button>
-				<p class="description">Idempotent: re-registers the role with the current capability set and re-creates the user if it was removed.</p>
+				<button type="submit" name="iawm_op" value="reinstall_agent" class="button"><?php esc_html_e( 'Reinstall agent role & user', 'ia-webmaster-bridge' ); ?></button>
+				<p class="description"><?php esc_html_e( 'Idempotent: re-registers the role with the current capability set and re-creates the user if it was removed.', 'ia-webmaster-bridge' ); ?></p>
 			</form>
 		</div>
 		<?php
@@ -631,46 +674,102 @@ class IAWM_Admin {
 		$allowlist     = class_exists( 'IAWM_Network' ) ? IAWM_Network::get_allowlist() : array();
 		?>
 		<div class="iawm-card">
-			<h2 class="iawm-card-title">Kill switch</h2>
-			<p class="iawm-card-help">Blocks ALL write requests. Reads remain allowed. Use it during an incident or when you want to pause the agent.</p>
-			<p>State: <strong><?php echo $kill ? '<span class="iawm-pill iawm-pill-danger">ON — writes blocked</span>' : '<span class="iawm-pill iawm-pill-ok">off — writes allowed</span>'; ?></strong></p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'Kill switch', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help"><?php esc_html_e( 'Blocks ALL write requests. Reads remain allowed. Use it during an incident or when you want to pause the agent.', 'ia-webmaster-bridge' ); ?></p>
+			<p>
+				<?php esc_html_e( 'State:', 'ia-webmaster-bridge' ); ?>
+				<strong>
+					<?php if ( $kill ) : ?>
+						<span class="iawm-pill iawm-pill-danger"><?php esc_html_e( 'ON — writes blocked', 'ia-webmaster-bridge' ); ?></span>
+					<?php else : ?>
+						<span class="iawm-pill iawm-pill-ok"><?php esc_html_e( 'off — writes allowed', 'ia-webmaster-bridge' ); ?></span>
+					<?php endif; ?>
+				</strong>
+			</p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="security">
 				<?php wp_nonce_field( self::ACTION ); ?>
 				<?php if ( $kill ) : ?>
-					<button type="submit" name="iawm_op" value="kill_off" class="button button-primary iawm-kill-switch">Re-enable writes</button>
+					<button type="submit" name="iawm_op" value="kill_off" class="button button-primary iawm-kill-switch"><?php esc_html_e( 'Re-enable writes', 'ia-webmaster-bridge' ); ?></button>
 				<?php else : ?>
-					<button type="submit" name="iawm_op" value="kill_on" class="button iawm-kill-switch">Block all writes</button>
+					<button type="submit" name="iawm_op" value="kill_on" class="button iawm-kill-switch"><?php esc_html_e( 'Block all writes', 'ia-webmaster-bridge' ); ?></button>
 				<?php endif; ?>
 			</form>
 		</div>
 
 		<div class="iawm-card">
-			<h2 class="iawm-card-title">HTTPS enforcement</h2>
-			<p class="iawm-card-help">When the <code>IAWM_REQUIRE_HTTPS</code> constant is set to <code>true</code> in <code>wp-config.php</code>, non-HTTPS API calls are refused before any signature work. Configuration via a constant (not an admin toggle) prevents a compromised admin from disabling the protection.</p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'HTTPS enforcement', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help">
+				<?php
+				echo wp_kses(
+					/* translators: HTML <code> tags wrap PHP constant + file names; left verbatim. */
+					__( 'When the <code>IAWM_REQUIRE_HTTPS</code> constant is set to <code>true</code> in <code>wp-config.php</code>, non-HTTPS API calls are refused before any signature work. Configuration via a constant (not an admin toggle) prevents a compromised admin from disabling the protection.', 'ia-webmaster-bridge' ),
+					array( 'code' => array() )
+				);
+				?>
+			</p>
 			<table class="iawm-help-table">
-				<tr><th>IAWM_REQUIRE_HTTPS</th><td><?php echo $require_https ? '<span class="iawm-pill iawm-pill-ok">true (enforced)</span>' : '<span class="iawm-pill iawm-pill-neutral">not set (any scheme accepted)</span>'; ?></td></tr>
-				<tr><th>Current page over HTTPS</th><td><?php echo $is_https ? '<span class="iawm-pill iawm-pill-ok">yes</span>' : '<span class="iawm-pill iawm-pill-warn">no</span>'; ?></td></tr>
+				<tr><th>IAWM_REQUIRE_HTTPS</th><td>
+					<?php if ( $require_https ) : ?>
+						<span class="iawm-pill iawm-pill-ok"><?php esc_html_e( 'true (enforced)', 'ia-webmaster-bridge' ); ?></span>
+					<?php else : ?>
+						<span class="iawm-pill iawm-pill-neutral"><?php esc_html_e( 'not set (any scheme accepted)', 'ia-webmaster-bridge' ); ?></span>
+					<?php endif; ?>
+				</td></tr>
+				<tr><th><?php esc_html_e( 'Current page over HTTPS', 'ia-webmaster-bridge' ); ?></th><td>
+					<?php if ( $is_https ) : ?>
+						<span class="iawm-pill iawm-pill-ok"><?php esc_html_e( 'yes', 'ia-webmaster-bridge' ); ?></span>
+					<?php else : ?>
+						<span class="iawm-pill iawm-pill-warn"><?php esc_html_e( 'no', 'ia-webmaster-bridge' ); ?></span>
+					<?php endif; ?>
+				</td></tr>
 			</table>
 			<?php if ( ! $require_https ) : ?>
-				<p style="font-size:12px;"><strong>To enforce HTTPS</strong>, add this line to <code>wp-config.php</code>:</p>
+				<p style="font-size:12px;">
+					<?php
+					echo wp_kses(
+						/* translators: Instructional sentence pointing to wp-config.php. */
+						__( '<strong>To enforce HTTPS</strong>, add this line to <code>wp-config.php</code>:', 'ia-webmaster-bridge' ),
+						array(
+							'strong' => array(),
+							'code'   => array(),
+						)
+					);
+					?>
+				</p>
 				<pre style="background:#f0f0f1;padding:8px;font-size:12px;">define( 'IAWM_REQUIRE_HTTPS', true );</pre>
 			<?php endif; ?>
 		</div>
 
 		<div class="iawm-card">
-			<h2 class="iawm-card-title">IP allow-list</h2>
-			<p class="iawm-card-help">One entry per line. Each entry can be an IP literal (<code>198.51.100.42</code>, <code>2001:db8::1</code>) or a CIDR block (<code>192.168.1.0/24</code>, <code>2001:db8::/32</code>). Empty list = allow all. Loopback (<code>127.0.0.1</code>, <code>::1</code>) is always allowed.</p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'IP allow-list', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help">
+				<?php
+				echo wp_kses(
+					/* translators: <code> tags wrap example IP addresses (kept verbatim). */
+					__( 'One entry per line. Each entry can be an IP literal (<code>198.51.100.42</code>, <code>2001:db8::1</code>) or a CIDR block (<code>192.168.1.0/24</code>, <code>2001:db8::/32</code>). Empty list = allow all. Loopback (<code>127.0.0.1</code>, <code>::1</code>) is always allowed.', 'ia-webmaster-bridge' ),
+					array( 'code' => array() )
+				);
+				?>
+			</p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="security">
 				<?php wp_nonce_field( self::ACTION ); ?>
-				<textarea name="iawm_allowlist_raw" rows="8" cols="60" class="large-text code" placeholder="# One IP or CIDR per line.&#10;# Empty list = allow all.&#10;192.168.1.0/24"><?php echo esc_textarea( implode( "\n", $allowlist ) ); ?></textarea>
-				<p><button type="submit" name="iawm_op" value="save_allowlist" class="button button-primary">Save allow-list</button></p>
+				<textarea name="iawm_allowlist_raw" rows="8" cols="60" class="large-text code" placeholder="<?php echo esc_attr( __( "# One IP or CIDR per line.\n# Empty list = allow all.\n192.168.1.0/24", 'ia-webmaster-bridge' ) ); ?>"><?php echo esc_textarea( implode( "\n", $allowlist ) ); ?></textarea>
+				<p><button type="submit" name="iawm_op" value="save_allowlist" class="button button-primary"><?php esc_html_e( 'Save allow-list', 'ia-webmaster-bridge' ); ?></button></p>
 			</form>
 			<?php if ( ! empty( $allowlist ) ) : ?>
-				<p style="font-size:12px;color:#646970;">Currently <strong><?php echo (int) count( $allowlist ); ?></strong> entries active.</p>
+				<p style="font-size:12px;color:#646970;">
+					<?php
+					printf(
+						/* translators: %d: number of allow-list entries. */
+						esc_html( _n( 'Currently %d entry active.', 'Currently %d entries active.', (int) count( $allowlist ), 'ia-webmaster-bridge' ) ),
+						(int) count( $allowlist )
+					);
+					?>
+				</p>
 			<?php endif; ?>
 		</div>
 		<?php
@@ -690,46 +789,84 @@ class IAWM_Admin {
 		$backup_rows= (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . IAWM_Backup::table_name() );
 		?>
 		<div class="iawm-card">
-			<h2 class="iawm-card-title">Retention policy</h2>
-			<p class="iawm-card-help">Two daily cron jobs trim the audit log and the backup table to the limits below. Defaults: 90 days of audit, 50 backups.</p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'Retention policy', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help"><?php esc_html_e( 'Two daily cron jobs trim the audit log and the backup table to the limits below. Defaults: 90 days of audit, 50 backups.', 'ia-webmaster-bridge' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="cleanup">
 				<?php wp_nonce_field( self::ACTION ); ?>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th><label for="iawm_audit_days">Keep audit entries for (days)</label></th>
+						<th><label for="iawm_audit_days"><?php esc_html_e( 'Keep audit entries for (days)', 'ia-webmaster-bridge' ); ?></label></th>
 						<td>
 							<input id="iawm_audit_days" type="number" name="iawm_audit_days" value="<?php echo (int) $audit_days; ?>" min="1" max="3650" class="small-text">
-							<p class="description">Currently <strong><?php echo (int) $audit_rows; ?></strong> entries. Next prune: <?php echo $next_audit ? esc_html( wp_date( 'Y-m-d H:i', $next_audit ) ) : '<em>not scheduled</em>'; ?>.</p>
+							<p class="description">
+								<?php
+								$next_audit_str = $next_audit
+									? '<code>' . esc_html( wp_date( 'Y-m-d H:i', $next_audit ) ) . '</code>'
+									: '<em>' . esc_html__( 'not scheduled', 'ia-webmaster-bridge' ) . '</em>';
+								echo wp_kses(
+									sprintf(
+										/* translators: 1: current number of audit entries, 2: timestamp of the next prune or "not scheduled". */
+										__( 'Currently <strong>%1$d</strong> entries. Next prune: %2$s.', 'ia-webmaster-bridge' ),
+										(int) $audit_rows,
+										$next_audit_str
+									),
+									array(
+										'strong' => array(),
+										'em'     => array(),
+										'code'   => array(),
+									)
+								);
+								?>
+							</p>
 						</td>
 					</tr>
 					<tr>
-						<th><label for="iawm_backup_keep">Keep newest N backups</label></th>
+						<th><label for="iawm_backup_keep"><?php esc_html_e( 'Keep newest N backups', 'ia-webmaster-bridge' ); ?></label></th>
 						<td>
 							<input id="iawm_backup_keep" type="number" name="iawm_backup_keep" value="<?php echo (int) $backup_n; ?>" min="1" max="10000" class="small-text">
-							<p class="description">Currently <strong><?php echo (int) $backup_rows; ?></strong> backup records. Next prune: <?php echo $next_backup ? esc_html( wp_date( 'Y-m-d H:i', $next_backup ) ) : '<em>not scheduled</em>'; ?>.</p>
+							<p class="description">
+								<?php
+								$next_backup_str = $next_backup
+									? '<code>' . esc_html( wp_date( 'Y-m-d H:i', $next_backup ) ) . '</code>'
+									: '<em>' . esc_html__( 'not scheduled', 'ia-webmaster-bridge' ) . '</em>';
+								echo wp_kses(
+									sprintf(
+										/* translators: 1: current number of backup records, 2: timestamp of the next prune or "not scheduled". */
+										__( 'Currently <strong>%1$d</strong> backup records. Next prune: %2$s.', 'ia-webmaster-bridge' ),
+										(int) $backup_rows,
+										$next_backup_str
+									),
+									array(
+										'strong' => array(),
+										'em'     => array(),
+										'code'   => array(),
+									)
+								);
+								?>
+							</p>
 						</td>
 					</tr>
 				</table>
-				<p><button type="submit" name="iawm_op" value="save_retention" class="button button-primary">Save retention</button></p>
+				<p><button type="submit" name="iawm_op" value="save_retention" class="button button-primary"><?php esc_html_e( 'Save retention', 'ia-webmaster-bridge' ); ?></button></p>
 			</form>
 		</div>
 
 		<div class="iawm-card">
-			<h2 class="iawm-card-title">Prune now</h2>
-			<p class="iawm-card-help">Manually run the retention jobs without waiting for the next cron tick.</p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'Prune now', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help"><?php esc_html_e( 'Manually run the retention jobs without waiting for the next cron tick.', 'ia-webmaster-bridge' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="cleanup">
 				<?php wp_nonce_field( self::ACTION ); ?>
-				<button type="submit" name="iawm_op" value="prune_audit_now" class="button">Prune audit log now</button>
+				<button type="submit" name="iawm_op" value="prune_audit_now" class="button"><?php esc_html_e( 'Prune audit log now', 'ia-webmaster-bridge' ); ?></button>
 			</form>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="cleanup">
 				<?php wp_nonce_field( self::ACTION ); ?>
-				<button type="submit" name="iawm_op" value="prune_backups_now" class="button">Prune backups now</button>
+				<button type="submit" name="iawm_op" value="prune_backups_now" class="button"><?php esc_html_e( 'Prune backups now', 'ia-webmaster-bridge' ); ?></button>
 			</form>
 		</div>
 		<?php
@@ -743,20 +880,28 @@ class IAWM_Admin {
 		$entries = IAWM_Audit::get_recent( 30 );
 		?>
 		<div class="iawm-card">
-			<h2 class="iawm-card-title">Recent activity (last 30)</h2>
-			<p class="iawm-card-help">Full audit available via <code>iawm_audit</code> MCP tool or the <code>wp_iawm_audit_log</code> table.</p>
+			<h2 class="iawm-card-title"><?php esc_html_e( 'Recent activity (last 30)', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help">
+				<?php
+				echo wp_kses(
+					/* translators: <code> tags wrap the MCP tool name and the SQL table name (kept verbatim). */
+					__( 'Full audit available via <code>iawm_audit</code> MCP tool or the <code>wp_iawm_audit_log</code> table.', 'ia-webmaster-bridge' ),
+					array( 'code' => array() )
+				);
+				?>
+			</p>
 			<?php if ( empty( $entries ) ) : ?>
-				<p>No entries yet.</p>
+				<p><?php esc_html_e( 'No entries yet.', 'ia-webmaster-bridge' ); ?></p>
 			<?php else : ?>
 				<table class="widefat striped iawm-audit-table">
 					<thead>
 						<tr>
-							<th>Time</th>
-							<th>Method</th>
-							<th>Route</th>
-							<th>Status</th>
-							<th>Key</th>
-							<th>IP</th>
+							<th><?php esc_html_e( 'Time', 'ia-webmaster-bridge' ); ?></th>
+							<th><?php esc_html_e( 'Method', 'ia-webmaster-bridge' ); ?></th>
+							<th><?php esc_html_e( 'Route', 'ia-webmaster-bridge' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'ia-webmaster-bridge' ); ?></th>
+							<th><?php esc_html_e( 'Key', 'ia-webmaster-bridge' ); ?></th>
+							<th><?php esc_html_e( 'IP', 'ia-webmaster-bridge' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -788,37 +933,45 @@ class IAWM_Admin {
 		?>
 		<div class="iawm-tools-grid">
 			<div class="iawm-tool-card">
-				<h4>📋 Documentation</h4>
-				<p style="font-size:13px;color:#646970;">Operations runbook, security model, design system primer.</p>
+				<h4><?php esc_html_e( '📋 Documentation', 'ia-webmaster-bridge' ); ?></h4>
+				<p style="font-size:13px;color:#646970;"><?php esc_html_e( 'Operations runbook, security model, design system primer.', 'ia-webmaster-bridge' ); ?></p>
 				<p>
-					<a class="button" target="_blank" rel="noopener" href="https://github.com/RiusmaX/ia-webmaster-bridge/blob/main/docs/operations.md">Operations</a>
-					<a class="button" target="_blank" rel="noopener" href="https://github.com/RiusmaX/ia-webmaster-bridge/blob/main/docs/design-system.md">Design system</a>
+					<a class="button" target="_blank" rel="noopener" href="https://github.com/RiusmaX/ia-webmaster-bridge/blob/main/docs/operations.md"><?php esc_html_e( 'Operations', 'ia-webmaster-bridge' ); ?></a>
+					<a class="button" target="_blank" rel="noopener" href="https://github.com/RiusmaX/ia-webmaster-bridge/blob/main/docs/design-system.md"><?php esc_html_e( 'Design system', 'ia-webmaster-bridge' ); ?></a>
 				</p>
 			</div>
 			<div class="iawm-tool-card">
-				<h4>🔍 Diagnostics</h4>
-				<p style="font-size:13px;color:#646970;">Run from Claude Code: <code>iawm_diagnostics_smoke</code> after any destructive op, <code>iawm_diagnostics_check_self</code> after upgrades.</p>
+				<h4><?php esc_html_e( '🔍 Diagnostics', 'ia-webmaster-bridge' ); ?></h4>
+				<p style="font-size:13px;color:#646970;">
+					<?php
+					echo wp_kses(
+						/* translators: <code> tags wrap MCP tool names (kept verbatim). */
+						__( 'Run from Claude Code: <code>iawm_diagnostics_smoke</code> after any destructive op, <code>iawm_diagnostics_check_self</code> after upgrades.', 'ia-webmaster-bridge' ),
+						array( 'code' => array() )
+					);
+					?>
+				</p>
 			</div>
 			<div class="iawm-tool-card">
-				<h4>♻ Reinstall agent</h4>
-				<p style="font-size:13px;color:#646970;">Recreates the dedicated user + role.</p>
+				<h4><?php esc_html_e( '♻ Reinstall agent', 'ia-webmaster-bridge' ); ?></h4>
+				<p style="font-size:13px;color:#646970;"><?php esc_html_e( 'Recreates the dedicated user + role.', 'ia-webmaster-bridge' ); ?></p>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 					<input type="hidden" name="iawm_tab" value="tools">
 					<?php wp_nonce_field( self::ACTION ); ?>
-					<button type="submit" name="iawm_op" value="reinstall_agent" class="button">Reinstall</button>
+					<button type="submit" name="iawm_op" value="reinstall_agent" class="button"><?php esc_html_e( 'Reinstall', 'ia-webmaster-bridge' ); ?></button>
 				</form>
 			</div>
 		</div>
 
 		<div class="iawm-danger-zone" style="margin-top:32px;">
-			<h3>⚠️ Danger zone</h3>
-			<p>Revokes every API key on this site at once. The corresponding Claude sessions lose access immediately.</p>
+			<h3><?php esc_html_e( '⚠️ Danger zone', 'ia-webmaster-bridge' ); ?></h3>
+			<p><?php esc_html_e( 'Revokes every API key on this site at once. The corresponding Claude sessions lose access immediately.', 'ia-webmaster-bridge' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 				<input type="hidden" name="iawm_tab" value="tools">
 				<?php wp_nonce_field( self::ACTION ); ?>
-				<button type="submit" name="iawm_op" value="revoke_all" class="button button-link-delete" onclick="return confirm('Revoke ALL keys? This cannot be undone.');">Revoke ALL keys</button>
+				<button type="submit" name="iawm_op" value="revoke_all" class="button button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Revoke ALL keys? This cannot be undone.', 'ia-webmaster-bridge' ) ); ?>');"><?php esc_html_e( 'Revoke ALL keys', 'ia-webmaster-bridge' ); ?></button>
 			</form>
 		</div>
 		<?php
@@ -855,9 +1008,10 @@ class IAWM_Admin {
 	private static function key_status_title( $entry ) {
 		$last = $entry['last_used_at'] ?? null;
 		if ( empty( $last ) ) {
-			return 'Never used yet';
+			return __( 'Never used yet', 'ia-webmaster-bridge' );
 		}
-		return 'Last used at ' . (string) $last;
+		/* translators: %s: timestamp at which the API key was last used. */
+		return sprintf( __( 'Last used at %s', 'ia-webmaster-bridge' ), (string) $last );
 	}
 
 	/**
@@ -868,7 +1022,7 @@ class IAWM_Admin {
 	 */
 	private static function format_last_used( $entry ) {
 		if ( empty( $entry['last_used_at'] ) ) {
-			return 'never used';
+			return __( 'never used', 'ia-webmaster-bridge' );
 		}
 		$ts = strtotime( (string) $entry['last_used_at'] );
 		if ( ! $ts ) {
@@ -876,15 +1030,21 @@ class IAWM_Admin {
 		}
 		$delta = time() - $ts;
 		if ( $delta < 60 ) {
-			return 'just now';
+			return __( 'just now', 'ia-webmaster-bridge' );
 		}
 		if ( $delta < HOUR_IN_SECONDS ) {
-			return floor( $delta / 60 ) . ' min ago';
+			$minutes = (int) floor( $delta / 60 );
+			/* translators: %d: number of minutes elapsed since the key was last used. */
+			return sprintf( _n( '%d min ago', '%d min ago', $minutes, 'ia-webmaster-bridge' ), $minutes );
 		}
 		if ( $delta < DAY_IN_SECONDS ) {
-			return floor( $delta / HOUR_IN_SECONDS ) . ' h ago';
+			$hours = (int) floor( $delta / HOUR_IN_SECONDS );
+			/* translators: %d: number of hours elapsed since the key was last used. */
+			return sprintf( _n( '%d h ago', '%d h ago', $hours, 'ia-webmaster-bridge' ), $hours );
 		}
-		return floor( $delta / DAY_IN_SECONDS ) . ' d ago';
+		$days = (int) floor( $delta / DAY_IN_SECONDS );
+		/* translators: %d: number of days elapsed since the key was last used. */
+		return sprintf( _n( '%d d ago', '%d d ago', $days, 'ia-webmaster-bridge' ), $days );
 	}
 
 	/**
@@ -895,10 +1055,10 @@ class IAWM_Admin {
 	 */
 	private static function render_scope_badges( $scopes ) {
 		if ( null === $scopes ) {
-			return '<span class="iawm-scope-badge iawm-scope-all">all (legacy)</span>';
+			return '<span class="iawm-scope-badge iawm-scope-all">' . esc_html__( 'all (legacy)', 'ia-webmaster-bridge' ) . '</span>';
 		}
 		if ( empty( $scopes ) ) {
-			return '<span class="iawm-scope-badge iawm-scope-read">(no scope)</span>';
+			return '<span class="iawm-scope-badge iawm-scope-read">' . esc_html__( '(no scope)', 'ia-webmaster-bridge' ) . '</span>';
 		}
 		$out = '';
 		foreach ( $scopes as $scope ) {
@@ -922,20 +1082,41 @@ class IAWM_Admin {
 		$rejected = isset( $_GET['rejected_count'] ) ? (int) $_GET['rejected_count'] : 0;
 		$pruned   = isset( $_GET['pruned'] ) ? (int) $_GET['pruned'] : 0;
 		$messages = array(
-			'key_created'       => array( 'success', 'New key created. The secret is shown once in its row below — copy it now, it cannot be displayed again.' ),
-			'secret_rotated'    => array( 'success', 'Secret rotated. Copy the new value into the gateway config.' ),
-			'scopes_updated'    => array( 'success', 'Scopes updated for this key.' ),
-			'metadata_updated'  => array( 'success', 'Label / linked user updated.' ),
-			'key_revoked'       => array( 'warning', 'Key revoked.' ),
-			'all_revoked'       => array( 'warning', 'All keys revoked. No Claude session can authenticate until a new key is created.' ),
-			'kill_on'           => array( 'warning', 'Kill switch enabled: all writes are blocked.' ),
-			'kill_off'          => array( 'success', 'Kill switch disabled: writes are allowed again.' ),
-			'agent_installed'   => array( 'success', 'Agent role and user reinstalled.' ),
-			'allowlist_saved'   => array( 'success', 'IP allow-list saved.' ),
-			'allowlist_partial' => array( 'warning', sprintf( 'IP allow-list saved with %d invalid entries dropped.', $rejected ) ),
-			'retention_saved'   => array( 'success', 'Retention policy saved.' ),
-			'audit_pruned'      => array( 'success', sprintf( 'Audit log pruned: %d rows deleted.', $pruned ) ),
-			'backups_pruned'    => array( 'success', sprintf( 'Backups pruned: %d records deleted.', $pruned ) ),
+			'key_created'       => array( 'success', __( 'New key created. The secret is shown once in its row below — copy it now, it cannot be displayed again.', 'ia-webmaster-bridge' ) ),
+			'secret_rotated'    => array( 'success', __( 'Secret rotated. Copy the new value into the gateway config.', 'ia-webmaster-bridge' ) ),
+			'scopes_updated'    => array( 'success', __( 'Scopes updated for this key.', 'ia-webmaster-bridge' ) ),
+			'metadata_updated'  => array( 'success', __( 'Label / linked user updated.', 'ia-webmaster-bridge' ) ),
+			'key_revoked'       => array( 'warning', __( 'Key revoked.', 'ia-webmaster-bridge' ) ),
+			'all_revoked'       => array( 'warning', __( 'All keys revoked. No Claude session can authenticate until a new key is created.', 'ia-webmaster-bridge' ) ),
+			'kill_on'           => array( 'warning', __( 'Kill switch enabled: all writes are blocked.', 'ia-webmaster-bridge' ) ),
+			'kill_off'          => array( 'success', __( 'Kill switch disabled: writes are allowed again.', 'ia-webmaster-bridge' ) ),
+			'agent_installed'   => array( 'success', __( 'Agent role and user reinstalled.', 'ia-webmaster-bridge' ) ),
+			'allowlist_saved'   => array( 'success', __( 'IP allow-list saved.', 'ia-webmaster-bridge' ) ),
+			'allowlist_partial' => array(
+				'warning',
+				sprintf(
+					/* translators: %d: number of invalid allow-list entries that were dropped. */
+					_n( 'IP allow-list saved with %d invalid entry dropped.', 'IP allow-list saved with %d invalid entries dropped.', $rejected, 'ia-webmaster-bridge' ),
+					$rejected
+				),
+			),
+			'retention_saved'   => array( 'success', __( 'Retention policy saved.', 'ia-webmaster-bridge' ) ),
+			'audit_pruned'      => array(
+				'success',
+				sprintf(
+					/* translators: %d: number of audit-log rows deleted. */
+					_n( 'Audit log pruned: %d row deleted.', 'Audit log pruned: %d rows deleted.', $pruned, 'ia-webmaster-bridge' ),
+					$pruned
+				),
+			),
+			'backups_pruned'    => array(
+				'success',
+				sprintf(
+					/* translators: %d: number of backup records deleted. */
+					_n( 'Backups pruned: %d record deleted.', 'Backups pruned: %d records deleted.', $pruned, 'ia-webmaster-bridge' ),
+					$pruned
+				),
+			),
 		);
 
 		if ( ! isset( $messages[ $notice ] ) ) {

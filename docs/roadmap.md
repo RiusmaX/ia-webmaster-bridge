@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-3 complete; Phase 4 closed (plugins/themes/core/database/cron, docs); Phase 5 closed (5.1-5.4, ops docs) · Last updated: 2026-05-25
+> Status: Phases 0-6 complete; Phase 7 (production hardening) in progress, v1.0.0 target imminent · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -83,18 +83,86 @@ continuously, with Phase 5 being the formal hardening pass.
 
 - [x] Base Claude Code skills (webmaster, create page, audit)
 - [x] Packaged as a Claude Code plugin + open-source release (GitHub, GPL-3.0)
-- [x] `design-frontend-wordpress` skill (hierarchy, typography, colors, spacing, mobile-first)
+- [x] `frontend-design-wordpress` skill (hierarchy, typography, colors, spacing, mobile-first)
 - [x] `marketing-conversion-wordpress` skill (AIDA/PAS/FAB, social proof, CTA hierarchy)
 - [x] `seo-wordpress` skill (SEO audit, Rank Math, semantic structure)
-- [x] `creer-page-divi-wordpress` skill (prompt → full Divi page workflow)
+- [x] `create-divi-page` skill (prompt → full Divi page workflow)
 - [x] Normalized SEO API with Rank Math backend
 - [ ] Yoast SEO backend as an alternative (#33)
 - [ ] Per-site context file
 - [ ] Documented webmaster workflows
 - [ ] Possible scheduled routines
 
+## Phase 7 — Production hardening (in progress, target v1.0.0)
+
+Master tracker: [`phase-7-action-plan.md`](phase-7-action-plan.md).
+
+- [x] **7.1** — Network hardening: HTTPS enforcement via
+  `IAWM_REQUIRE_HTTPS` constant, IP allow-list option
+  (`iawm_ip_allowlist`) supporting CIDR + single IPs, IPv4 + IPv6;
+  both checks happen before credentials resolution so probes from
+  unauthorised IPs leak no key information
+- [x] **7.2** — Lifecycle hardening: daily WP-Cron jobs
+  `iawm_prune_audit_log` (default 90 days) and `iawm_prune_backups`
+  (default 50 records); `/diagnostics/smoke` endpoint (HTTP probe +
+  debug.log fatal scan + state checks); `/diagnostics/check-self`
+  endpoint (install invariants)
+- [x] **7.3** — Divi branding writer: `/divi/branding/get` and
+  `/divi/branding/update` cover the `et_divi` keys not in the
+  17-key customizer allow-list (`divi_logo`, `divi_favicon`, dark /
+  mobile / tablet / phone variants)
+- [x] **7.4** — Plugin settings page redesign: six-tab card layout
+  with status bar, kill-switch toggle, IP allow-list editor,
+  retention sliders, audit viewer, smoke-test buttons; danger zone
+  visually separated; mobile responsive
+- [ ] **7.5** — i18n plugin admin: wrap user-visible strings in
+  `__()`, generate `.pot`, ship `fr_FR` translation
+- [ ] **7.6** — PHPUnit tests on critical paths (auth, scopes,
+  backups, confirmation tokens, self-protection)
+- [ ] **7.7** — Skills assemblies: `safe-plugin-update`,
+  `design-system-first`, `site-smoke-test`,
+  `prod-deployment-checklist`
+- [x] **7.8** — Doc pass (this pass): README + new
+  `production-deployment.md`, `security-model.md`, `CHANGELOG.md`,
+  `CONTRIBUTING.md`; refresh of `CLAUDE.md`, `operations.md`,
+  `decisions.md` (D-020 through D-023), this roadmap
+- [ ] **7.9** — Pentest dry-run against the local site
+- [ ] **7.10** — Final integration + **v1.0.0** tag + GitHub release
+
+## Phase 8 — Backlog after v1.0.0
+
+Nice-to-haves to ship under the 1.x line. None of these block v1.0.0;
+all are tracked here so they don't fall through the cracks.
+
+- [ ] **Yoast SEO backend** as an alternative to Rank Math (#33).
+  Adapter mapping is already in place, only the toggle + tests
+  remain.
+- [ ] **WordPress multisite** support. Today the plugin assumes a
+  single-site install; the dedicated agent user lives on the main
+  site only, the audit table is per-site, and the IP allow-list is
+  network-shared at best. A clean multisite pass means deciding
+  per-site vs network-wide for each of those.
+- [ ] **WooCommerce reference page**. The 25 Woo modules are already
+  in the auto-discovered registry (D-018) but no parametric pattern
+  composes a "complete WooCommerce product page" yet. One reference
+  pattern (single-product layout + cart + cross-sell) would unlock
+  e-commerce site generation in one prompt.
+- [ ] **Deeper Divi modules**: build typed builders + opinionated
+  defaults for the long tail of native modules currently only
+  exposed through the auto-discovered registry (the 105-element
+  catalog) — today 41 have explicit builders, the rest are
+  free-form-only.
+- [ ] **Per-site context file** (Phase 6 carry-over). A
+  `iawm-context.md` checked in on the operator side that records
+  brand vocabulary, off-limits content, preferred patterns.
+- [ ] **Scheduled routines** (Phase 6 carry-over). The agent could
+  run a weekly "site health" routine without operator prompting,
+  posting the report to a configured channel.
+- [ ] **Webhook signing** for outbound notifications (smoke test
+  failure → Slack, audit alert → email).
+
 ## Deployment milestones
 
-- [ ] Stable on the local site
+- [x] Stable on the local site (validated end-to-end 2026-05-25)
 - [ ] Validated on a small prod
 - [ ] Validated on a large prod

@@ -129,7 +129,7 @@ class IAWM_Divi_Theme_Builder {
 
 		$res = self::call_divi( '/outside-vb/theme-builder/list-templates', array( 'live' => $live ) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'theme_builder_list_failed', 'Failed to list templates.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'theme_builder_list_failed', __( 'Failed to list templates.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		// Enrich: for each template, add the titles of related layouts.
@@ -166,7 +166,7 @@ class IAWM_Divi_Theme_Builder {
 	 */
 	public static function handle_template_create( $request ) {
 		$params = IAWM_Support::json_params( $request );
-		$title  = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : 'New Template';
+		$title  = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : __( 'New Template', 'ia-webmaster-bridge' );
 		$live   = isset( $params['live'] ) ? (bool) $params['live'] : true;
 
 		$res = self::call_divi( '/outside-vb/theme-builder/create-template', array(
@@ -174,7 +174,7 @@ class IAWM_Divi_Theme_Builder {
 			'title' => $title,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_create_failed', 'Failed to create template.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_create_failed', __( 'Failed to create template.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
@@ -194,7 +194,7 @@ class IAWM_Divi_Theme_Builder {
 		$template    = isset( $params['template'] ) && is_array( $params['template'] ) ? $params['template'] : array();
 
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_template_id', __( 'template_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$res = self::call_divi( '/outside-vb/theme-builder/update-template', array(
@@ -203,7 +203,7 @@ class IAWM_Divi_Theme_Builder {
 			'template'    => $template,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_update_failed', 'Failed to update template.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_update_failed', __( 'Failed to update template.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
@@ -221,7 +221,7 @@ class IAWM_Divi_Theme_Builder {
 		$live        = isset( $params['live'] ) ? (bool) $params['live'] : true;
 
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_template_id', __( 'template_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$res = self::call_divi( '/outside-vb/theme-builder/delete-template', array(
@@ -229,7 +229,7 @@ class IAWM_Divi_Theme_Builder {
 			'template_id' => $template_id,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_delete_failed', 'Deletion failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_delete_failed', __( 'Deletion failed.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
@@ -257,7 +257,7 @@ class IAWM_Divi_Theme_Builder {
 		$exclude_from = isset( $params['exclude_from'] ) && is_array( $params['exclude_from'] ) ? $params['exclude_from'] : array();
 
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_template_id', 'template_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_template_id', __( 'template_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$res = self::call_divi( '/outside-vb/theme-builder/assign-template', array(
@@ -267,7 +267,7 @@ class IAWM_Divi_Theme_Builder {
 			'exclude_from' => $exclude_from,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_assign_failed', 'Assignment failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'template_assign_failed', __( 'Assignment failed.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
@@ -293,7 +293,7 @@ class IAWM_Divi_Theme_Builder {
 		$title  = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : '';
 
 		if ( ! in_array( $zone, self::ZONES, true ) ) {
-			return IAWM_Support::rest_error( 'invalid_zone', 'zone must be header, body or footer.', 400 );
+			return IAWM_Support::rest_error( 'invalid_zone', __( 'zone must be header, body or footer.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post_type = self::ZONE_POST_TYPE[ $zone ];
@@ -354,7 +354,7 @@ class IAWM_Divi_Theme_Builder {
 		$mode   = isset( $params['mode'] ) ? (string) $params['mode'] : 'tree';
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', __( 'post_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 		$post = get_post( $id );
 		if ( ! $post ) {

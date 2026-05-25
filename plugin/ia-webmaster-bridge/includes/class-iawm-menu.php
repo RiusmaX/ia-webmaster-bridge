@@ -136,7 +136,7 @@ class IAWM_Menu {
 		$name   = isset( $params['name'] ) ? sanitize_text_field( (string) $params['name'] ) : '';
 
 		if ( '' === $name ) {
-			return IAWM_Support::rest_error( 'iawm_missing_name', "The 'name' parameter is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_name', __( "The 'name' parameter is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -196,7 +196,12 @@ class IAWM_Menu {
 		if ( $object_id > 0 ) {
 			$object = get_post( $object_id );
 			if ( ! $object ) {
-				return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$object_id}.", 404 );
+				return IAWM_Support::rest_error(
+					'iawm_not_found',
+					/* translators: %d: ID of the content (post/page) that could not be found. */
+					sprintf( __( 'Content not found: %d.', 'ia-webmaster-bridge' ), $object_id ),
+					404
+				);
 			}
 			$item_args['menu-item-type']      = 'post_type';
 			$item_args['menu-item-object']    = $object->post_type;
@@ -209,7 +214,7 @@ class IAWM_Menu {
 			$item_args['menu-item-url']   = $url;
 			$item_args['menu-item-title'] = '' !== $title ? $title : $url;
 		} else {
-			return IAWM_Support::rest_error( 'iawm_missing_target', "Provide 'url' (link) or 'object_id' (content).", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_target', __( "Provide 'url' (link) or 'object_id' (content).", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -256,7 +261,12 @@ class IAWM_Menu {
 
 		$item = $item_id > 0 ? get_post( $item_id ) : null;
 		if ( ! $item || 'nav_menu_item' !== $item->post_type ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Menu item not found: {$item_id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: menu item ID. */
+				sprintf( __( 'Menu item not found: %d.', 'ia-webmaster-bridge' ), $item_id ),
+				404
+			);
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -273,7 +283,7 @@ class IAWM_Menu {
 		IAWM_Support::act_as_agent();
 
 		if ( ! wp_delete_post( $item_id, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_remove_failed', 'Could not delete the item.', 500 );
+			return IAWM_Support::rest_error( 'iawm_remove_failed', __( 'Could not delete the item.', 'ia-webmaster-bridge' ), 500 );
 		}
 
 		return new WP_REST_Response(
@@ -304,7 +314,12 @@ class IAWM_Menu {
 		$location   = isset( $params['location'] ) ? sanitize_key( (string) $params['location'] ) : '';
 		$registered = get_registered_nav_menus();
 		if ( '' === $location || ! isset( $registered[ $location ] ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_location', "Unknown menu location: {$location}.", 400 );
+			return IAWM_Support::rest_error(
+				'iawm_invalid_location',
+				/* translators: %s: theme menu-location slug. */
+				sprintf( __( 'Unknown menu location: %s.', 'ia-webmaster-bridge' ), $location ),
+				400
+			);
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -348,7 +363,12 @@ class IAWM_Menu {
 		$menu = $id > 0 ? wp_get_nav_menu_object( $id ) : false;
 
 		if ( ! $menu ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Menu not found: {$id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: navigation menu ID. */
+				sprintf( __( 'Menu not found: %d.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 
 		return $menu;

@@ -121,7 +121,7 @@ class IAWM_Config {
 		$input  = ( isset( $params['settings'] ) && is_array( $params['settings'] ) ) ? $params['settings'] : array();
 
 		if ( empty( $input ) ) {
-			return IAWM_Support::rest_error( 'iawm_no_settings', "The 'settings' parameter (object) is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_no_settings', __( "The 'settings' parameter (object) is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$changes  = array();
@@ -146,7 +146,11 @@ class IAWM_Config {
 		if ( empty( $changes ) ) {
 			return IAWM_Support::rest_error(
 				'iawm_no_valid_settings',
-				'No valid setting to apply. Rejected: ' . implode( ', ', $rejected ) . '.',
+				sprintf(
+					/* translators: %s: comma-separated list of rejected setting keys. */
+					__( 'No valid setting to apply. Rejected: %s.', 'ia-webmaster-bridge' ),
+					implode( ', ', $rejected )
+				),
 				400
 			);
 		}
@@ -175,7 +179,11 @@ class IAWM_Config {
 		if ( ! empty( $risky_keys ) && empty( $params['skip_backup'] ) && class_exists( 'IAWM_Backup' ) ) {
 			$pre_backup = IAWM_Backup::snapshot_options(
 				array_keys( $changes ),
-				'Before risky settings update: ' . implode( ', ', $risky_keys ),
+				sprintf(
+					/* translators: %s: comma-separated list of risky setting keys being changed. */
+					__( 'Before risky settings update: %s', 'ia-webmaster-bridge' ),
+					implode( ', ', $risky_keys )
+				),
 				(string) $request->get_route()
 			);
 		}
@@ -271,15 +279,20 @@ class IAWM_Config {
 		$login = isset( $params['login'] ) ? sanitize_user( (string) $params['login'] ) : '';
 		$email = isset( $params['email'] ) ? sanitize_email( (string) $params['email'] ) : '';
 		if ( '' === $login || '' === $email ) {
-			return IAWM_Support::rest_error( 'iawm_missing_fields', "The 'login' and 'email' parameters are required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_fields', __( "The 'login' and 'email' parameters are required.", 'ia-webmaster-bridge' ), 400 );
 		}
 		if ( ! is_email( $email ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_email', 'Invalid email address.', 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_email', __( 'Invalid email address.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$role = isset( $params['role'] ) ? sanitize_key( (string) $params['role'] ) : 'subscriber';
 		if ( ! in_array( $role, self::USER_ROLES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_role', "Unsupported role: {$role}.", 400 );
+			return IAWM_Support::rest_error(
+				'iawm_invalid_role',
+				/* translators: %s: WordPress role slug that was rejected. */
+				sprintf( __( 'Unsupported role: %s.', 'ia-webmaster-bridge' ), $role ),
+				400
+			);
 		}
 
 		$display       = isset( $params['display_name'] ) ? sanitize_text_field( (string) $params['display_name'] ) : $login;
@@ -303,7 +316,7 @@ class IAWM_Config {
 		}
 
 		if ( username_exists( $login ) || email_exists( $email ) ) {
-			return IAWM_Support::rest_error( 'iawm_user_exists', 'A user with this login or email already exists.', 409 );
+			return IAWM_Support::rest_error( 'iawm_user_exists', __( 'A user with this login or email already exists.', 'ia-webmaster-bridge' ), 409 );
 		}
 
 		IAWM_Support::act_as_agent();
@@ -328,7 +341,7 @@ class IAWM_Config {
 		);
 		if ( ! $has_password ) {
 			$response['generated_password'] = $password;
-			$response['notice']             = 'Generated password: deliver it securely, then require it to be changed.';
+			$response['notice']             = __( 'Generated password: deliver it securely, then require it to be changed.', 'ia-webmaster-bridge' );
 		}
 
 		return new WP_REST_Response( $response, 201 );
@@ -349,7 +362,12 @@ class IAWM_Config {
 
 		$user = $id > 0 ? get_user_by( 'id', $id ) : false;
 		if ( ! $user ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "User not found: {$id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: WordPress user ID that was not found. */
+				sprintf( __( 'User not found: %d.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 
 		// Safeguard: the agent cannot modify the user it operates as.
@@ -360,14 +378,14 @@ class IAWM_Config {
 			? IAWM_Agent_User::is_agent_user( $id )
 			: ( $id === IAWM_Support::acting_user_id() );
 		if ( $is_agent ) {
-			return IAWM_Support::rest_error( 'iawm_protected_user', 'The dedicated agent user cannot be modified via the API.', 403 );
+			return IAWM_Support::rest_error( 'iawm_protected_user', __( 'The dedicated agent user cannot be modified via the API.', 'ia-webmaster-bridge' ), 403 );
 		}
 
 		$update = array( 'ID' => $id );
 		if ( isset( $params['email'] ) ) {
 			$email = sanitize_email( (string) $params['email'] );
 			if ( ! is_email( $email ) ) {
-				return IAWM_Support::rest_error( 'iawm_invalid_email', 'Invalid email address.', 400 );
+				return IAWM_Support::rest_error( 'iawm_invalid_email', __( 'Invalid email address.', 'ia-webmaster-bridge' ), 400 );
 			}
 			$update['user_email'] = $email;
 		}
@@ -377,13 +395,18 @@ class IAWM_Config {
 		if ( isset( $params['role'] ) ) {
 			$role = sanitize_key( (string) $params['role'] );
 			if ( ! in_array( $role, self::USER_ROLES, true ) ) {
-				return IAWM_Support::rest_error( 'iawm_invalid_role', "Unsupported role: {$role}.", 400 );
+				return IAWM_Support::rest_error(
+					'iawm_invalid_role',
+					/* translators: %s: WordPress role slug that was rejected. */
+					sprintf( __( 'Unsupported role: %s.', 'ia-webmaster-bridge' ), $role ),
+					400
+				);
 			}
 			$update['role'] = $role;
 		}
 
 		if ( count( $update ) <= 1 ) {
-			return IAWM_Support::rest_error( 'iawm_no_change', 'No changes provided.', 400 );
+			return IAWM_Support::rest_error( 'iawm_no_change', __( 'No changes provided.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {

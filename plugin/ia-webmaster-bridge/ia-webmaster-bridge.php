@@ -2,13 +2,14 @@
 /**
  * Plugin Name:       IA Webmaster Bridge
  * Description:       Adapter that lets an AI (Claude) act as a webmaster on this WordPress site. Exposes a controlled, signed REST API under the ia-webmaster/v1 namespace.
- * Version:           0.33.0
+ * Version:           0.34.0
  * Requires at least: 7.0
  * Requires PHP:      7.4
  * Author:            Marius Sergent
  * License:           GPL-3.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain:       ia-webmaster-bridge
+ * Domain Path:       /languages
  *
  * @package IA_Webmaster_Bridge
  */
@@ -18,10 +19,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'IAWM_VERSION', '0.33.0' );
+define( 'IAWM_VERSION', '0.34.0' );
 define( 'IAWM_REST_NAMESPACE', 'ia-webmaster/v1' );
 define( 'IAWM_PLUGIN_FILE', __FILE__ );
 define( 'IAWM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+
+// Load translations as early as WordPress allows. The `Text Domain` and
+// `Domain Path` headers above tell WordPress where to look for .mo files
+// (`languages/ia-webmaster-bridge-<locale>.mo`); this call wires it up.
+add_action(
+	'plugins_loaded',
+	static function () {
+		load_plugin_textdomain(
+			'ia-webmaster-bridge',
+			false,
+			dirname( plugin_basename( IAWM_PLUGIN_FILE ) ) . '/languages/'
+		);
+	}
+);
 
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-settings.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-support.php';

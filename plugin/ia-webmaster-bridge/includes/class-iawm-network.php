@@ -47,7 +47,7 @@ class IAWM_Network {
 		}
 		return new WP_Error(
 			'iawm_https_required',
-			'This site requires HTTPS for the API. Re-issue your request over https://.',
+			__( 'This site requires HTTPS for the API. Re-issue your request over https://.', 'ia-webmaster-bridge' ),
 			array( 'status' => 403 )
 		);
 	}
@@ -73,7 +73,7 @@ class IAWM_Network {
 		if ( '' === $caller ) {
 			return new WP_Error(
 				'iawm_ip_not_allowed',
-				'Caller IP not recognised.',
+				__( 'Caller IP not recognised.', 'ia-webmaster-bridge' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -93,7 +93,7 @@ class IAWM_Network {
 		// the size of the allow-list.
 		return new WP_Error(
 			'iawm_ip_not_allowed',
-			'Caller IP is not on the allow-list for this site.',
+			__( 'Caller IP is not on the allow-list for this site.', 'ia-webmaster-bridge' ),
 			array( 'status' => 403 )
 		);
 	}
@@ -156,14 +156,14 @@ class IAWM_Network {
 				if ( self::is_valid_cidr( $entry ) ) {
 					$valid[] = $entry;
 				} else {
-					$invalid[ $entry ] = 'Invalid CIDR notation.';
+					$invalid[ $entry ] = __( 'Invalid CIDR notation.', 'ia-webmaster-bridge' );
 				}
 				continue;
 			}
 			if ( filter_var( $entry, FILTER_VALIDATE_IP ) ) {
 				$valid[] = $entry;
 			} else {
-				$invalid[ $entry ] = 'Not a valid IPv4 or IPv6 address.';
+				$invalid[ $entry ] = __( 'Not a valid IPv4 or IPv6 address.', 'ia-webmaster-bridge' );
 			}
 		}
 		return array( 'valid' => $valid, 'invalid' => $invalid );

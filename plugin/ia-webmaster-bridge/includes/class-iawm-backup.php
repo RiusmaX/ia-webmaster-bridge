@@ -762,7 +762,12 @@ class IAWM_Backup {
 
 		$backup = self::get_backup( $id );
 		if ( ! $backup ) {
-			return IAWM_Support::rest_error( 'iawm_backup_not_found', "Backup not found: {$id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_backup_not_found',
+				/* translators: %d: backup ID that was not found. */
+				sprintf( __( 'Backup not found: %d.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 		if ( ! $include ) {
 			unset( $backup['payload'] );
@@ -782,7 +787,7 @@ class IAWM_Backup {
 	public static function handle_create( $request ) {
 		$params = IAWM_Support::json_params( $request );
 		$kind   = isset( $params['kind'] ) ? sanitize_key( (string) $params['kind'] ) : '';
-		$label  = isset( $params['label'] ) ? sanitize_text_field( (string) $params['label'] ) : 'Manual snapshot';
+		$label  = isset( $params['label'] ) ? sanitize_text_field( (string) $params['label'] ) : __( 'Manual snapshot', 'ia-webmaster-bridge' );
 
 		switch ( $kind ) {
 			case self::KIND_OPTIONS:
@@ -797,11 +802,16 @@ class IAWM_Backup {
 				$id     = self::snapshot_tables( $tables, $label );
 				break;
 			default:
-				return IAWM_Support::rest_error( 'iawm_invalid_kind', "Invalid backup kind: {$kind}.", 400 );
+				return IAWM_Support::rest_error(
+					'iawm_invalid_kind',
+					/* translators: %s: requested backup kind. */
+					sprintf( __( 'Invalid backup kind: %s.', 'ia-webmaster-bridge' ), $kind ),
+					400
+				);
 		}
 
 		if ( null === $id ) {
-			return IAWM_Support::rest_error( 'iawm_snapshot_failed', 'Snapshot produced no payload.', 400 );
+			return IAWM_Support::rest_error( 'iawm_snapshot_failed', __( 'Snapshot produced no payload.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		return new WP_REST_Response(
@@ -857,7 +867,7 @@ class IAWM_Backup {
 		$params = IAWM_Support::json_params( $request );
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_id', 'Missing or invalid id.', 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_id', __( 'Missing or invalid id.', 'ia-webmaster-bridge' ), 400 );
 		}
 		$ok = self::delete_backup( $id );
 		return new WP_REST_Response( array( 'ok' => $ok, 'deleted' => $ok, 'id' => $id ), $ok ? 200 : 404 );

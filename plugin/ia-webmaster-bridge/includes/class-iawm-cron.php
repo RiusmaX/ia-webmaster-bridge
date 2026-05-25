@@ -171,12 +171,17 @@ class IAWM_Cron {
 		$args   = isset( $params['args'] ) && is_array( $params['args'] ) ? $params['args'] : array();
 
 		if ( '' === $hook ) {
-			return IAWM_Support::rest_error( 'iawm_missing_hook', '`hook` is required.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_hook', __( '`hook` is required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$next = wp_next_scheduled( $hook, $args );
 		if ( false === $next ) {
-			return IAWM_Support::rest_error( 'iawm_not_scheduled', "Hook '{$hook}' is not currently scheduled with the given args.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_scheduled',
+				/* translators: %s: cron hook name. */
+				sprintf( __( "Hook '%s' is not currently scheduled with the given args.", 'ia-webmaster-bridge' ), $hook ),
+				404
+			);
 		}
 
 		IAWM_Support::act_as_agent();
@@ -231,14 +236,18 @@ class IAWM_Cron {
 		$args      = isset( $params['args'] ) && is_array( $params['args'] ) ? $params['args'] : array();
 
 		if ( '' === $hook ) {
-			return IAWM_Support::rest_error( 'iawm_missing_hook', '`hook` is required.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_hook', __( '`hook` is required.', 'ia-webmaster-bridge' ), 400 );
 		}
 		if ( '' !== $schedule ) {
 			$schedules = wp_get_schedules();
 			if ( ! isset( $schedules[ $schedule ] ) ) {
 				return IAWM_Support::rest_error(
 					'iawm_unknown_schedule',
-					"Unknown schedule slug '{$schedule}'. Use /cron/schedules to list valid ones.",
+					sprintf(
+						/* translators: %s: schedule slug that was rejected. */
+						__( "Unknown schedule slug '%s'. Use /cron/schedules to list valid ones.", 'ia-webmaster-bridge' ),
+						$schedule
+					),
 					400
 				);
 			}
@@ -251,7 +260,7 @@ class IAWM_Cron {
 			: wp_schedule_single_event( $timestamp, $hook, $args );
 
 		if ( false === $res ) {
-			return IAWM_Support::rest_error( 'iawm_schedule_failed', 'Scheduling failed (event probably already queued).', 409 );
+			return IAWM_Support::rest_error( 'iawm_schedule_failed', __( 'Scheduling failed (event probably already queued).', 'ia-webmaster-bridge' ), 409 );
 		}
 
 		return new WP_REST_Response(
@@ -286,7 +295,7 @@ class IAWM_Cron {
 		$timestamp = isset( $params['timestamp'] ) ? (int) $params['timestamp'] : 0;
 
 		if ( '' === $hook ) {
-			return IAWM_Support::rest_error( 'iawm_missing_hook', '`hook` is required.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_hook', __( '`hook` is required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		IAWM_Support::act_as_agent();

@@ -164,15 +164,15 @@ class IAWM_Database {
 	public static function handle_export( $request ) {
 		$params = IAWM_Support::json_params( $request );
 		$tables = isset( $params['tables'] ) ? (array) $params['tables'] : array();
-		$label  = isset( $params['label'] ) ? sanitize_text_field( (string) $params['label'] ) : 'Manual DB export';
+		$label  = isset( $params['label'] ) ? sanitize_text_field( (string) $params['label'] ) : __( 'Manual DB export', 'ia-webmaster-bridge' );
 
 		if ( empty( $tables ) ) {
-			return IAWM_Support::rest_error( 'iawm_no_tables', 'Provide a non-empty `tables` array.', 400 );
+			return IAWM_Support::rest_error( 'iawm_no_tables', __( 'Provide a non-empty `tables` array.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$id = IAWM_Backup::snapshot_tables( $tables, $label, (string) $request->get_route() );
 		if ( null === $id ) {
-			return IAWM_Support::rest_error( 'iawm_snapshot_failed', 'Snapshot produced no payload. Check that the table names exist.', 400 );
+			return IAWM_Support::rest_error( 'iawm_snapshot_failed', __( 'Snapshot produced no payload. Check that the table names exist.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		return new WP_REST_Response(
@@ -220,7 +220,7 @@ class IAWM_Database {
 		$millis = (int) round( ( microtime( true ) - $start ) * 1000 );
 
 		if ( null === $rows ) {
-			return IAWM_Support::rest_error( 'iawm_query_failed', $wpdb->last_error ?: 'Query failed.', 500 );
+			return IAWM_Support::rest_error( 'iawm_query_failed', $wpdb->last_error ?: __( 'Query failed.', 'ia-webmaster-bridge' ), 500 );
 		}
 
 		return new WP_REST_Response(
@@ -244,7 +244,7 @@ class IAWM_Database {
 	 */
 	private static function validate_select( $sql ) {
 		if ( ! is_string( $sql ) || '' === trim( $sql ) ) {
-			return 'Empty SQL.';
+			return __( 'Empty SQL.', 'ia-webmaster-bridge' );
 		}
 
 		// Strip /* ... */ and -- ... comments to inspect the meaningful body.
@@ -253,18 +253,19 @@ class IAWM_Database {
 		$stripped = trim( (string) $stripped );
 
 		if ( '' === $stripped ) {
-			return 'SQL contains only comments.';
+			return __( 'SQL contains only comments.', 'ia-webmaster-bridge' );
 		}
 		if ( false !== strpos( $stripped, ';' ) ) {
-			return 'Multiple statements are not allowed (no `;`).';
+			return __( 'Multiple statements are not allowed (no `;`).', 'ia-webmaster-bridge' );
 		}
 		if ( 0 !== stripos( $stripped, 'SELECT' ) && 0 !== stripos( $stripped, '(SELECT' ) && 0 !== stripos( $stripped, 'WITH' ) ) {
-			return 'Only SELECT (or WITH ... SELECT) queries are allowed.';
+			return __( 'Only SELECT (or WITH ... SELECT) queries are allowed.', 'ia-webmaster-bridge' );
 		}
 		$forbidden = array( 'INTO OUTFILE', 'INTO DUMPFILE', 'LOAD_FILE', 'BENCHMARK', 'SLEEP(' );
 		foreach ( $forbidden as $needle ) {
 			if ( false !== stripos( $stripped, $needle ) ) {
-				return 'Disallowed construct in query: ' . $needle;
+				/* translators: %s: forbidden SQL keyword (e.g. INTO OUTFILE). */
+				return sprintf( __( 'Disallowed construct in query: %s', 'ia-webmaster-bridge' ), $needle );
 			}
 		}
 
@@ -302,10 +303,10 @@ class IAWM_Database {
 		$dry_run = ! empty( $params['dry_run'] );
 
 		if ( '' === $search ) {
-			return IAWM_Support::rest_error( 'iawm_missing_search', '`search` is required and cannot be empty.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_search', __( '`search` is required and cannot be empty.', 'ia-webmaster-bridge' ), 400 );
 		}
 		if ( $search === $replace ) {
-			return IAWM_Support::rest_error( 'iawm_same_value', '`search` and `replace` are identical.', 400 );
+			return IAWM_Support::rest_error( 'iawm_same_value', __( '`search` and `replace` are identical.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$allowed = self::sr_allowed_targets();
@@ -420,14 +421,19 @@ class IAWM_Database {
 		$out = array();
 		foreach ( $requested as $entry ) {
 			if ( ! is_array( $entry ) || count( $entry ) < 2 ) {
-				return IAWM_Support::rest_error( 'iawm_bad_target', 'Each target must be [table, column].', 400 );
+				return IAWM_Support::rest_error( 'iawm_bad_target', __( 'Each target must be [table, column].', 'ia-webmaster-bridge' ), 400 );
 			}
 			$table  = (string) $entry[0];
 			$column = (string) $entry[1];
 			if ( ! isset( $allowed[ $table ] ) || ! in_array( $column, $allowed[ $table ], true ) ) {
 				return IAWM_Support::rest_error(
 					'iawm_target_not_allowed',
-					sprintf( 'Target (%s, %s) is not in the allow-list.', $table, $column ),
+					sprintf(
+						/* translators: 1: database table name. 2: column name. */
+						__( 'Target (%1$s, %2$s) is not in the allow-list.', 'ia-webmaster-bridge' ),
+						$table,
+						$column
+					),
 					403
 				);
 			}

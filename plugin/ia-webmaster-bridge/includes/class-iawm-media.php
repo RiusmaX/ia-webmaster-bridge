@@ -116,12 +116,17 @@ class IAWM_Media {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', __( "The 'id' parameter is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || 'attachment' !== $post->post_type ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Media not found: {$id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: media attachment ID. */
+				sprintf( __( 'Media not found: %d.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 
 		return new WP_REST_Response(
@@ -146,7 +151,7 @@ class IAWM_Media {
 
 		$url = isset( $params['url'] ) ? esc_url_raw( (string) $params['url'] ) : '';
 		if ( '' === $url ) {
-			return IAWM_Support::rest_error( 'iawm_missing_url', "The 'url' parameter is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_url', __( "The 'url' parameter is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$title       = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : '';
@@ -179,7 +184,12 @@ class IAWM_Media {
 
 		$tmp = download_url( $url );
 		if ( is_wp_error( $tmp ) ) {
-			return IAWM_Support::rest_error( 'iawm_download_failed', 'Download failed: ' . $tmp->get_error_message(), 502 );
+			return IAWM_Support::rest_error(
+				'iawm_download_failed',
+				/* translators: %s: error message returned by WordPress download_url(). */
+				sprintf( __( 'Download failed: %s', 'ia-webmaster-bridge' ), $tmp->get_error_message() ),
+				502
+			);
 		}
 
 		$name = basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
@@ -187,7 +197,7 @@ class IAWM_Media {
 			if ( file_exists( $tmp ) ) {
 				wp_delete_file( $tmp );
 			}
-			return IAWM_Support::rest_error( 'iawm_invalid_url', 'The URL does not point to a file with a named extension.', 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_url', __( 'The URL does not point to a file with a named extension.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post_data = array();
@@ -242,12 +252,17 @@ class IAWM_Media {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', __( "The 'id' parameter is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || 'attachment' !== $post->post_type ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Media not found: {$id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: media attachment ID. */
+				sprintf( __( 'Media not found: %d.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 
 		$changes = array();
@@ -264,7 +279,7 @@ class IAWM_Media {
 		$alt = isset( $params['alt'] ) ? sanitize_text_field( (string) $params['alt'] ) : null;
 
 		if ( empty( $changes ) && null === $alt ) {
-			return IAWM_Support::rest_error( 'iawm_no_change', 'No changes provided.', 400 );
+			return IAWM_Support::rest_error( 'iawm_no_change', __( 'No changes provided.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {

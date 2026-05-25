@@ -32,8 +32,10 @@ See [`docs/decisions.md`](docs/decisions.md). In short:
 |------|------|
 | `CLAUDE.md` | This file (shared project context, loaded each session) |
 | `README.md` | Public project description and install |
+| `CHANGELOG.md` | keep-a-changelog version history (since v0.18.3) |
+| `CONTRIBUTING.md` | Contribution rules (code style, commits, tests, disclosure) |
 | `LICENSE` | GPL-3.0-or-later |
-| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossary.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md` |
+| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossary.md`, `operations.md`, `production-deployment.md`, `security-model.md`, `design-system.md`, `phase-7-action-plan.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md` |
 | `specs/` | One spec per feature (`01` to `07`) |
 | `plugin/ia-webmaster-bridge/` | WordPress plugin (REST API `ia-webmaster/v1`) |
 | `claude-plugin/` | Claude Code plugin (MCP tools + skills + MCP gateway) |
@@ -43,18 +45,27 @@ See [`docs/decisions.md`](docs/decisions.md). In short:
 
 ## Project status
 
-Phases 0 to 3 complete — see [`docs/roadmap.md`](docs/roadmap.md) for
-the detailed sub-milestones reached and remaining.
+Phases 0–6 implemented. **Phase 7 — production hardening — is in
+progress**; v1.0.0 is the imminent target. The full sub-phase tracker
+lives in [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md);
+the historical roadmap is in [`docs/roadmap.md`](docs/roadmap.md).
 
 Current high-level capabilities:
 
 - Full WordPress management (content, media, taxonomies, menus,
-  configuration, diagnostics, plugins).
-- Divi 5: 41 native modules, 13 parametric patterns, full Theme
-  Builder, bit-faithful round-trip, unified declarative composer
-  (`iawm_divi_page_compose`).
+  configuration, diagnostics, plugins, themes, core, database, cron).
+- Divi 5: 105 auto-discovered modules (incl. WooCommerce), 13
+  parametric patterns, full Theme Builder, bit-faithful round-trip,
+  unified declarative composer (`iawm_divi_page_compose`), design
+  system writes (colors / fonts / variables / theme options /
+  branding).
 - Rank Math SEO (Yoast planned).
-- 7 Claude Code skills for method and workflow.
+- Multi-key auth, scoped per request, with audit log, automatic
+  pre-op backups, confirmation tokens, kill switch, HTTPS
+  enforcement, IP allow-list. Eight-layer defence in depth — see
+  [`docs/security-model.md`](docs/security-model.md).
+- 7 Claude Code skills today; 4 more (Phase 7.7) pending before
+  v1.0.0.
 
 ## Collaboration rules (to be followed by the agent)
 

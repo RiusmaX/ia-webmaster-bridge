@@ -128,7 +128,7 @@ class IAWM_Taxonomy {
 
 		$name = isset( $params['name'] ) ? sanitize_text_field( (string) $params['name'] ) : '';
 		if ( '' === $name ) {
-			return IAWM_Support::rest_error( 'iawm_missing_name', "The 'name' parameter is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_name', __( "The 'name' parameter is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$args = array();
@@ -184,7 +184,12 @@ class IAWM_Taxonomy {
 
 		$post_id = isset( $params['id'] ) ? (int) $params['id'] : 0;
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$post_id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: content (post or page) ID that was not found. */
+				sprintf( __( 'Content not found: %d.', 'ia-webmaster-bridge' ), $post_id ),
+				404
+			);
 		}
 
 		$taxonomy = self::resolve_taxonomy( $params );
@@ -194,7 +199,7 @@ class IAWM_Taxonomy {
 
 		$terms = ( isset( $params['terms'] ) && is_array( $params['terms'] ) ) ? $params['terms'] : array();
 		if ( empty( $terms ) ) {
-			return IAWM_Support::rest_error( 'iawm_missing_terms', "The 'terms' parameter (array) is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_terms', __( "The 'terms' parameter (array) is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		// Integers -> term IDs; strings -> names.
@@ -262,7 +267,12 @@ class IAWM_Taxonomy {
 		$taxonomy = isset( $params['taxonomy'] ) ? sanitize_key( (string) $params['taxonomy'] ) : '';
 
 		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_taxonomy', "Unknown taxonomy: {$taxonomy}.", 400 );
+			return IAWM_Support::rest_error(
+				'iawm_invalid_taxonomy',
+				/* translators: %s: taxonomy slug. */
+				sprintf( __( 'Unknown taxonomy: %s.', 'ia-webmaster-bridge' ), $taxonomy ),
+				400
+			);
 		}
 
 		return $taxonomy;

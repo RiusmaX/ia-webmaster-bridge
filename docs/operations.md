@@ -7,6 +7,29 @@ written assuming the plugin and gateway are healthy; if they are not,
 the **SSH / WP-CLI fallback** section below covers recovery without
 the API.
 
+## Phase 7 features at a glance
+
+Phase 7 (in progress, see [`phase-7-action-plan.md`](phase-7-action-plan.md))
+added four operator-facing surfaces that change day-to-day ops:
+
+- **Network hardening** (7.1): HTTPS enforcement via the
+  `IAWM_REQUIRE_HTTPS` constant and an IP allow-list option editable
+  from the admin Security tab. See
+  [`security-model.md`](security-model.md) for the layered model.
+- **Lifecycle hardening** (7.2): two daily WP-Cron jobs prune the
+  audit log (`iawm_prune_audit_log`, retention
+  `iawm_audit_retention_days`, default 90 days) and the backup table
+  (`iawm_prune_backups`, retention `iawm_backup_keep_n`, default 50
+  rows). Retention sliders live in the admin Cleanup tab.
+- **Smoke test workflow**: after any destructive operation, call
+  `iawm_diagnostics_smoke` (HTTP probe + fatal scan + state checks)
+  and, after a plugin upgrade, `iawm_diagnostics_check_self`
+  (invariants). Both are exposed as buttons in the admin Tools tab.
+- **Branding writer** (7.3): site logo and favicon are written
+  through `iawm_divi_branding_update` (curated allow-list of
+  `divi_logo`, `divi_favicon`, `divi_logo_dark`, `divi_logo_mobile`,
+  `divi_logo_tablet`, `divi_logo_phone`).
+
 ---
 
 ## Key rotation

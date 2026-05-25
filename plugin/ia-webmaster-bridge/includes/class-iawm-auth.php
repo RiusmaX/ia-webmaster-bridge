@@ -75,7 +75,7 @@ class IAWM_Auth {
 		if ( ! IAWM_Settings::has_credentials() ) {
 			return new WP_Error(
 				'iawm_not_configured',
-				'The adapter is not configured: no API credentials.',
+				__( 'The adapter is not configured: no API credentials.', 'ia-webmaster-bridge' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -86,27 +86,27 @@ class IAWM_Auth {
 		$signature = (string) $request->get_header( 'X-IAWM-Signature' );
 
 		if ( '' === $key_id || '' === $timestamp || '' === $nonce || '' === $signature ) {
-			return self::deny( 'Missing authentication headers.' );
+			return self::deny( __( 'Missing authentication headers.', 'ia-webmaster-bridge' ) );
 		}
 
 		// Resolve the key by its identifier (multi-key support since v0.26.0).
 		$creds = IAWM_Settings::get_by_key_id( $key_id );
 		if ( null === $creds ) {
-			return self::deny( 'Unknown key identifier.' );
+			return self::deny( __( 'Unknown key identifier.', 'ia-webmaster-bridge' ) );
 		}
 
 		// Timestamp: the request must fall within the tolerance window.
 		if ( ! ctype_digit( $timestamp ) ) {
-			return self::deny( 'Invalid timestamp.' );
+			return self::deny( __( 'Invalid timestamp.', 'ia-webmaster-bridge' ) );
 		}
 		if ( abs( time() - (int) $timestamp ) > self::TIMESTAMP_TOLERANCE ) {
-			return self::deny( 'Request expired or timestamp out of tolerance.' );
+			return self::deny( __( 'Request expired or timestamp out of tolerance.', 'ia-webmaster-bridge' ) );
 		}
 
 		// Nonce: single-use, to prevent replay of a signed request.
 		$nonce_key = 'iawm_nonce_' . hash( 'sha256', $nonce );
 		if ( false !== get_transient( $nonce_key ) ) {
-			return self::deny( 'Nonce already used (replay detected).' );
+			return self::deny( __( 'Nonce already used (replay detected).', 'ia-webmaster-bridge' ) );
 		}
 
 		// HMAC signature.
@@ -114,7 +114,7 @@ class IAWM_Auth {
 		$expected = hash_hmac( 'sha256', $message, (string) $creds['secret'] );
 
 		if ( ! hash_equals( $expected, strtolower( $signature ) ) ) {
-			return self::deny( 'Invalid signature.' );
+			return self::deny( __( 'Invalid signature.', 'ia-webmaster-bridge' ) );
 		}
 
 		// Valid signature: consume the nonce (lifetime > tolerance).
@@ -126,7 +126,11 @@ class IAWM_Auth {
 		if ( null !== $required && ! IAWM_Settings::key_has_scope( $key_id, $required ) ) {
 			return new WP_Error(
 				'iawm_scope_denied',
-				sprintf( 'API key does not hold the required scope "%s".', $required ),
+				sprintf(
+					/* translators: %s: name of the required scope (e.g. "content:write"). */
+					__( 'API key does not hold the required scope "%s".', 'ia-webmaster-bridge' ),
+					$required
+				),
 				array(
 					'status'          => 403,
 					'required_scope'  => $required,
@@ -138,7 +142,7 @@ class IAWM_Auth {
 		if ( $require_write && IAWM_Settings::is_kill_switch_on() ) {
 			return new WP_Error(
 				'iawm_kill_switch',
-				'Writes are disabled (kill switch on).',
+				__( 'Writes are disabled (kill switch on).', 'ia-webmaster-bridge' ),
 				array( 'status' => 403 )
 			);
 		}

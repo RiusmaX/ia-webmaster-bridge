@@ -319,6 +319,146 @@ new one.
   still works exactly the same: this just complements the manual
   flow with a programmatic one.
 
+## D-020 — Lifecycle rotation policies (90 days audit / 50 backups)
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: the audit log and the backup table grow indefinitely if
+  left alone. On a busy site, both reach hundreds of thousands of rows
+  within a year, causing slow admin pages, expensive `wp_iawm_*`
+  queries, and an opaque incident response (you can no longer skim
+  the audit log). At the same time, throwing data away too early
+  destroys the security signal the audit log is supposed to carry,
+  and recent backups should outlive any plausible roll-back window.
+- **Decision**: ship two WP-Cron jobs registered on activation,
+  `iawm_prune_audit_log` (daily at 03:00) and `iawm_prune_backups`
+  (daily at 03:15). Retention windows are options
+  `iawm_audit_retention_days` (default **90 days**) and
+  `iawm_backup_keep_n` (default **50 records**), both editable from
+  the admin Cleanup tab.
+  - 90 days for audit is long enough to investigate a leak that
+    surfaced 2–3 months after the fact (typical lag for a stolen
+    secret to be used), short enough to keep query cost flat.
+  - 50 backups is roughly 1–2 months of pre-op snapshots on an
+    actively-managed site; an operator who runs more than that per
+    week probably needs a custom retention anyway.
+- **Consequences**: the two surfaces stay self-pruning by default,
+  but the operator can dial them up (e.g. 365 days audit for
+  compliance) or down (e.g. 14 backups on a high-volume site) from
+  the admin UI without code changes. The same rotation principle
+  will apply to any future log-like surface — register a cron + an
+  option, default sane.
+
+## D-021 — Smoke test approach (HTTP probe + debug.log scan + state checks)
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: until Phase 7.2 there was no programmatic way for the
+  agent to confirm "did the destructive operation I just ran break
+  anything?". The agent could read `debug.log` via diagnostics, but
+  parsing it for relevant fatal entries, then cross-checking with
+  the site's HTTP status, the kill-switch state, the agent user, the
+  active Divi version, was repetitive boilerplate that the agent had
+  to re-derive every time. A clear "post-op health probe" was needed.
+- **Decision**: ship `/diagnostics/smoke` as the single
+  "did-it-survive" endpoint. It runs four independent checks:
+  - **HTTP probe** of `home_url()` over `wp_remote_get` (follows
+    redirects), records final status and final URL.
+  - **debug.log scan** for any `PHP Fatal error` line whose
+    timestamp is within the last 10 minutes.
+  - **State checks**: kill switch state, agent user existence + role
+    integrity, Divi activity, summary of plugin versions.
+  - Aggregates into a top-level `healthy: true|false`.
+- The endpoint is a **read endpoint** and does not alert. The agent
+  is expected to call it after any destructive operation and the
+  operator can pin its result to a dashboard.
+- A companion `/diagnostics/check-self` covers the install
+  invariants (tables, cron jobs, credentials presence, HTTPS state)
+  — useful after a plugin upgrade and to gate the production go/no-
+  go check in [`production-deployment.md`](production-deployment.md).
+- **Consequences**: agent skills (and the Phase 7.7
+  `site-smoke-test` skill) have a single call to make. The endpoint
+  is cheap (one HTTP request + a file tail); it's safe to call
+  liberally. The 10-minute fatal window is a deliberate trade-off:
+  long enough to catch most slow-failing ops, short enough not to
+  return ancient unrelated errors.
+
+## D-022 — HTTPS enforcement via constant, IP allow-list as second line
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: Phase 5 closed the application-level threat model
+  (HMAC, scopes, audit, backups, confirmation). Two network-level
+  weaknesses remained: a request could in theory be served over HTTP
+  (leaking the signed payload + token to anyone on the path), and
+  the bridge accepted requests from any source IP — making a leaked
+  secret usable from any internet host. Both are textbook hardenings
+  but had been left for Phase 7 to keep the application-level work
+  shippable.
+- **Decision**: enforce HTTPS via a **`wp-config.php` constant**
+  `IAWM_REQUIRE_HTTPS` (not an admin-UI toggle), and add an IP
+  allow-list as an admin-editable option `iawm_ip_allowlist`. Both
+  checks happen in `IAWM_Auth::guard()` before credentials
+  resolution. Rationale:
+  - The HTTPS check belongs in `wp-config.php` because that file is
+    typically owned by the deployment process, not the WP admin
+    UI. A compromised WP admin account (different threat model —
+    see [`security-model.md`](security-model.md)) cannot silently
+    disable HTTPS enforcement. Toggling it on/off requires
+    filesystem access.
+  - The IP allow-list belongs in the admin UI because it changes
+    often (operator on a train, new VPN range, new team member)
+    and is non-destructive when wrong (worst case: the operator
+    locks themselves out, and loopback / WP-CLI recovery still
+    work).
+  - Both run **before** key resolution so an attacker probing the
+    namespace from an unauthorised IP cannot learn which key ids
+    exist (no detail leakage in the 403).
+  - Both **default to off** for back-compat (HTTPS constant absent
+    = no enforcement; empty allow-list = allow-all). The operator
+    must opt in. The
+    [`production-deployment.md`](production-deployment.md)
+    checklist makes opting in mandatory for any non-local install.
+- **Consequences**: a production install with both features enabled
+  reduces the attack surface from "anyone with the secret" to
+  "anyone with the secret AND on the allow-list AND via HTTPS".
+  Operators behind a reverse proxy honour `X-Forwarded-For` only
+  when `IAWM_TRUST_PROXY_HEADER` is also set in `wp-config.php` —
+  matching the constant pattern for security-critical toggles. Both
+  features are now part of the pentest checklist in
+  [`operations.md`](operations.md).
+
+## D-023 — i18n strategy (English source, .pot generated, fr_FR first locale)
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: until Phase 7.4 the plugin shipped English-only
+  user-visible strings, despite declaring a `Text Domain` header.
+  The codebase i18n pass (commit `829868d`) had translated source
+  comments and docstrings to English but had not wrapped admin UI
+  strings in `__()` / `esc_html__()`. A French operator still saw
+  English notices. Beyond the maintainer's locale, this is a
+  blocker for adoption by any operator who isn't comfortable in
+  English.
+- **Decision**: codebase source language stays English (per the
+  internationalisation pass) but every user-visible string gets
+  wrapped in the WordPress i18n functions
+  (`__`, `_e`, `esc_html__`, `esc_attr__`) with text domain
+  `ia-webmaster-bridge`. The plugin loads its translations via
+  `load_plugin_textdomain` on `plugins_loaded`. The translation
+  workflow:
+  - `languages/ia-webmaster-bridge.pot` is generated by
+    `wp i18n make-pot` (or equivalent — Loco Translate, manual
+    `xgettext`) and committed.
+  - First locale shipped: French (`ia-webmaster-bridge-fr_FR.po` +
+    `.mo`). This is the maintainer's locale and the second-most-
+    likely operator language.
+  - Additional locales welcome via PR — see
+    [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+- **Consequences**: a French operator sees the plugin in French if
+  their WP `Site Language` is set accordingly; a German operator
+  who provides a `de_DE.po` gets German; the source-of-truth strings
+  remain English, matching the project's worldwide-adoption goal.
+  The `.pot` file becomes part of the release artefacts; PRs that
+  add user-visible strings must update the `.pot` or at minimum
+  flag the strings as added so the next release can regenerate it.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

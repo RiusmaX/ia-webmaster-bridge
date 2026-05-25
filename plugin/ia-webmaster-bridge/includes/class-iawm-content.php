@@ -87,7 +87,12 @@ class IAWM_Content {
 
 		$type = isset( $params['type'] ) ? sanitize_key( (string) $params['type'] ) : 'post';
 		if ( ! in_array( $type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_type', "Unsupported content type: {$type}.", 400 );
+			return IAWM_Support::rest_error(
+				'iawm_invalid_type',
+				/* translators: %s: requested content type. */
+				sprintf( __( 'Unsupported content type: %s.', 'ia-webmaster-bridge' ), $type ),
+				400
+			);
 		}
 
 		$per_page = isset( $params['per_page'] ) ? (int) $params['per_page'] : 20;
@@ -144,12 +149,17 @@ class IAWM_Content {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', __( "The 'id' parameter is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || ! in_array( $post->post_type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: content (post or page) ID that could not be found. */
+				sprintf( __( 'Content not found: %d.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 
 		return new WP_REST_Response(
@@ -175,19 +185,19 @@ class IAWM_Content {
 
 		$type = isset( $params['type'] ) ? sanitize_key( (string) $params['type'] ) : '';
 		if ( ! in_array( $type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_type', 'A valid type is required (post|page).', 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_type', __( 'A valid type is required (post|page).', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$title   = isset( $params['title'] ) ? (string) $params['title'] : '';
 		$content = isset( $params['content'] ) ? (string) $params['content'] : '';
 		if ( '' === trim( $title ) && '' === trim( $content ) ) {
-			return IAWM_Support::rest_error( 'iawm_empty', 'A title or content is required.', 400 );
+			return IAWM_Support::rest_error( 'iawm_empty', __( 'A title or content is required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		// Safeguard: draft by default, explicit publish.
 		$status = isset( $params['status'] ) ? self::sanitize_write_status( $params['status'] ) : 'draft';
 		if ( null === $status ) {
-			return IAWM_Support::rest_error( 'iawm_invalid_status', 'Unsupported status for writing.', 400 );
+			return IAWM_Support::rest_error( 'iawm_invalid_status', __( 'Unsupported status for writing.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		// Content normalisation (canonical Gutenberg block markup).
@@ -268,12 +278,17 @@ class IAWM_Content {
 		$id     = isset( $params['id'] ) ? (int) $params['id'] : 0;
 
 		if ( $id <= 0 ) {
-			return IAWM_Support::rest_error( 'iawm_missing_id', "The 'id' parameter is required.", 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_id', __( "The 'id' parameter is required.", 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || ! in_array( $post->post_type, self::ALLOWED_TYPES, true ) ) {
-			return IAWM_Support::rest_error( 'iawm_not_found', "Content not found: {$id}.", 404 );
+			return IAWM_Support::rest_error(
+				'iawm_not_found',
+				/* translators: %d: content (post or page) ID that could not be found. */
+				sprintf( __( 'Content not found: %d.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 
 		$changes = array();
@@ -304,7 +319,7 @@ class IAWM_Content {
 		if ( isset( $params['status'] ) ) {
 			$status = self::sanitize_write_status( $params['status'] );
 			if ( null === $status ) {
-				return IAWM_Support::rest_error( 'iawm_invalid_status', 'Unsupported status for writing.', 400 );
+				return IAWM_Support::rest_error( 'iawm_invalid_status', __( 'Unsupported status for writing.', 'ia-webmaster-bridge' ), 400 );
 			}
 			$changes['post_status'] = $status;
 		}
@@ -314,7 +329,7 @@ class IAWM_Content {
 			: null;
 
 		if ( empty( $changes ) && null === $template ) {
-			return IAWM_Support::rest_error( 'iawm_no_change', 'No changes provided.', 400 );
+			return IAWM_Support::rest_error( 'iawm_no_change', __( 'No changes provided.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$content_info = ( null !== $norm ) ? self::content_info( $norm ) : null;

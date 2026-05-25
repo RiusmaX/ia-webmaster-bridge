@@ -1,0 +1,374 @@
+# Changelog
+
+All notable changes to **IA Webmaster Bridge** are documented in this
+file. Format: [keep a changelog](https://keepachangelog.com/en/1.1.0/);
+versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Two components are versioned independently and called out per release
+where they moved together:
+
+- **plugin** — `plugin/ia-webmaster-bridge/` (WordPress side).
+- **gateway** — `claude-plugin/mcp-gateway/` (Node.js MCP bridge).
+
+## [Unreleased]
+
+Phase 7 sub-phases pending: 7.5 i18n (in progress), 7.6 PHPUnit tests,
+7.7 skills assemblies, 7.8 doc pass (this file), 7.9 pentest dry-run,
+7.10 v1.0.0 release. Tracked in
+[`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md).
+
+## [0.34.0] — 2026-05-25 — plugin 0.34.0
+
+### Changed
+
+- Bumped plugin version pre-i18n pass (Phase 7.5 in progress). No
+  functional change yet.
+
+## [0.33.0] — 2026-05-25 — plugin 0.33.0, gateway 0.23.0
+
+### Added
+
+- **Divi branding writer** (Phase 7.3). Site logo and favicon live in
+  the `et_divi` option behind Divi's Customizer; they are not in the
+  17-key theme-options allow-list. Two new endpoints:
+  - `POST /divi/branding/get` — returns the branding subset of
+    `et_divi`.
+  - `POST /divi/branding/update` — writes a curated allow-list of keys
+    (`divi_logo`, `divi_favicon`, `divi_logo_dark`,
+    `divi_logo_mobile`, `divi_logo_tablet`, `divi_logo_phone`). URLs
+    sanitised via `esc_url_raw`. Auto-snapshot of the full `et_divi`
+    option before writing.
+- Two new MCP tools: `iawm_divi_branding_get`,
+  `iawm_divi_branding_update`.
+
+### Changed
+
+- **Plugin settings page redesigned** (Phase 7.4). Single long form
+  replaced by a six-tab card layout:
+  - Status bar with kill-switch state, key count, agent health, audit
+    and backup counts.
+  - Tab 1 API Keys: expandable rows with status dots, colour-coded
+    scope badges, inline label/scope editing.
+  - Tab 2 Agent: dedicated user status + reinstall button.
+  - Tab 3 Security: kill switch, HTTPS state, IP allow-list editor.
+  - Tab 4 Cleanup: retention sliders, next-run timestamps, "Prune now"
+    buttons.
+  - Tab 5 Audit log: last 30 entries with colour-coded outcomes.
+  - Tab 6 Tools: doc links, danger zone visually separated.
+  - Mobile responsive, vanilla CSS, no build step.
+
+## [0.31.0] — 2026-05-25 — plugin 0.31.0, gateway 0.22.0
+
+### Added
+
+- **Network hardening** (Phase 7.1, `IAWM_Network`).
+  - Constant `IAWM_REQUIRE_HTTPS` in `wp-config.php`. When `true`,
+    non-HTTPS requests are refused with HTTP 403 `iawm_https_required`
+    before any signature work.
+  - Option `iawm_ip_allowlist` (admin UI). Supports CIDR and single
+    IPs, IPv4 + IPv6. Empty = allow-all (back-compat). Loopback always
+    permitted. `IAWM_TRUST_PROXY_HEADER` constant honours
+    `X-Forwarded-For` behind a reverse proxy.
+  - Both checks happen in `IAWM_Auth::guard()` before credentials
+    resolution — an attacker probing from an unauthorised IP cannot
+    learn which key ids exist.
+- **Lifecycle hardening** (Phase 7.2).
+  - Option `iawm_audit_retention_days` (default 90). Daily WP-Cron job
+    `iawm_prune_audit_log` at 03:00.
+  - Option `iawm_backup_keep_n` (default 50). Daily WP-Cron job
+    `iawm_prune_backups` at 03:15.
+  - New endpoint `/diagnostics/smoke` — HTTP probe on `home_url()`,
+    debug.log fatal scan over the last 10 minutes, agent user /
+    kill-switch / Divi state, plugin version summary, aggregate
+    `healthy: true|false`.
+  - New endpoint `/diagnostics/check-self` — verifies agent user +
+    role, audit + backup tables, ≥ 1 credentials record, rotation cron
+    jobs, HTTPS state.
+- Two new MCP tools: `iawm_diagnostics_smoke`,
+  `iawm_diagnostics_check_self`.
+
+### Security
+
+- HTTPS enforcement constant is intentionally placed in `wp-config.php`
+  rather than the admin UI: a compromised WP admin account cannot
+  silently disable it.
+
+## [0.29.0] — 2026-05-25 — plugin 0.29.0, gateway 0.21.0
+
+### Fixed
+
+- `/database/search-replace` is now correctly confirmation-gated. The
+  handler called `IAWM_Confirmation::guard()` but the route was missing
+  from `REQUIRES_CONFIRMATION`, so non-dry-run calls applied directly.
+- `/divi/theme-options/update` payload shape now matches Divi's
+  upstream contract. Divi expects a single `{key, value}` per call
+  with strict allow-list of 17 customizer keys. The handler now loops
+  over the input map, calls Divi once per key, coerces values to
+  string, collects per-key outcomes in `applied` / `rejected`. Returns
+  HTTP 200 if all applied, 207 Multi-Status if some failed.
+
+### Changed
+
+- Documentation: design-system.md now spells out the 17-key
+  theme-options allow-list and that `divi_logo` / `divi_favicon` are
+  **not** in it (they require the new branding writer in 0.33).
+- `docs/validation-checklist.md` carries a full-run log of the 35+
+  validation checks plus a record of the two deviations and their
+  fixes.
+
+## [0.28.0] — 2026-05-25 — plugin 0.28.0, gateway 0.20.0
+
+### Added
+
+- **Design system writes** (D-019). The agent can now own the Divi
+  design system end-to-end:
+  - `POST /divi/global-data/colors/update` — replaces the `gcid-*`
+    palette (full-replace semantics).
+  - `POST /divi/global-data/fonts/update` — sets heading and/or body
+    font (two-field merge).
+  - `POST /divi/global-data/variables/update` — replaces the typed
+    `gvid-*` variable map (6 buckets).
+  - `POST /divi/theme-options/get` / `update` — wraps Divi's
+    `outside-vb/theme-options/*` with merge semantics.
+- `/divi/global-data` (read) now also returns `global_fonts`
+  alongside `global_colors` and `global_variables`.
+- Five new MCP tools (`iawm_divi_global_colors_update`,
+  `iawm_divi_global_fonts_update`,
+  `iawm_divi_global_variables_update`, `iawm_divi_theme_options_get`,
+  `iawm_divi_theme_options_update`).
+- New `docs/design-system.md` documenting the four-step authoring
+  workflow.
+
+## [0.27.0] — 2026-05-25 — plugin 0.27.0, gateway 0.18.0
+
+### Added
+
+- **Multi-key support** (D-017, Phase 5.4). Credentials storage
+  refactored to a map keyed by `key_id`. Each record carries label,
+  secret, scopes, optional `linked_user_id` (WP user, audit-only
+  attribution), `created_at`, `last_used_at`. Zero-downtime rotation
+  becomes natural: create new, switch the gateway, revoke the old.
+- Admin UI rebuilt around a table of keys: per-row scope editing,
+  rotate secret, revoke. Separate "Create a new key" form. Danger-zone
+  "Revoke ALL".
+- Audit log entries gain `key_label` and `linked_user_id`.
+- **Cron module** (`IAWM_Cron`, Phase 4). Five endpoints —
+  `/cron/list`, `/cron/schedules`, `/cron/run`, `/cron/schedule`,
+  `/cron/unschedule`. Wraps WP-Cron without exposing a shell.
+- New `docs/operations.md` runbook (key rotation, multi-operator
+  setup, safe-update workflow, SSH/WP-CLI fallback, pentest
+  checklist).
+
+### Changed
+
+- `IAWM_Auth` resolves credentials by `X-IAWM-Key` header (was:
+  compared against the single stored record).
+- Legacy single-record installs are transparently migrated on first
+  read; the existing key keeps working with a synthetic
+  `"Legacy key"` label.
+
+## [0.26.0] — 2026-05-25
+
+### Added
+
+- **Auto-generated Divi module registry** (D-018). Hand-curated list
+  of 48 modules replaced by 105 auto-discovered from the Divi install
+  itself.
+  - `tools/scan-divi-modules.mjs` walks
+    `visual-builder/packages/module-library/src/components/`, parses
+    each `module.json` + `module-default-render-attributes.json`, and
+    writes three artefacts:
+    - `docs/divi5-modules-registry.json` — structured registry.
+    - `docs/divi5-modules-catalog.md` — human catalog.
+    - `claude-plugin/mcp-gateway/src/divi/modules-registry.ts` —
+      `DiviBlock` enum + `DIVI_MODULES` runtime array.
+- Two new MCP tools: `iawm_divi_modules_catalog`,
+  `iawm_divi_module_info`.
+
+### Fixed
+
+- `divi/post-navigation` was a typo for the real block name
+  `divi/post-nav`, breaking any `postNavigation()` builder call.
+
+## [0.25.0] — 2026-05-25 — plugin 0.25.0, gateway 0.17.0
+
+### Added
+
+- **Database tools** (Phase 4, `IAWM_Database`). Four narrow endpoints:
+  - `/database/info` — tables, sizes, row counts.
+  - `/database/export` — SQL dump into a backup record.
+  - `/database/query` — SELECT-only with strict validation (no `;`,
+    no `INTO OUTFILE`, no `LOAD_FILE`, no `BENCHMARK`, no `SLEEP()`,
+    forced `LIMIT` cap of 200).
+  - `/database/search-replace` — serialisation-safe walker against an
+    explicit (table, column) allow-list. Mandatory
+    dry-run-then-confirm flow.
+
+### Security
+
+- Confirmation token now gates `/database/search-replace` in addition
+  to `/backup/restore` and `/core/update`.
+
+## [0.24.0] — 2026-05-25
+
+### Added
+
+- **Confirmation tokens** (Phase 5.3, `IAWM_Confirmation`, D-015).
+  Two-step pattern for the most destructive endpoints. First
+  non-dry-run call returns HTTP 202 + `requires_confirmation: true` +
+  single-use 64-hex token (5-min TTL, body-bound). Re-issue with the
+  token applies. Tokens stored as sha256 in transients — the raw
+  token never hits the DB.
+- Currently gating: `/backup/restore`, `/core/update`,
+  `/database/search-replace`.
+
+## [0.23.0] — 2026-05-25
+
+### Added
+
+- **WordPress core update** (Phase 4, `IAWM_Core`). `/core/info`
+  (read) + `/core/update` (infra:write) with PHP version pre-flight,
+  `dry_run` preview, plugin-state snapshot, confirmation token
+  mandatory for the real apply.
+
+## [0.22.0] — 2026-05-25 — plugin 0.22.0, gateway 0.16.0
+
+### Added
+
+- **Single-plugin update** via `/plugins/update`. Mirrors the
+  `/themes/update` path. Refuses to self-update the bridge plugin
+  (HTTP 403 `cannot_self_update`). Forces `wp_update_plugins()` to
+  refresh the transient before deciding. Snapshots plugin activation
+  state pre-op; surfaces `pre_op_backup_id`. `skip_backup: true` opts
+  out for retries.
+- New MCP tool: `iawm_plugins_update`.
+
+## [0.21.0] — 2026-05-25 — plugin 0.21.0, gateway 0.15.0
+
+### Added
+
+- **Themes module** (Phase 4). Five endpoints, all WP.org-only and
+  strict-slug-validated:
+  - `/themes/info`, `/themes/list`, `/themes/install`,
+    `/themes/activate`, `/themes/update`.
+- Automatic pre-op `options` snapshot of theme-related options
+  (`template`, `stylesheet`, `current_theme`, `theme_switched`,
+  `theme_mods_{slug}`) for both the active and the target theme.
+- Five new MCP tools (`iawm_themes_info` / `list` / `install` /
+  `activate` / `update`).
+
+### Decisions
+
+- Theme deletion intentionally not exposed (matches the
+  `IAWM_Plugins` policy).
+
+## [0.20.0] — 2026-05-25 — plugin 0.20.0, gateway 0.14.0
+
+### Added
+
+- **Backup module** (`IAWM_Backup`, Phase 5.2, D-013/D-014). Three
+  snapshot kinds: `options` (JSON map of WP option values),
+  `plugins_state` (active + recently-activated + installed list),
+  `tables` (raw SQL dump of named tables).
+- New `wp_iawm_backups` table.
+- Six REST routes under `/backup/*` (list / get / create / restore /
+  delete / prune). `read` for list/get, `infra:write` for the rest.
+- Restore supports `dry_run` so the operator previews the diff.
+- **Automatic pre-op snapshots** wired into `plugins/install`,
+  `plugins/activate`, `plugins/deactivate` and risky settings
+  updates. Surfaced as `pre_op_backup_id`. `skip_backup: true` opts
+  out per-request.
+- Six new MCP tools under `registerBackup()`
+  (`iawm_backup_list/get/create/restore/delete/prune`).
+
+### Changed
+
+- `IAWM_Auth::required_scope` now uses the permission callback
+  (`guard_read` vs `guard_write`) to pick read vs write-by-prefix
+  rather than the HTTP method.
+
+## [0.19.0] — 2026-05-25
+
+### Added
+
+- **Dedicated agent WordPress user** (`iawm-agent`, role
+  `iawm_agent`, Phase 5.1, D-011). Created on plugin activation.
+  Administrator-like minus `unfiltered_html`, `unfiltered_upload`,
+  `edit_files`, `edit_plugins`, `edit_themes`, multisite super-admin.
+  The application refuses any API attempt to modify or delete this
+  user. WP audit records now attribute every write to the agent, not
+  to a human admin.
+- **Per-key scopes** (D-012): `read`, `content:write`, `divi:write`,
+  `config:write`, `infra:write`. Required scope derived from the
+  route. Miss returns HTTP 403 `iawm_scope_denied`. Check happens
+  after HMAC verification so scope info never leaks to
+  unauthenticated callers.
+- Admin UI: pick scopes when generating a key, retighten an existing
+  key's scopes without rotating the secret, reinstall the agent
+  role/user.
+
+### Security
+
+- Backward compatibility: legacy keys without an explicit scope list
+  remain fully-scoped; existing installs aren't broken on upgrade.
+
+## [0.18.x] — 2026-05-24
+
+### Changed
+
+- **Full i18n pass on the codebase** (commits `829868d`, `a6b8f53`).
+  All documentation, code comments, error messages and MCP tool
+  descriptions translated to English so the project is usable
+  worldwide. The maintainer's personal preferences stay in the
+  gitignored `CLAUDE.local.md`.
+- 4 skills renamed (`audit-wordpress-site`,
+  `create-wordpress-page`, `create-divi-page`,
+  `frontend-design-wordpress`).
+- 4 specs renamed (`01-adapter`, `02-security`, `03-content`,
+  `07-webmaster-layer`).
+- `docs/glossaire.md` → `docs/glossary.md`.
+- New `language` parameter (BCP-47) on content-generation tools
+  (`iawm_content_create`, `iawm_content_update`,
+  `iawm_divi_page_compose`, `iawm_divi_theme_builder_compose`) to
+  hint the agent on which language to write site content in.
+
+### Added
+
+- Repo cleanup pass (commits `e264800`, `6933914`): removed hardcoded
+  personal paths and nominal references, generic public `CLAUDE.md`
+  with maintainer preferences split into the gitignored
+  `CLAUDE.local.md`.
+
+## [0.18.3] and earlier
+
+- **Phase 3 — Divi 5 plane** (commits `4fcf34a` … `1b2022d`).
+  Unified declarative `iawm_divi_page_compose` (pattern / free-form /
+  block). Theme Builder endpoints + `setup-site-defaults` wrapper.
+  Bit-faithful round-trip writes. 41 native modules, 13 parametric
+  patterns. Library + design system reads. Full E2E test passed
+  (header + footer + 10-section homepage + Rank Math SEO generated
+  as draft from a brief).
+- **Phase 2 — content + configuration plane** (commit `d3dfba3` and
+  earlier).
+  Pages, posts, media, menus, taxonomies, site settings, users,
+  diagnostics. Rank Math SEO. Kill switch. Dry-run + draft-by-default
+  guardrails. `wp_slash` round-trip bug fixed.
+- **Phase 1 — basic connection** (commit `58d178e`). Minimal plugin
+  with REST namespace + HMAC signature + audit log. Local MCP
+  gateway connected to Claude Code.
+
+[Unreleased]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.34.0...HEAD
+[0.34.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.33.0...v0.34.0
+[0.33.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.31.0...v0.33.0
+[0.31.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.29.0...v0.31.0
+[0.29.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.28.0...v0.29.0
+[0.28.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.27.0...v0.28.0
+[0.27.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.26.0...v0.27.0
+[0.26.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.25.0...v0.26.0
+[0.25.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.24.0...v0.25.0
+[0.24.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.23.0...v0.24.0
+[0.23.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.22.0...v0.23.0
+[0.22.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.21.0...v0.22.0
+[0.21.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.20.0...v0.21.0
+[0.20.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.19.0...v0.20.0
+[0.19.0]: https://github.com/RiusmaX/ia-webmaster-bridge/compare/v0.18.3...v0.19.0
