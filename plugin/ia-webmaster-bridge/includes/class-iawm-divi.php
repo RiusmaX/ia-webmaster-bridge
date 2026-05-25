@@ -128,15 +128,25 @@ class IAWM_Divi {
 		$mode    = isset( $params['mode'] ) ? (string) $params['mode'] : 'tree';
 
 		if ( ! in_array( $mode, array( 'tree', 'raw', 'flat' ), true ) ) {
-			return IAWM_Support::rest_error( 'invalid_mode', "Unknown mode: {$mode}.", 400 );
+			return IAWM_Support::rest_error(
+				'invalid_mode',
+				/* translators: %s: unsupported "mode" value. */
+				sprintf( __( 'Unknown mode: %s.', 'ia-webmaster-bridge' ), $mode ),
+				400
+			);
 		}
 		if ( $post_id <= 0 ) {
-			return IAWM_Support::rest_error( 'invalid_post_id', 'post_id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_post_id', __( 'post_id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'post_not_found', "Post {$post_id} not found.", 404 );
+			return IAWM_Support::rest_error(
+				'post_not_found',
+				/* translators: %d: post ID. */
+				sprintf( __( 'Post %d not found.', 'ia-webmaster-bridge' ), $post_id ),
+				404
+			);
 		}
 
 		$uses_builder = 'on' === get_post_meta( $post_id, '_et_pb_use_builder', true );
@@ -145,7 +155,11 @@ class IAWM_Divi {
 		if ( ! $uses_builder && ! $has_d5_marker ) {
 			return IAWM_Support::rest_error(
 				'not_a_divi_page',
-				"Post {$post_id} is not a Divi 5 page (neither meta _et_pb_use_builder=on, nor wp:divi/ blocks detected).",
+				sprintf(
+					/* translators: %d: post ID. */
+					__( 'Post %d is not a Divi 5 page (neither meta _et_pb_use_builder=on, nor wp:divi/ blocks detected).', 'ia-webmaster-bridge' ),
+					$post_id
+				),
 				400,
 				array( 'meta_use_builder' => $uses_builder, 'has_d5_marker' => $has_d5_marker )
 			);
@@ -257,7 +271,15 @@ class IAWM_Divi {
 
 		$valid_types = array( 'layout', 'section', 'row', 'module' );
 		if ( ! in_array( $type, $valid_types, true ) ) {
-			return IAWM_Support::rest_error( 'invalid_type', "Invalid type. Expected: " . implode( ', ', $valid_types ), 400 );
+			return IAWM_Support::rest_error(
+				'invalid_type',
+				sprintf(
+					/* translators: %s: comma-separated list of valid type values. */
+					__( 'Invalid type. Expected: %s', 'ia-webmaster-bridge' ),
+					implode( ', ', $valid_types )
+				),
+				400
+			);
 		}
 
 		$res = self::call_divi_route( '/divi-library', 'POST', array(
@@ -266,7 +288,7 @@ class IAWM_Divi {
 		) );
 
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'divi_library_failed', 'Call to divi-library failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'divi_library_failed', __( 'Call to divi-library failed.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		// Flatten: Divi returns { layout: { categories, packs, tags, items } }
@@ -312,7 +334,7 @@ class IAWM_Divi {
 	public static function handle_library_item( $request ) {
 		$params = IAWM_Support::json_params( $request );
 		if ( ! isset( $params['id'] ) || '' === $params['id'] ) {
-			return IAWM_Support::rest_error( 'invalid_id', 'id required.', 400 );
+			return IAWM_Support::rest_error( 'invalid_id', __( 'id required.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$res = self::call_divi_route( '/divi-library/item', 'POST', array(
@@ -323,7 +345,7 @@ class IAWM_Divi {
 		) );
 
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'divi_library_item_failed', 'Call to divi-library/item failed.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'divi_library_item_failed', __( 'Call to divi-library/item failed.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response( array_merge( array( 'ok' => true ), (array) $res['data'] ), 200 );
@@ -482,7 +504,7 @@ class IAWM_Divi {
 		) );
 
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'global_data_unavailable', 'Could not retrieve the Divi design system.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'global_data_unavailable', __( 'Could not retrieve the Divi design system.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		$data = (array) $res['data'];
@@ -532,7 +554,7 @@ class IAWM_Divi {
 		$params = IAWM_Support::json_params( $request );
 		$colors = isset( $params['global_colors'] ) && is_array( $params['global_colors'] ) ? $params['global_colors'] : null;
 		if ( null === $colors || empty( $colors ) ) {
-			return IAWM_Support::rest_error( 'iawm_missing_global_colors', 'Provide a non-empty `global_colors` object.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_global_colors', __( 'Provide a non-empty `global_colors` object.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -565,7 +587,7 @@ class IAWM_Divi {
 			'global_colors' => $normalised,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'global_colors_update_failed', 'Divi rejected the update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'global_colors_update_failed', __( 'Divi rejected the update.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response(
@@ -596,7 +618,7 @@ class IAWM_Divi {
 		$heading = isset( $params['heading_font'] ) ? (string) $params['heading_font'] : '';
 		$body    = isset( $params['body_font'] ) ? (string) $params['body_font'] : '';
 		if ( '' === $heading && '' === $body ) {
-			return IAWM_Support::rest_error( 'iawm_missing_fonts', 'Provide at least one of `heading_font` or `body_font`.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_fonts', __( 'Provide at least one of `heading_font` or `body_font`.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		if ( ! empty( $params['dry_run'] ) ) {
@@ -629,7 +651,7 @@ class IAWM_Divi {
 			'body_font'    => $body,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'global_fonts_update_failed', 'Divi rejected the update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'global_fonts_update_failed', __( 'Divi rejected the update.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response(
@@ -661,14 +683,23 @@ class IAWM_Divi {
 		$params = IAWM_Support::json_params( $request );
 		$vars = isset( $params['global_variables'] ) && is_array( $params['global_variables'] ) ? $params['global_variables'] : null;
 		if ( null === $vars ) {
-			return IAWM_Support::rest_error( 'iawm_missing_global_variables', 'Provide `global_variables` as an object with keys among numbers, strings, images, links, colors, fonts.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_global_variables', __( 'Provide `global_variables` as an object with keys among numbers, strings, images, links, colors, fonts.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		// Bucket-level validation.
 		$known_buckets = array( 'numbers', 'strings', 'images', 'links', 'colors', 'fonts' );
 		foreach ( $vars as $bucket => $_unused ) {
 			if ( ! in_array( $bucket, $known_buckets, true ) ) {
-				return IAWM_Support::rest_error( 'iawm_unknown_variable_bucket', "Unknown bucket: {$bucket}. Use one of: " . implode( ', ', $known_buckets ), 400 );
+				return IAWM_Support::rest_error(
+					'iawm_unknown_variable_bucket',
+					sprintf(
+						/* translators: 1: unknown bucket name. 2: comma-separated list of valid buckets. */
+						__( 'Unknown bucket: %1$s. Use one of: %2$s', 'ia-webmaster-bridge' ),
+						$bucket,
+						implode( ', ', $known_buckets )
+					),
+					400
+				);
 			}
 		}
 
@@ -693,7 +724,7 @@ class IAWM_Divi {
 			'global_variables' => $vars,
 		) );
 		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'global_variables_update_failed', 'Divi rejected the update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+			return IAWM_Support::rest_error( 'global_variables_update_failed', __( 'Divi rejected the update.', 'ia-webmaster-bridge' ), $res['status'], array( 'divi_response' => $res['data'] ) );
 		}
 
 		return new WP_REST_Response(
@@ -780,7 +811,7 @@ class IAWM_Divi {
 		$params   = IAWM_Support::json_params( $request );
 		$branding = isset( $params['branding'] ) && is_array( $params['branding'] ) ? $params['branding'] : null;
 		if ( null === $branding || empty( $branding ) ) {
-			return IAWM_Support::rest_error( 'iawm_missing_branding', 'Provide a non-empty `branding` object.', 400 );
+			return IAWM_Support::rest_error( 'iawm_missing_branding', __( 'Provide a non-empty `branding` object.', 'ia-webmaster-bridge' ), 400 );
 		}
 
 		$allow    = self::branding_allowlist();

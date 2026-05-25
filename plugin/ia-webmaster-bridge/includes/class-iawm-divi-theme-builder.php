@@ -358,12 +358,22 @@ class IAWM_Divi_Theme_Builder {
 		}
 		$post = get_post( $id );
 		if ( ! $post ) {
-			return IAWM_Support::rest_error( 'not_found', "Layout {$id} not found.", 404 );
+			return IAWM_Support::rest_error(
+				'not_found',
+				/* translators: %d: layout post ID that was not found. */
+				sprintf( __( 'Layout %d not found.', 'ia-webmaster-bridge' ), $id ),
+				404
+			);
 		}
 		if ( ! in_array( $post->post_type, self::ZONE_POST_TYPE, true ) ) {
 			return IAWM_Support::rest_error(
 				'not_a_layout',
-				"Post {$id} is not a Theme Builder layout (type={$post->post_type}).",
+				sprintf(
+					/* translators: 1: post ID. 2: actual post type. */
+					__( 'Post %1$d is not a Theme Builder layout (type=%2$s).', 'ia-webmaster-bridge' ),
+					$id,
+					$post->post_type
+				),
 				400
 			);
 		}
@@ -399,7 +409,7 @@ class IAWM_Divi_Theme_Builder {
 	 */
 	public static function handle_setup_site_defaults( $request ) {
 		$params        = IAWM_Support::json_params( $request );
-		$title         = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : 'Default Site Template';
+		$title         = isset( $params['title'] ) ? sanitize_text_field( (string) $params['title'] ) : __( 'Default Site Template', 'ia-webmaster-bridge' );
 		$assign_default = ! isset( $params['assign_default'] ) || (bool) $params['assign_default'];
 		$replace        = ! empty( $params['replace_existing'] );
 
@@ -414,7 +424,7 @@ class IAWM_Divi_Theme_Builder {
 		if ( empty( $zone_inputs ) ) {
 			return IAWM_Support::rest_error(
 				'no_layouts',
-				'At least one of header / body / footer must be provided.',
+				__( 'At least one of header / body / footer must be provided.', 'ia-webmaster-bridge' ),
 				400
 			);
 		}
@@ -426,7 +436,11 @@ class IAWM_Divi_Theme_Builder {
 			if ( ! empty( $t['default'] ) && ! $replace ) {
 				return IAWM_Support::rest_error(
 					'default_template_exists',
-					"A default template already exists (id={$t['id']}). Pass replace_existing=true to overwrite.",
+					sprintf(
+						/* translators: %s: existing default template ID. */
+						__( 'A default template already exists (id=%s). Pass replace_existing=true to overwrite.', 'ia-webmaster-bridge' ),
+						$t['id']
+					),
 					409,
 					array( 'existing_template' => $t )
 				);
@@ -457,7 +471,16 @@ class IAWM_Divi_Theme_Builder {
 				true
 			);
 			if ( is_wp_error( $post_id ) ) {
-				return IAWM_Support::rest_error( 'layout_create_failed', "Failed to create {$zone}: " . $post_id->get_error_message(), 500 );
+				return IAWM_Support::rest_error(
+					'layout_create_failed',
+					sprintf(
+						/* translators: 1: layout zone (header/body/footer). 2: error message returned by wp_insert_post(). */
+						__( 'Failed to create %1$s: %2$s', 'ia-webmaster-bridge' ),
+						$zone,
+						$post_id->get_error_message()
+					),
+					500
+				);
 			}
 			update_post_meta( $post_id, '_et_pb_use_builder', 'on' );
 			update_post_meta( $post_id, '_et_pb_built_for_post_type', self::ZONE_POST_TYPE[ $zone ] );
@@ -470,11 +493,11 @@ class IAWM_Divi_Theme_Builder {
 			'title' => $title,
 		) );
 		if ( $create_res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_create_failed', 'Failed to create template.', $create_res['status'], array( 'divi_response' => $create_res['data'] ) );
+			return IAWM_Support::rest_error( 'template_create_failed', __( 'Failed to create template.', 'ia-webmaster-bridge' ), $create_res['status'], array( 'divi_response' => $create_res['data'] ) );
 		}
 		$template_id = isset( $create_res['data']['id'] ) ? (int) $create_res['data']['id'] : 0;
 		if ( $template_id <= 0 ) {
-			return IAWM_Support::rest_error( 'no_template_id', 'No template id returned.', 500, array( 'divi_response' => $create_res['data'] ) );
+			return IAWM_Support::rest_error( 'no_template_id', __( 'No template id returned.', 'ia-webmaster-bridge' ), 500, array( 'divi_response' => $create_res['data'] ) );
 		}
 
 		// 3. Link the layouts via update-template.
@@ -509,7 +532,7 @@ class IAWM_Divi_Theme_Builder {
 			'template'    => $template_payload,
 		) );
 		if ( $update_res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'template_link_failed', 'Failed to assign layouts.', $update_res['status'], array( 'divi_response' => $update_res['data'] ) );
+			return IAWM_Support::rest_error( 'template_link_failed', __( 'Failed to assign layouts.', 'ia-webmaster-bridge' ), $update_res['status'], array( 'divi_response' => $update_res['data'] ) );
 		}
 
 		// 4. If requested, mark it as default (use_on assignment).

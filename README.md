@@ -4,28 +4,22 @@
 > action signed.
 
 ![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)
-![Plugin](https://img.shields.io/badge/plugin-0.34.0-green)
-![Gateway](https://img.shields.io/badge/gateway-0.23.0-green)
-![Status](https://img.shields.io/badge/status-v1.0.0--rc-orange)
+![Plugin](https://img.shields.io/badge/plugin-1.0.0-brightgreen)
+![Gateway](https://img.shields.io/badge/gateway-1.0.0-brightgreen)
+![Status](https://img.shields.io/badge/status-v1.0.0-brightgreen)
 
 ## Status
 
-Phases 0–6 implemented. **Phase 7 — production hardening — is in
-progress**; v1.0.0 target is imminent. Tracking lives in
-[`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md).
+**v1.0.0 — production ready.** All seven Phase 7 sub-phases shipped:
+network hardening, lifecycle hardening, Divi branding writer, admin
+UI redesign, i18n, PHPUnit tests, four new operator skills, full doc
+pass, pentest dry-run. Sprint tracker: [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md);
+pentest record: [`docs/pentest-2026-05-25.md`](docs/pentest-2026-05-25.md);
+history: [`CHANGELOG.md`](CHANGELOG.md).
 
-Today's state:
-
-- 7.1 network hardening (HTTPS + IP allow-list) — done
-- 7.2 lifecycle hardening (rotation cron, smoke test, self-check) — done
-- 7.3 Divi branding writer — done
-- 7.4 admin UI redesign — done
-- 7.5 i18n plugin admin (en + fr_FR) — in progress
-- 7.6 PHPUnit tests, 7.7 skills assemblies, 7.8 doc pass (this doc),
-  7.9 pentest dry-run, 7.10 v1.0.0 release — pending
-
-Validated end-to-end on a local WordPress 7.0 + Divi 5 site. Test in a
-local environment before any production use.
+Validated end-to-end on a local WordPress 7.0 + Divi 5 site. Run the
+[production deployment checklist](docs/production-deployment.md)
+before any go-live.
 
 ## What it does
 
