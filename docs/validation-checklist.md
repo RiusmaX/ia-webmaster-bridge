@@ -294,7 +294,51 @@
 > returns the wrong field name, a UI element is missing, the auto-backup
 > didn't trigger when it should have, etc.
 
-### 2026-05-25 — Partial validation run
+### 2026-05-25 — Full validation run (post second restart)
+
+Two deviations found and **both fixed live** (plugin v0.29.0,
+gateway v0.21.0):
+
+1. **`/database/search-replace` was NOT confirmation-gated**, despite
+   the docs and the `IAWM_Confirmation::guard()` call in the handler.
+   The route was missing from `IAWM_Confirmation::REQUIRES_CONFIRMATION`.
+   Fix: added `/database/search-replace` to the constant. Re-tested:
+   first non-dry_run call now returns HTTP 202 + token; replay with
+   token applies; replay with same token → 400 `iawm_invalid_confirmation`.
+
+2. **`/divi/theme-options/update` payload shape mismatched Divi's
+   contract**. The Divi upstream takes `{key, value}` ONE pair per call
+   with a strict allow-list of 17 customizer keys (and rejects everything
+   else); our wrapper was sending `{options: {...}}` as a bag. Fix:
+   the handler now loops over the input map, calls Divi per key, and
+   collects per-key results in `applied` / `rejected`. Re-tested:
+   `iawm_divi_theme_options_update({options: {accent_color: "#0a6ef5"}})`
+   → 200, `applied.accent_color = "#0a6ef5"`. Also: divi_logo /
+   divi_favicon are NOT in Divi's allow-list (they live in `et_divi`
+   Customizer storage); `docs/design-system.md` updated to reflect this.
+
+Everything else passed cleanly. Summary of the full pass (35+ checks):
+
+| Section | Checks | Pass |
+|---|---|---|
+| Phase 5.1 self-protection + multi-key audit enrichment | 2 | ✓ |
+| Phase 5.2 backups (list/get/create/restore/delete + payload SQL dump) | 8 | ✓ |
+| Phase 5.3 confirmation tokens (gate, mismatch, replay, dry_run bypass) | 4 | ✓ |
+| Phase 4 themes (list/info/install-already-installed/update no-op) | 4 | ✓ |
+| Phase 4 plugins update (no-update / self-update refusal / invalid file) | 3 | ✓ |
+| Phase 4 core update (info, dry-run no-update) | 2 | ✓ |
+| Phase 4 cron (list/schedules/run/schedule/unschedule/unknown-slug) | 6 | ✓ |
+| Phase 4 database (info/export/query valid+invalid×2/search-replace dry-run + flow) | 7 | ✓ |
+| Design system (read with new global_fonts, colors update, fonts full + partial, variables, theme-options get + dry-run) | 7 | ✓ |
+| Modules registry (catalog filters, info, unknown lookup) | 5 | ✓ |
+| Token TTL (5 min) | 1 | ⏭ skipped (would require 6-min wait) |
+
+Bonus: the validation surfaced the two deviations above, which would
+have shipped silently otherwise. The design-system brand kit set during
+the run (primary #0a6ef5, Playfair Display + Inter, gvid-brand-radius,
+etc.) is left in place — the site is now demonstrably on-brand.
+
+### 2026-05-25 — Earlier partial validation run
 
 **Operating note**: when Claude Code is "restarted", it relaunches its
 processes but the **MCP gateway bundle is read from its installed

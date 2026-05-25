@@ -34270,10 +34270,10 @@ function registerDivi(server, client) {
   server.registerTool(
     "iawm_divi_theme_options_update",
     {
-      title: "Update Divi's theme options (ePanel)",
-      description: "Updates one or more keys in Divi's theme-options panel. Merge semantics \u2014 only the keys you pass are touched; everything else is preserved. Useful for: `divi_logo` (URL to the site logo), `divi_favicon`, header/footer integration HTML, performance switches. Use iawm_divi_theme_options_get first to see what keys exist on this site.",
+      title: "Update Divi's theme options",
+      description: "Updates one or more theme-options keys. Divi enforces a strict allow-list of 17 customizer keys: divi_blog_style, divi_disable_translations, heading_font, body_font, heading_font_weight, body_font_weight, body_font_height, body_font_size, body_header_size, content_width, accent_color, et_pb_static_css_file, et_pb_css_in_footer, gutter_width, vertical_nav, header_style, color_schemes. Pass a bag of {key: value}; the wrapper loops over Divi's single-key endpoint. Values are coerced to string. Site logo / favicon and other ePanel options OUTSIDE this allow-list are not writable through this route (they live in the `et_divi` WP option behind the Customizer).",
       inputSchema: {
-        options: external_exports.record(external_exports.string(), external_exports.unknown()).describe("Keys to set on et_divi"),
+        options: external_exports.record(external_exports.string(), external_exports.unknown()).describe("Allowlisted keys to set; see description"),
         dry_run: external_exports.boolean().optional()
       }
     },

@@ -734,17 +734,23 @@ class IAWM_Divi {
 	 *
 	 * Body: { options: { key: value, ... }, dry_run? }
 	 *
-	 * Only the keys you provide are touched; existing keys are
-	 * preserved. Commonly-set keys:
+	 * Divi's upstream `outside-vb/theme-options/update` route is a
+	 * **single-key/value contract** with a strict allow-list of 17
+	 * customizer options (`divi_blog_style`, `heading_font`,
+	 * `body_font`, `heading_font_weight`, `body_font_weight`,
+	 * `body_font_height`, `body_font_size`, `body_header_size`,
+	 * `content_width`, `accent_color`, `et_pb_static_css_file`,
+	 * `et_pb_css_in_footer`, `gutter_width`, `vertical_nav`,
+	 * `header_style`, `color_schemes`, `divi_disable_translations`).
+	 * Our wrapper accepts the more ergonomic bag-of-keys shape and
+	 * **loops** over Divi's endpoint, one call per key. Values are
+	 * coerced to string (Divi rejects non-string values).
 	 *
-	 *   - `divi_logo`      : URL of the site logo image.
-	 *   - `divi_favicon`   : URL of the site favicon.
-	 *   - `divi_color_schemes` : palette preset name.
-	 *   - `divi_fixed_nav` : 'on' | 'off'.
-	 *   - `divi_layout_setting` : 'fixed' | 'fluid'.
-	 *
-	 * The full key list is what Divi's ePanel surfaces. Use the GET
-	 * endpoint to inspect what's there before updating.
+	 * Logo, favicon and other ePanel settings outside this allow-list
+	 * live in the `et_divi` WordPress option and are NOT writable
+	 * through this route — Divi guards them tightly through its
+	 * Customizer. They will be addressed by a dedicated endpoint in a
+	 * later iteration if needed.
 	 *
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response|WP_Error
@@ -756,14 +762,11 @@ class IAWM_Divi {
 			return IAWM_Support::rest_error( 'iawm_missing_options', 'Provide a non-empty `options` object.', 400 );
 		}
 
-		// Fetch current options to apply a merge (Divi's update endpoint
-		// expects the full set; only sending changed keys would clobber the
-		// rest).
-		$current = self::call_divi_route( '/outside-vb/theme-options/get', 'POST', array() );
-		if ( $current['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'theme_options_read_failed', 'Could not read current theme options before update.', $current['status'] );
-		}
-		$current_data = is_array( $current['data'] ) ? $current['data'] : array();
+		// Fetch current options to populate the dry-run diff.
+		$current      = self::call_divi_route( '/outside-vb/theme-options/get', 'POST', array() );
+		$current_data = ( $current['status'] < 400 && is_array( $current['data'] ) && isset( $current['data']['options'] ) && is_array( $current['data']['options'] ) )
+			? $current['data']['options']
+			: array();
 
 		if ( ! empty( $params['dry_run'] ) ) {
 			$diff = array();
@@ -778,21 +781,39 @@ class IAWM_Divi {
 
 		IAWM_Support::act_as_agent();
 
-		$merged = array_merge( $current_data, $updates );
-		$res    = self::call_divi_route( '/outside-vb/theme-options/update', 'POST', array(
-			'options' => $merged,
-		) );
-		if ( $res['status'] >= 400 ) {
-			return IAWM_Support::rest_error( 'theme_options_update_failed', 'Divi rejected the theme-options update.', $res['status'], array( 'divi_response' => $res['data'] ) );
+		// Divi's update endpoint takes ONE { key, value } pair per call,
+		// validates the key against its own allow-list, and coerces value
+		// to string. Loop, collecting per-key results.
+		$applied  = array();
+		$rejected = array();
+		foreach ( $updates as $key => $value ) {
+			$res = self::call_divi_route(
+				'/outside-vb/theme-options/update',
+				'POST',
+				array(
+					'key'   => (string) $key,
+					'value' => is_scalar( $value ) ? (string) $value : wp_json_encode( $value ),
+				)
+			);
+			if ( $res['status'] >= 400 ) {
+				$rejected[ $key ] = array(
+					'status'        => $res['status'],
+					'divi_response' => $res['data'],
+				);
+			} else {
+				$applied[ $key ] = isset( $res['data']['value'] ) ? $res['data']['value'] : true;
+			}
 		}
 
 		return new WP_REST_Response(
 			array(
-				'ok'              => true,
-				'updated'         => true,
-				'changed_keys'    => array_keys( $updates ),
+				'ok'           => empty( $rejected ),
+				'updated'      => ! empty( $applied ),
+				'applied'      => $applied,
+				'rejected'     => $rejected,
+				'changed_keys' => array_keys( $applied ),
 			),
-			200
+			empty( $rejected ) ? 200 : 207 // 207 Multi-Status when some keys failed.
 		);
 	}
 

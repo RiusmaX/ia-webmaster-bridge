@@ -149,10 +149,20 @@ await iawm_divi_global_variables_update({
     },
   },
 });
+// Theme-options panel — limited to the Divi customizer allow-list:
+// divi_blog_style, divi_disable_translations, heading_font, body_font,
+// heading_font_weight, body_font_weight, body_font_height,
+// body_font_size, body_header_size, content_width, accent_color,
+// et_pb_static_css_file, et_pb_css_in_footer, gutter_width,
+// vertical_nav, header_style, color_schemes.
+// Note: site logo and favicon live OUTSIDE this allow-list (in the
+// `et_divi` Customizer option) and are not writable through this route.
 await iawm_divi_theme_options_update({
   options: {
-    "divi_logo":    "https://example.com/wp-content/uploads/logo.svg",
-    "divi_favicon": "https://example.com/wp-content/uploads/favicon.png",
+    accent_color:    "#0a6ef5",
+    header_style:    "centered",
+    content_width:   "1100",
+    body_font_size:  "16",
   },
 });
 

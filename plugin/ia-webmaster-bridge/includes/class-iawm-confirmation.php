@@ -54,6 +54,7 @@ class IAWM_Confirmation {
 	const REQUIRES_CONFIRMATION = array(
 		'/backup/restore',
 		'/core/update',
+		'/database/search-replace',
 	);
 
 	/**
