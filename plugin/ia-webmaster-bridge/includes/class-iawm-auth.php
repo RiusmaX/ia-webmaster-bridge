@@ -60,9 +60,7 @@ class IAWM_Auth {
 	 * @return true|WP_Error
 	 */
 	public static function guard( $request, $require_write ) {
-		$creds = IAWM_Settings::get_credentials();
-
-		if ( null === $creds ) {
+		if ( ! IAWM_Settings::has_credentials() ) {
 			return new WP_Error(
 				'iawm_not_configured',
 				'The adapter is not configured: no API credentials.',
@@ -79,8 +77,9 @@ class IAWM_Auth {
 			return self::deny( 'Missing authentication headers.' );
 		}
 
-		// Key identifier (constant-time comparison).
-		if ( ! hash_equals( (string) $creds['key_id'], $key_id ) ) {
+		// Resolve the key by its identifier (multi-key support since v0.26.0).
+		$creds = IAWM_Settings::get_by_key_id( $key_id );
+		if ( null === $creds ) {
 			return self::deny( 'Unknown key identifier.' );
 		}
 
@@ -112,7 +111,7 @@ class IAWM_Auth {
 		// Scope check (since v0.19.0). Keys without an explicit scope list
 		// keep the legacy behaviour: full access.
 		$required = self::required_scope( $request, $require_write );
-		if ( null !== $required && ! IAWM_Settings::key_has_scope( $required ) ) {
+		if ( null !== $required && ! IAWM_Settings::key_has_scope( $key_id, $required ) ) {
 			return new WP_Error(
 				'iawm_scope_denied',
 				sprintf( 'API key does not hold the required scope "%s".', $required ),
@@ -131,6 +130,10 @@ class IAWM_Auth {
 				array( 'status' => 403 )
 			);
 		}
+
+		// Update the last-used timestamp on the key (best-effort; failures
+		// here must not block the request).
+		IAWM_Settings::touch_last_used( $key_id );
 
 		return true;
 	}

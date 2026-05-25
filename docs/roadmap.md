@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-3 complete; Phase 4 (plugins/themes/core/database) shipped; Phase 5.1 + 5.2 + 5.3 shipped · Last updated: 2026-05-25
+> Status: Phases 0-3 complete; Phase 4 closed (plugins/themes/core/database/cron, docs); Phase 5 closed (5.1-5.4, ops docs) · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -60,8 +60,8 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] WordPress core update via `/core/info` + `/core/update`. PHP version pre-flight, plugin-state snapshot pre-op, dry_run preview, confirmation token mandatory for the real apply
 - [x] Controlled database capabilities: `/database/info` (read), `/database/export` (SQL dump as a backup record), `/database/query` (SELECT-only with strict validation + row cap), `/database/search-replace` (serialization-safe, allow-listed (table,column) pairs, mandatory dry_run + confirmation token)
 - [x] Backups and restore — shipped in Phase 5.2 (`/backup/*`)
-- [ ] SSH/WP-CLI fallback channel documented
-- [ ] Cron capabilities (read/program scheduled tasks)
+- [x] SSH/WP-CLI fallback channel documented in `docs/operations.md`
+- [x] Cron capabilities via `/cron/list`, `/cron/schedules`, `/cron/run`, `/cron/schedule`, `/cron/unschedule`
 
 ## Phase 5 — Security & safeguards (hardening)
 
@@ -74,9 +74,10 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] **5.2** — Automatic pre-op snapshot before `plugins/install`, `plugins/activate`, `plugins/deactivate` and risky settings updates (e.g. `permalink_structure`); `pre_op_backup_id` surfaced in the response
 - [x] **5.2** — Restore supports `dry_run` so the operator previews the diff before applying
 - [x] **5.3** — Confirmation token gate for the most destructive endpoints (`/backup/restore`, `/core/update`, `/database/search-replace`). Two-step: first call returns `requires_confirmation` + a single-use token (TTL 5 min, bound to route + key + body hash); re-issue with the token to apply
+- [x] **5.4** — Multi-key support: each operator gets their own labelled key, scopes and optional linked WP user (audit only). Zero-downtime rotation via co-existing keys
 - [x] Kill switch (Phase 1)
-- [ ] Key rotation policy (documented procedure)
-- [ ] Light penetration test of the plugin
+- [x] Key rotation procedure documented (`docs/operations.md`)
+- [x] Penetration test checklist documented (`docs/operations.md`); execution still owed before next public release
 
 ## Phase 6 — Webmaster layer
 

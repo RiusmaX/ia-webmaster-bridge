@@ -116,6 +116,22 @@ class IAWM_Audit {
 			'body_bytes' => strlen( (string) $request->get_body() ),
 		);
 
+		// Enrich with key label + linked user (since multi-key support v0.26.0),
+		// so the audit log makes sense at a glance when several humans share
+		// the same site.
+		$key_id = (string) $request->get_header( 'X-IAWM-Key' );
+		if ( '' !== $key_id && class_exists( 'IAWM_Settings' ) ) {
+			$record = IAWM_Settings::get_by_key_id( $key_id );
+			if ( null !== $record ) {
+				if ( ! empty( $record['label'] ) ) {
+					$detail['key_label'] = $record['label'];
+				}
+				if ( ! empty( $record['linked_user_id'] ) ) {
+					$detail['linked_user_id'] = (int) $record['linked_user_id'];
+				}
+			}
+		}
+
 		// In case of an error response, keep the application code.
 		if ( is_object( $response ) && method_exists( $response, 'get_data' ) ) {
 			$data = $response->get_data();
@@ -130,7 +146,7 @@ class IAWM_Audit {
 				'route'   => $route,
 				'status'  => $status,
 				'outcome' => self::outcome_from_status( $status ),
-				'key_id'  => substr( (string) $request->get_header( 'X-IAWM-Key' ), 0, 64 ),
+				'key_id'  => substr( $key_id, 0, 64 ),
 				'ip'      => self::client_ip(),
 				'detail'  => $detail,
 			)

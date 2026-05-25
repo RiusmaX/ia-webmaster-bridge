@@ -1,6 +1,6 @@
 # Spec 02 — Security & guardrails
 
-- **Status**: In implementation (Phase 5.1 + 5.2 + 5.3 shipped)
+- **Status**: Implemented (Phase 5.1 + 5.2 + 5.3 + 5.4 shipped; ops runbook documented)
 - **Phase**: Cross-cutting (built from Phase 1, hardened in Phase 5)
 - **Priority**: High
 - **Last updated**: 2026-05-25

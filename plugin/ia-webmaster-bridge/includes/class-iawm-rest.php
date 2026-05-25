@@ -95,9 +95,25 @@ class IAWM_REST {
 	 *
 	 * @return WP_REST_Response
 	 */
-	public static function handle_status() {
-		$creds      = IAWM_Settings::get_credentials();
-		$scopes     = IAWM_Settings::get_scopes();
+	public static function handle_status( $request ) {
+		// The key id that signed this request — resolved by IAWM_Auth.
+		$caller_key = (string) $request->get_header( 'X-IAWM-Key' );
+		$caller     = IAWM_Settings::get_by_key_id( $caller_key );
+		$scopes     = IAWM_Settings::get_scopes( $caller_key );
+
+		// Linked WP user (audit-level link, NOT the executor).
+		$linked = null;
+		if ( $caller && ! empty( $caller['linked_user_id'] ) ) {
+			$linked_user = get_userdata( (int) $caller['linked_user_id'] );
+			if ( $linked_user instanceof WP_User ) {
+				$linked = array(
+					'id'           => (int) $linked_user->ID,
+					'login'        => $linked_user->user_login,
+					'display_name' => $linked_user->display_name,
+				);
+			}
+		}
+
 		$agent_id   = class_exists( 'IAWM_Agent_User' ) ? IAWM_Agent_User::get_user_id() : 0;
 		$agent_user = $agent_id > 0 ? get_userdata( $agent_id ) : null;
 
@@ -107,7 +123,9 @@ class IAWM_REST {
 				'authenticated' => true,
 				'service'       => 'IA Webmaster Bridge',
 				'version'       => IAWM_VERSION,
-				'key_id'        => $creds ? $creds['key_id'] : null,
+				'key_id'        => $caller_key,
+				'key_label'     => $caller && isset( $caller['label'] ) ? $caller['label'] : null,
+				'linked_user'   => $linked,
 				'scopes'        => null === $scopes ? '*' : $scopes,
 				'kill_switch'   => IAWM_Settings::is_kill_switch_on(),
 				'agent_user'    => $agent_user instanceof WP_User
@@ -117,6 +135,7 @@ class IAWM_REST {
 						'role'  => IAWM_Agent_User::ROLE_KEY,
 					)
 					: null,
+				'total_keys'    => count( IAWM_Settings::all_credentials() ),
 				'env'           => self::environment(),
 				'time'          => current_time( 'c' ),
 			),

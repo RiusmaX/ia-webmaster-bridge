@@ -33204,6 +33204,67 @@ function registerDivi(server, client) {
     async (args) => toToolResult("divi/page/write", await client.post("/divi/page/write", args))
   );
 }
+function registerCron(server, client) {
+  server.registerTool(
+    "iawm_cron_list",
+    {
+      title: "List scheduled events",
+      description: "Returns every queued WP-Cron event with its hook, args, next-run timestamp, recurrence slug and interval. Optional `hook` filter narrows the list to one hook.",
+      inputSchema: {
+        hook: external_exports.string().optional().describe("Optional hook name to filter on")
+      }
+    },
+    async (args) => toToolResult("cron/list", await client.post("/cron/list", args))
+  );
+  server.registerTool(
+    "iawm_cron_schedules",
+    {
+      title: "List available recurrence slugs",
+      description: "Returns the recurrence slugs registered on the site (hourly, daily, plus any custom ones declared by themes/plugins) with their interval in seconds and display label.",
+      inputSchema: {}
+    },
+    async () => toToolResult("cron/schedules", await client.post("/cron/schedules", {}))
+  );
+  server.registerTool(
+    "iawm_cron_run",
+    {
+      title: "Run a scheduled event now",
+      description: "Fires a queued hook immediately and re-schedules it if it was recurring. `args` must match the queued event exactly (same array shape) \u2014 use iawm_cron_list to find the right values.",
+      inputSchema: {
+        hook: external_exports.string().describe("Hook to fire"),
+        args: external_exports.array(external_exports.unknown()).optional().describe("Positional args matching the queued event")
+      }
+    },
+    async (args) => toToolResult("cron/run", await client.post("/cron/run", args))
+  );
+  server.registerTool(
+    "iawm_cron_schedule",
+    {
+      title: "Schedule an event",
+      description: "Adds a one-off (no `schedule`) or recurring (`schedule: 'hourly'|'daily'|...`) event. Defaults to firing 60 seconds from now. The hook itself must already have a PHP listener somewhere on the site \u2014 this only queues the call.",
+      inputSchema: {
+        hook: external_exports.string().describe("Hook to schedule"),
+        schedule: external_exports.string().optional().describe("Recurrence slug from /cron/schedules (omit for a one-off event)"),
+        timestamp: external_exports.number().int().optional().describe("Unix timestamp for the first run (default: now+60s)"),
+        args: external_exports.array(external_exports.unknown()).optional().describe("Positional args for the hook")
+      }
+    },
+    async (args) => toToolResult("cron/schedule", await client.post("/cron/schedule", args))
+  );
+  server.registerTool(
+    "iawm_cron_unschedule",
+    {
+      title: "Unschedule an event",
+      description: "Removes a scheduled event. With `timestamp`: removes a specific occurrence (args must match). Without `timestamp`: removes every occurrence of the hook.",
+      inputSchema: {
+        hook: external_exports.string().describe("Hook to unschedule"),
+        timestamp: external_exports.number().int().optional().describe("Specific occurrence to remove; omit to remove all occurrences of the hook"),
+        args: external_exports.array(external_exports.unknown()).optional().describe("Args of the specific occurrence")
+      }
+    },
+    async (args) => toToolResult("cron/unschedule", await client.post("/cron/unschedule", args))
+  );
+}
 function registerDatabase(server, client) {
   server.registerTool(
     "iawm_database_info",
@@ -33424,6 +33485,7 @@ function registerTools(server, client) {
   registerThemes(server, client);
   registerCore(server, client);
   registerDatabase(server, client);
+  registerCron(server, client);
   registerSeo(server, client);
   registerDivi(server, client);
   registerBackup(server, client);

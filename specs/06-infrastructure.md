@@ -1,6 +1,6 @@
 # Spec 06 — Infrastructure plan
 
-- **Status**: In implementation (plugins, themes, core update, DB tools, backups shipped — cron remaining)
+- **Status**: Implemented (plugins, themes, core update, DB tools, cron, backups; ops runbook)
 - **Phase**: 4
 - **Priority**: Medium
 - **Last updated**: 2026-05-25

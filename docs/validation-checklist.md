@@ -99,6 +99,32 @@
 
 ---
 
+## Multi-key + Cron (plugin v0.27.0)
+
+### Multi-key
+
+- [x] **Legacy migration** — already validated in session: `iawm_status` returns `key_label: "Legacy key"` and `total_keys: 1`.
+- [ ] **Admin UI** — Settings → IA Webmaster Bridge:
+  - [ ] Existing key shown in the table with the synthetic label "Legacy key".
+  - [ ] **Create a new key** form: pick a label, scopes, optional linked WP user. Submit.
+  - [ ] After submit: new row appears, secret displayed once (in highlighted yellow row).
+- [ ] **Per-key scope tightening** — open the new key's "Manage" → "Scopes" section, untick `infra:write`, save.
+  - [ ] `iawm_status` (signed with that key) returns scopes without `infra:write`.
+  - [ ] `iawm_plugins_install({slug: "akismet"})` returns HTTP 403 `iawm_scope_denied`.
+- [ ] **Linked user audit** — call any iawm tool with the new key, then `iawm_audit`. Expected: the entry's `detail` contains `key_label` and `linked_user_id`.
+- [ ] **Rotate secret** — "Manage" → "Rotate secret" on a key. Expected: new secret shown once, MCP gateway with old secret now fails 401.
+- [ ] **Revoke single key** — "Manage" → "Revoke this key". Expected: that key returns 401 on next call; other keys keep working.
+- [ ] **Revoke all** — Danger zone → "Revoke ALL keys". Expected: every key dies. (Be ready to re-create your own before testing this!)
+
+### Cron
+
+- [ ] **List events** — `iawm_cron_list()`. Expected: queued events with `wp_version_check`, plugin-specific hooks, etc.
+- [ ] **List schedules** — `iawm_cron_schedules()`. Expected: at least `hourly`, `twicedaily`, `daily`.
+- [ ] **Run an event now** — pick a recurring event from the list, call `iawm_cron_run({hook: "wp_version_check"})`. Expected: hook fires; subsequent `iawm_cron_list` shows a new occurrence ~12h away.
+- [ ] **Schedule a one-off event** — `iawm_cron_schedule({hook: "my_test_hook", timestamp: <now+300>})`. Expected: `scheduled: true`. List shows it.
+- [ ] **Unschedule by hook** — `iawm_cron_unschedule({hook: "my_test_hook"})`. Expected: `unscheduled_all: true, removed: 1`.
+- [ ] **Unknown schedule slug** — `iawm_cron_schedule({hook: "x", schedule: "nope"})`. Expected: HTTP 400 `iawm_unknown_schedule`.
+
 ## Phase 4 — Database tools (plugin v0.25.0)
 
 ### Untested as of this writing

@@ -235,6 +235,31 @@ new one.
   move or a structured data audit, but cannot drop a table or write
   raw SQL.
 
+## D-017 — Multi-key with linked WP users (audit-only association)
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: a single shared HMAC secret per site does not scale to
+  teams. We want each human operator to use their own Claude with
+  their own `~/.iawm/config.json`, and the audit log to reflect WHO
+  triggered each call — not just "the API key did it".
+- **Decision**: refactor the credentials storage to a map keyed by
+  key_id. Each record carries label, secret, scopes, optional
+  `linked_user_id` (a WP user id), `created_at` and `last_used_at`.
+  The HMAC executor remains the dedicated agent user
+  (`iawm-agent`) regardless of which key signs — that keeps the
+  WP-side capability surface tight. The `linked_user_id` only flows
+  into the audit log so the operator can see, e.g., "Alice's Claude
+  triggered this restore". Legacy single-record installs are
+  migrated transparently on first read; the existing key keeps
+  working with a synthetic label `"Legacy key"`.
+- **Consequences**: zero-downtime key rotation becomes natural —
+  create a new key, switch the gateway, revoke the old one. Multi-
+  team setups become viable. The admin UI grows from one form to a
+  table of keys with per-row scope, label, linked user, last-used
+  display. No security regression: each key still goes through the
+  same HMAC + scope + audit + backup pipeline, just with finer
+  attribution.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

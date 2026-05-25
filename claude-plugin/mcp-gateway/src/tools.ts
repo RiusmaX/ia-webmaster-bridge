@@ -940,6 +940,95 @@ function registerDivi(server: McpServer, client: IawmClient): void {
  * @param client Signed client to the adapter.
  */
 /* ------------------------------------------------------------------ */
+/* Cron (Phase 4 — WP-Cron management)                                 */
+/* ------------------------------------------------------------------ */
+
+function registerCron(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_cron_list",
+    {
+      title: "List scheduled events",
+      description:
+        "Returns every queued WP-Cron event with its hook, args, next-run timestamp, recurrence slug and interval. Optional `hook` filter narrows the list to one hook.",
+      inputSchema: {
+        hook: z.string().optional().describe("Optional hook name to filter on"),
+      },
+    },
+    async (args) => toToolResult("cron/list", await client.post("/cron/list", args)),
+  );
+
+  server.registerTool(
+    "iawm_cron_schedules",
+    {
+      title: "List available recurrence slugs",
+      description:
+        "Returns the recurrence slugs registered on the site (hourly, daily, plus any custom ones declared by themes/plugins) with their interval in seconds and display label.",
+      inputSchema: {},
+    },
+    async () => toToolResult("cron/schedules", await client.post("/cron/schedules", {})),
+  );
+
+  server.registerTool(
+    "iawm_cron_run",
+    {
+      title: "Run a scheduled event now",
+      description:
+        "Fires a queued hook immediately and re-schedules it if it was recurring. `args` must match the queued event exactly (same array shape) — use iawm_cron_list to find the right values.",
+      inputSchema: {
+        hook: z.string().describe("Hook to fire"),
+        args: z
+          .array(z.unknown())
+          .optional()
+          .describe("Positional args matching the queued event"),
+      },
+    },
+    async (args) => toToolResult("cron/run", await client.post("/cron/run", args)),
+  );
+
+  server.registerTool(
+    "iawm_cron_schedule",
+    {
+      title: "Schedule an event",
+      description:
+        "Adds a one-off (no `schedule`) or recurring (`schedule: 'hourly'|'daily'|...`) event. Defaults to firing 60 seconds from now. The hook itself must already have a PHP listener somewhere on the site — this only queues the call.",
+      inputSchema: {
+        hook: z.string().describe("Hook to schedule"),
+        schedule: z
+          .string()
+          .optional()
+          .describe("Recurrence slug from /cron/schedules (omit for a one-off event)"),
+        timestamp: z
+          .number()
+          .int()
+          .optional()
+          .describe("Unix timestamp for the first run (default: now+60s)"),
+        args: z.array(z.unknown()).optional().describe("Positional args for the hook"),
+      },
+    },
+    async (args) => toToolResult("cron/schedule", await client.post("/cron/schedule", args)),
+  );
+
+  server.registerTool(
+    "iawm_cron_unschedule",
+    {
+      title: "Unschedule an event",
+      description:
+        "Removes a scheduled event. With `timestamp`: removes a specific occurrence (args must match). Without `timestamp`: removes every occurrence of the hook.",
+      inputSchema: {
+        hook: z.string().describe("Hook to unschedule"),
+        timestamp: z
+          .number()
+          .int()
+          .optional()
+          .describe("Specific occurrence to remove; omit to remove all occurrences of the hook"),
+        args: z.array(z.unknown()).optional().describe("Args of the specific occurrence"),
+      },
+    },
+    async (args) => toToolResult("cron/unschedule", await client.post("/cron/unschedule", args)),
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Database (Phase 4)                                                  */
 /* ------------------------------------------------------------------ */
 
@@ -1255,6 +1344,7 @@ export function registerTools(server: McpServer, client: IawmClient): void {
   registerThemes(server, client);
   registerCore(server, client);
   registerDatabase(server, client);
+  registerCron(server, client);
   registerSeo(server, client);
   registerDivi(server, client);
   registerBackup(server, client);
