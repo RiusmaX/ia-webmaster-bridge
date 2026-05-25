@@ -423,6 +423,26 @@ function registerDiagnostics(server: McpServer, client: IawmClient): void {
     },
     async (args) => toToolResult("diagnostics/logs", await client.post("/diagnostics/logs", args)),
   );
+
+  server.registerTool(
+    "iawm_diagnostics_smoke",
+    {
+      title: "Site smoke test",
+      description:
+        "Operational health check to run AFTER any destructive operation (plugin update, theme switch, core update, restore). Probes the front page over HTTP, scans debug.log for recent fatal errors, verifies the agent user, the kill-switch state and that Divi is still active. Returns per-probe details and an aggregate `healthy: true|false`.",
+    },
+    async () => toToolResult("diagnostics/smoke", await client.post("/diagnostics/smoke", {})),
+  );
+
+  server.registerTool(
+    "iawm_diagnostics_check_self",
+    {
+      title: "Plugin self-check",
+      description:
+        "Verifies the plugin's own installation invariants: dedicated agent user + role, audit + backup tables exist, at least one credentials record, rotation cron jobs registered, HTTPS configuration. Run this after a plugin upgrade or on a fresh install to confirm everything is wired up.",
+    },
+    async () => toToolResult("diagnostics/check-self", await client.post("/diagnostics/check-self", {})),
+  );
 }
 
 /* ------------------------------------------------------------------ */

@@ -58,14 +58,70 @@ class IAWM_Backup {
 	/** Snapshot kind: raw SQL table dump. */
 	const KIND_TABLES = 'tables';
 
+	/** Option storing how many backup records to keep (Phase 7.2). */
+	const OPTION_RETENTION_N = 'iawm_backup_keep_n';
+
+	/** Default retention if the option is unset. */
+	const DEFAULT_RETENTION_N = 50;
+
+	/** WP-Cron hook fired daily to prune old backups. */
+	const PRUNE_HOOK = 'iawm_prune_backups';
+
 	/**
-	 * Hooks up the module: schema migration + REST route registration.
+	 * Hooks up the module: schema migration + REST route registration +
+	 * daily rotation cron.
 	 *
 	 * @return void
 	 */
 	public static function init() {
 		add_action( 'plugins_loaded', array( __CLASS__, 'maybe_upgrade' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
+
+		add_action( self::PRUNE_HOOK, array( __CLASS__, 'auto_prune' ) );
+		if ( ! wp_next_scheduled( self::PRUNE_HOOK ) ) {
+			// Offset from the audit-log job by 15 minutes so the two
+			// don't fight over wpdb at the same time.
+			$ts = self::next_run_at( 3, 15 );
+			wp_schedule_event( $ts, 'daily', self::PRUNE_HOOK );
+		}
+	}
+
+	/**
+	 * Returns the configured retention count, clamped to [1, 10000].
+	 *
+	 * @return int
+	 */
+	public static function get_retention_n() {
+		$n = (int) get_option( self::OPTION_RETENTION_N, self::DEFAULT_RETENTION_N );
+		return max( 1, min( 10000, $n ) );
+	}
+
+	/**
+	 * Cron callback: prune to the configured retention count.
+	 *
+	 * @return int Number of deleted rows.
+	 */
+	public static function auto_prune() {
+		return self::prune_old( self::get_retention_n() );
+	}
+
+	/**
+	 * Returns the next site-time timestamp matching the given hour +
+	 * minute.
+	 *
+	 * @param int $hour   Hour 0-23.
+	 * @param int $minute Minute 0-59.
+	 * @return int Unix timestamp.
+	 */
+	private static function next_run_at( $hour, $minute = 0 ) {
+		$tz   = wp_timezone();
+		$now  = new DateTime( 'now', $tz );
+		$next = clone $now;
+		$next->setTime( $hour, $minute, 0 );
+		if ( $next <= $now ) {
+			$next->modify( '+1 day' );
+		}
+		return $next->getTimestamp();
 	}
 
 	/**

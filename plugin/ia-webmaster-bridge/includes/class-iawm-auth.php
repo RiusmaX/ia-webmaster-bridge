@@ -60,6 +60,18 @@ class IAWM_Auth {
 	 * @return true|WP_Error
 	 */
 	public static function guard( $request, $require_write ) {
+		// Phase 7.1 network pre-checks — run BEFORE any credentials
+		// resolution so probing IPs / HTTP-only callers cannot
+		// fingerprint the namespace.
+		$https = IAWM_Network::check_https();
+		if ( is_wp_error( $https ) ) {
+			return $https;
+		}
+		$ip = IAWM_Network::check_ip();
+		if ( is_wp_error( $ip ) ) {
+			return $ip;
+		}
+
 		if ( ! IAWM_Settings::has_credentials() ) {
 			return new WP_Error(
 				'iawm_not_configured',

@@ -24,6 +24,15 @@ class IAWM_Audit {
 	/** Option storing the installed schema version. */
 	const OPTION_DB_VERSION = 'iawm_db_version';
 
+	/** Option storing how many days to keep audit rows (Phase 7.2). */
+	const OPTION_RETENTION_DAYS = 'iawm_audit_retention_days';
+
+	/** Default retention if the option is unset. */
+	const DEFAULT_RETENTION_DAYS = 90;
+
+	/** WP-Cron hook fired daily to prune the audit log. */
+	const PRUNE_HOOK = 'iawm_prune_audit_log';
+
 	/**
 	 * Hooks up the audit log.
 	 *
@@ -32,6 +41,56 @@ class IAWM_Audit {
 	public static function init() {
 		add_action( 'plugins_loaded', array( __CLASS__, 'maybe_upgrade' ) );
 		add_filter( 'rest_post_dispatch', array( __CLASS__, 'record' ), 10, 3 );
+
+		// Daily rotation job — registered on every load (idempotent).
+		add_action( self::PRUNE_HOOK, array( __CLASS__, 'prune_old' ) );
+		if ( ! wp_next_scheduled( self::PRUNE_HOOK ) ) {
+			// Fire daily at +3 AM site time (offset from "now" by however
+			// long it takes to reach 03:00 next).
+			wp_schedule_event( self::next_run_at( 3 ), 'daily', self::PRUNE_HOOK );
+		}
+	}
+
+	/**
+	 * Returns the configured retention in days, clamped to [1, 3650].
+	 *
+	 * @return int
+	 */
+	public static function get_retention_days() {
+		$days = (int) get_option( self::OPTION_RETENTION_DAYS, self::DEFAULT_RETENTION_DAYS );
+		return max( 1, min( 3650, $days ) );
+	}
+
+	/**
+	 * Deletes audit rows older than the configured retention window.
+	 *
+	 * @return int Number of deleted rows.
+	 */
+	public static function prune_old() {
+		global $wpdb;
+		$table  = self::table_name();
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( self::get_retention_days() * DAY_IN_SECONDS ) );
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery -- maintenance job, no caching needed.
+		$deleted = $wpdb->query( $wpdb->prepare( "DELETE FROM `$table` WHERE created_at < %s", $cutoff ) );
+		// phpcs:enable
+		return (int) $deleted;
+	}
+
+	/**
+	 * Returns the next site-time timestamp that matches the given hour.
+	 *
+	 * @param int $hour Hour 0-23.
+	 * @return int Unix timestamp.
+	 */
+	private static function next_run_at( $hour ) {
+		$tz   = wp_timezone();
+		$now  = new DateTime( 'now', $tz );
+		$next = clone $now;
+		$next->setTime( $hour, 0, 0 );
+		if ( $next <= $now ) {
+			$next->modify( '+1 day' );
+		}
+		return $next->getTimestamp();
 	}
 
 	/**
