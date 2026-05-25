@@ -1,10 +1,14 @@
 # Phase 7 — Production hardening · action plan
 
-> Status: In progress · Last updated: 2026-05-25
+> Status: **Closed** · Shipped as v1.0.0 on 2026-05-25 · Last updated: 2026-05-25
 >
 > Goal: take the project from "Phases 0–6 implementé, validable en
 > interne" to "publishable open source + déployable en prod par un tiers
 > sans réserve". Tag the result as **v1.0.0**.
+>
+> Historical record kept for reference. The 10 sub-phases below all
+> shipped; subsequent phases follow the same structure
+> ([Phase 9 action plan](phase-9-action-plan.md)).
 
 ## Why this phase
 

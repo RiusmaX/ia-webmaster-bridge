@@ -161,18 +161,36 @@ the cycle. Two long-tail items stay open as Phase 9.
   URL+IP transient dedup at insert time, optional sampling, daily
   prune cron. (Decision D-026, v1.2.0.)
 
-### Carried over to Phase 9
+## Phase 9 — Polish + long tail *(planned — target v1.3.0)*
 
-- [ ] **Deeper Divi module builders**: typed builders + opinionated
-  defaults for the long tail of native modules currently only
-  exposed through the auto-discovered registry (the 105-element
-  catalog) — today 41 have explicit builders, the rest are
-  free-form-only.
-- [ ] **Webhook signing** for outbound notifications (smoke test
-  failure → Slack, audit alert → email).
+Master tracker: [`phase-9-action-plan.md`](phase-9-action-plan.md).
+
+The v1.2.0 audit pass on 2026-05-25 left a small, well-scoped set of
+items: one TODO in the code, three genuinely-open spec questions, the
+long tail of Divi module builders, and one operational milestone.
+Phase 9 closes all of them before opening the door to large-prod
+exposure.
+
+- [ ] **9.1** — Testimonials carousel variant (resolve the lone TODO
+  in `patterns/testimonials.ts`)
+- [ ] **9.2** — Top-20 Divi native module builders (typed +
+  opinionated defaults; reduces the 58 free-form-only modules to 38)
+- [ ] **9.3** — Top-10 WooCommerce module builders (typed + opinionated
+  defaults across the four Theme Builder contexts)
+- [ ] **9.4** — Webhook signing for outbound notifications
+  (smoke-test failure → Slack, audit alert → email/generic POST,
+  HMAC-signed symmetric to inbound). Decision D-030.
+- [ ] **9.5** — Revisions API: `/content/revisions/{list,get,restore}`
+  with confirmation token on restore. Closes a spec 03 open question.
+- [ ] **9.6** — Audit log pseudonymisation: per-route sensitive-param
+  declarations + redaction toggle. Closes a spec 02 open question.
+  Decision D-031.
+- [ ] **9.7** — Production validation on a small prod (executes
+  `docs/production-deployment.md` end-to-end + real pentest)
+- [ ] **9.8** — v1.3.0 release
 
 ## Deployment milestones
 
 - [x] Stable on the local site (validated end-to-end 2026-05-25)
-- [ ] Validated on a small prod
+- [ ] Validated on a small prod *(Phase 9.7)*
 - [ ] Validated on a large prod

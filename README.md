@@ -36,7 +36,8 @@
 
 History: [`CHANGELOG.md`](CHANGELOG.md);
 pentest: [`docs/pentest-2026-05-25.md`](docs/pentest-2026-05-25.md);
-phase tracker: [`docs/roadmap.md`](docs/roadmap.md).
+phase tracker: [`docs/roadmap.md`](docs/roadmap.md);
+next sprint: [`docs/phase-9-action-plan.md`](docs/phase-9-action-plan.md).
 
 Validated end-to-end on a local WordPress 7.0 + Divi 5 site. Run the
 [production deployment checklist](docs/production-deployment.md)

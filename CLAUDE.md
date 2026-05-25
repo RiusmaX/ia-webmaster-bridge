@@ -35,7 +35,7 @@ See [`docs/decisions.md`](docs/decisions.md). In short:
 | `CHANGELOG.md` | keep-a-changelog version history (since v0.18.3) |
 | `CONTRIBUTING.md` | Contribution rules (code style, commits, tests, disclosure) |
 | `LICENSE` | GPL-3.0-or-later |
-| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossary.md`, `operations.md`, `production-deployment.md`, `security-model.md`, `capabilities.md`, `skills.md`, `design-system.md`, `phase-7-action-plan.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md`, `pentest-*.md`, `validation-checklist.md` |
+| `docs/` | `architecture.md`, `roadmap.md`, `decisions.md`, `glossary.md`, `operations.md`, `production-deployment.md`, `security-model.md`, `capabilities.md`, `skills.md`, `design-system.md`, `phase-7-action-plan.md`, `phase-9-action-plan.md`, `divi5-format.md`, `divi5-modules-catalog.md`, `divi5-compose-dsl.md`, `multisite.md`, `woocommerce-integration.md`, `pentest-*.md`, `validation-checklist.md` |
 | `specs/` | One spec per feature (`01` to `07`) |
 | `plugin/ia-webmaster-bridge/` | WordPress plugin (REST API `ia-webmaster/v1`) |
 | `claude-plugin/` | Claude Code plugin (MCP tools + skills + MCP gateway) |
@@ -45,27 +45,43 @@ See [`docs/decisions.md`](docs/decisions.md). In short:
 
 ## Project status
 
-Phases 0–6 implemented. **Phase 7 — production hardening — is in
-progress**; v1.0.0 is the imminent target. The full sub-phase tracker
-lives in [`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md);
-the historical roadmap is in [`docs/roadmap.md`](docs/roadmap.md).
+Phases 0–8 closed. **Current release: v1.2.0** (plugin + gateway both
+1.2.0, 100 MCP tools, 15 Claude Code skills, 28 decisions on file).
+**Phase 9 — polish + long tail — is the next sprint**, targeting
+**v1.3.0**. The sub-phase tracker lives in
+[`docs/phase-9-action-plan.md`](docs/phase-9-action-plan.md); the
+historical roadmap (Phases 0 → 8) is in
+[`docs/roadmap.md`](docs/roadmap.md); Phase 7's tracker is preserved
+as a closed reference at
+[`docs/phase-7-action-plan.md`](docs/phase-7-action-plan.md).
 
 Current high-level capabilities:
 
 - Full WordPress management (content, media, taxonomies, menus,
-  configuration, diagnostics, plugins, themes, core, database, cron).
-- Divi 5: 105 auto-discovered modules (incl. WooCommerce), 13
-  parametric patterns, full Theme Builder, bit-faithful round-trip,
-  unified declarative composer (`iawm_divi_page_compose`), design
-  system writes (colors / fonts / variables / theme options /
-  branding).
-- Rank Math SEO (Yoast planned).
+  configuration, diagnostics, plugins, themes, core, database, cron,
+  backups, broken-links scanner, 404 tracker).
+- Divi 5: 105 auto-discovered modules (incl. 25 WooCommerce), 47
+  typed builders, 13 parametric patterns, full Theme Builder,
+  bit-faithful round-trip, unified declarative composer
+  (`iawm_divi_page_compose`), design system writes (colors / fonts /
+  variables / theme options / branding).
+- **Two SEO backends auto-detected**: Rank Math and Yoast (same
+  normalized API on both sides).
+- **WooCommerce Theme Builder helper**: four canonical contexts
+  (shop / single-product / cart / checkout) with suggested module
+  lists and `use_on` expressions.
+- **Multisite-tolerant**: global agent user, per-site role + tables,
+  auto-provisioning of new sub-sites via `wp_initialize_site`. Network
+  Admin Settings page surfaces every sub-site's state.
 - Multi-key auth, scoped per request, with audit log, automatic
   pre-op backups, confirmation tokens, kill switch, HTTPS
   enforcement, IP allow-list. Eight-layer defence in depth — see
   [`docs/security-model.md`](docs/security-model.md).
-- 7 Claude Code skills today; 4 more (Phase 7.7) pending before
-  v1.0.0.
+- **15 Claude Code skills** covering method, content authoring (incl.
+  Divi), design / marketing / SEO, infra ops (safe-update,
+  design-system-first, smoke-test, prod-deployment), governance
+  (audit, context discovery, status report, scheduled routines,
+  broken-links audit). Catalogue: [`docs/skills.md`](docs/skills.md).
 
 ## Collaboration rules (to be followed by the agent)
 
