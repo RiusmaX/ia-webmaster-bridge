@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-3 complete · Last updated: 2026-05-23
+> Status: Phases 0-3 complete; Phase 5.1 (dedicated user + scopes) shipped · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -63,10 +63,15 @@ continuously, with Phase 5 being the formal hardening pass.
 
 ## Phase 5 — Security & safeguards (hardening)
 
-- [ ] Authorization model review (scopes / capabilities)
+- [x] **5.1** — Dedicated WordPress user (`iawm-agent`, role `iawm_agent`) created on plugin activation; writes no longer borrow the first admin's identity
+- [x] **5.1** — Restricted role: administrator-like minus `unfiltered_html`, `unfiltered_upload`, `edit_files`, `edit_plugins`, `edit_themes`, multisite caps
+- [x] **5.1** — Per-key scopes (`read`, `content:write`, `divi:write`, `config:write`, `infra:write`) enforced by the auth guard; HTTP 403 `iawm_scope_denied` on miss
+- [x] **5.1** — Admin UI: pick scopes when generating a key, retighten an existing key without rotating the secret, reinstall agent role/user
+- [x] **5.1** — Agent's own user is protected from modification or deletion by the API
+- [x] Kill switch (Phase 1)
 - [ ] Automatic backup before destructive operation
 - [ ] Explicit confirmations for risky actions
-- [ ] Kill switch and key rotation
+- [ ] Key rotation policy (documented procedure)
 - [ ] Light penetration test of the plugin
 
 ## Phase 6 — Webmaster layer

@@ -6,6 +6,14 @@
  * secret. The signature covers the method, route, query, a timestamp
  * and a nonce: this ensures authenticity, integrity, and replay protection.
  *
+ * Beyond the signature, since v0.19.0 each API key carries an optional
+ * **scope** list. The scope required by a given route is derived from its
+ * HTTP method and path prefix (see required_scope()). A key whose scope
+ * list does not include the required scope is denied (HTTP 403), even
+ * with a valid signature. Keys without an explicit scope list are
+ * treated as legacy fully-scoped keys (no scope check), so an upgrade
+ * does not break existing installs.
+ *
  * @package IA_Webmaster_Bridge
  */
 
@@ -101,6 +109,20 @@ class IAWM_Auth {
 		// Valid signature: consume the nonce (lifetime > tolerance).
 		set_transient( $nonce_key, time(), self::TIMESTAMP_TOLERANCE * 2 );
 
+		// Scope check (since v0.19.0). Keys without an explicit scope list
+		// keep the legacy behaviour: full access.
+		$required = self::required_scope( $request );
+		if ( null !== $required && ! IAWM_Settings::key_has_scope( $required ) ) {
+			return new WP_Error(
+				'iawm_scope_denied',
+				sprintf( 'API key does not hold the required scope "%s".', $required ),
+				array(
+					'status'          => 403,
+					'required_scope'  => $required,
+				)
+			);
+		}
+
 		// Kill switch: blocks write requests.
 		if ( $require_write && IAWM_Settings::is_kill_switch_on() ) {
 			return new WP_Error(
@@ -111,6 +133,60 @@ class IAWM_Auth {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Derives the scope required to call a given route.
+	 *
+	 * The mapping is intentionally **prefix-based** so new routes are
+	 * categorised automatically by their family. Any GET is `read`; any
+	 * write goes to the scope matching its top-level family.
+	 *
+	 *  - `/divi/*`               (POST/PUT/DELETE) → `divi:write`
+	 *  - `/config/*`             (POST/PUT/DELETE) → `config:write`
+	 *  - `/plugins/*`            (POST/PUT/DELETE) → `infra:write`
+	 *  - `/themes/*` (future)    (POST/PUT/DELETE) → `infra:write`
+	 *  - `/database/*` (future)  (POST/PUT/DELETE) → `infra:write`
+	 *  - `/backup/*` (future)    (POST/PUT/DELETE) → `infra:write`
+	 *  - any other write         → `content:write`
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return string|null Required scope, or null when no scope check applies.
+	 */
+	public static function required_scope( $request ) {
+		$route = (string) $request->get_route();
+		$ns    = '/' . IAWM_REST_NAMESPACE . '/';
+
+		// Out-of-namespace requests do not flow through this guard, but be defensive.
+		if ( 0 !== strpos( $route, $ns ) ) {
+			return null;
+		}
+
+		$suffix = substr( $route, strlen( $ns ) );
+		$method = strtoupper( (string) $request->get_method() );
+
+		// Read paths.
+		if ( 'GET' === $method || 'HEAD' === $method ) {
+			return IAWM_Settings::SCOPE_READ;
+		}
+
+		// Write paths — categorise by family.
+		$prefix_map = array(
+			'divi/'     => IAWM_Settings::SCOPE_DIVI_WRITE,
+			'config/'   => IAWM_Settings::SCOPE_CONFIG_WRITE,
+			'plugins/'  => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'themes/'   => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'database/' => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'backup/'   => IAWM_Settings::SCOPE_INFRA_WRITE,
+		);
+
+		foreach ( $prefix_map as $prefix => $scope ) {
+			if ( 0 === strpos( $suffix, $prefix ) ) {
+				return $scope;
+			}
+		}
+
+		return IAWM_Settings::SCOPE_CONTENT_WRITE;
 	}
 
 	/**

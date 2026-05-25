@@ -334,8 +334,14 @@ class IAWM_Config {
 		}
 
 		// Safeguard: the agent cannot modify the user it operates as.
-		if ( $id === IAWM_Support::acting_user_id() ) {
-			return IAWM_Support::rest_error( 'iawm_protected_user', 'The user the agent operates as cannot be modified via the API.', 403 );
+		// IAWM_Agent_User::is_agent_user() is preferred when available; it
+		// catches the dedicated agent user even if a different effective
+		// user is currently being switched to.
+		$is_agent = class_exists( 'IAWM_Agent_User' )
+			? IAWM_Agent_User::is_agent_user( $id )
+			: ( $id === IAWM_Support::acting_user_id() );
+		if ( $is_agent ) {
+			return IAWM_Support::rest_error( 'iawm_protected_user', 'The dedicated agent user cannot be modified via the API.', 403 );
 		}
 
 		$update = array( 'ID' => $id );

@@ -1,9 +1,9 @@
 # Spec 02 — Security & guardrails
 
-- **Status**: Draft
+- **Status**: In implementation (Phase 5.1 — dedicated user + scopes shipped)
 - **Phase**: Cross-cutting (built from Phase 1, hardened in Phase 5)
 - **Priority**: High
-- **Last updated**: 2026-05-21
+- **Last updated**: 2026-05-25
 
 ## Goal
 
@@ -37,10 +37,22 @@ and guardrails against dangerous operations (decision D-005).
   body integrity).
 
 ### Authorisation
-- A **dedicated WordPress user** for the agent, with a least-privilege role.
-- Capabilities are **scoped**: the API key carries a list of scopes
-  (e.g. `content:read`, `content:write`, `divi:write`, `infra:*`). A capability
-  outside its scope is denied.
+- **Dedicated WordPress user** for the agent (`iawm-agent`, role
+  `iawm_agent`) created on plugin activation. *Implemented since v0.19.0.*
+  Loosely modelled on the administrator role but stripped of the
+  highest-risk capabilities: `unfiltered_html`, `unfiltered_upload`,
+  `edit_plugins`, `edit_themes`, `edit_files`, multisite super-admin
+  capabilities. The application layer additionally refuses any attempt
+  by the API to modify or delete that user.
+- **Scoped API keys**: every key carries a list of scopes — `read`,
+  `content:write`, `divi:write`, `config:write`, `infra:write`. A
+  request whose route family is not covered by the key's scopes is
+  denied with `403 iawm_scope_denied`. The scope required by a route is
+  derived from its HTTP method (GET → `read`) and its path prefix
+  (`/divi/*`, `/config/*`, `/plugins/*` → `infra:write`, etc.).
+  *Implemented since v0.19.0.* Legacy keys without an explicit scope
+  list remain fully-scoped (backward compatibility); the admin UI lets
+  the operator tighten an existing key without rotating its secret.
 - Caution profiles: on a new target, start read-only, then broaden.
 
 ### Audit log

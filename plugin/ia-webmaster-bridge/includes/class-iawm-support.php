@@ -29,12 +29,23 @@ class IAWM_Support {
 	/**
 	 * ID of the user under whom writes are performed.
 	 *
-	 * For now: the oldest administrator on the site. To be replaced in
-	 * Phase 5 by a dedicated user with a restricted role.
+	 * Since v0.19.0 the adapter uses a dedicated, restricted user
+	 * (`iawm-agent`, role `iawm_agent`) created on plugin activation —
+	 * see IAWM_Agent_User. If for any reason that user is unavailable
+	 * (manual deletion, install failure), we fall back to the oldest
+	 * administrator to keep the API functional, and the operator should
+	 * re-trigger installation from the admin page.
 	 *
 	 * @return int
 	 */
 	public static function acting_user_id() {
+		if ( class_exists( 'IAWM_Agent_User' ) ) {
+			$agent_id = IAWM_Agent_User::get_user_id();
+			if ( $agent_id > 0 ) {
+				return $agent_id;
+			}
+		}
+
 		$admins = get_users(
 			array(
 				'role'    => 'administrator',

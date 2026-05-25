@@ -1,6 +1,6 @@
 # Decision log
 
-> Status: Living · Last updated: 2026-05-21
+> Status: Living · Last updated: 2026-05-25
 
 Each decision has an identifier (`D-NNN`), a date, a status
 (`Accepted` / `To revisit` / `Superseded`), its context, the decision, and its
@@ -102,6 +102,48 @@ new one.
   Read-only is the safeguard; every access is still recorded in the audit
   log.
 - **Consequences**: new `IAWM_Diagnostics` module on the plugin side.
+
+## D-011 — Dedicated agent WP user with restricted role
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: until v0.18.x the adapter borrowed the first administrator's
+  identity (`act_as_agent`) to perform writes. Two problems: (1) the WordPress
+  audit trail attributes all agent actions to the human operator, blurring
+  accountability; (2) a leaked HMAC secret would have granted full
+  super-admin powers — the blast radius of a key compromise equalled
+  the maximum admin powers on the site.
+- **Decision**: introduce a dedicated WordPress user (`iawm-agent`) tied
+  to a custom role (`iawm_agent`), created on plugin activation. The role
+  is administrator-like but stripped of the highest-risk capabilities
+  (`unfiltered_html`, `unfiltered_upload`, `edit_plugins`, `edit_themes`,
+  `edit_files`, multisite super-admin). The application layer additionally
+  refuses any attempt by the API to modify or delete that user.
+- **Consequences**: WordPress audit records clearly attribute every
+  write to the agent; a leaked HMAC secret limits the attacker to the
+  `iawm_agent` role's surface. Operators can further tighten the role
+  via the `iawm_agent_role_caps` filter.
+
+## D-012 — Per-key scopes enforced at the auth layer
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: a single boolean (authenticated or not) was too coarse:
+  any successful HMAC check granted every endpoint, including the most
+  destructive ones (plugin install, settings update, user management).
+  Spec 02 already called for scoped capabilities — this realises it.
+- **Decision**: every API key carries a list of scopes —
+  `read`, `content:write`, `divi:write`, `config:write`, `infra:write`.
+  The scope required by an incoming request is derived from its HTTP
+  method (GET → `read`) and its path prefix (`/divi/*`, `/config/*`,
+  `/plugins/*` → `infra:write`, etc.). A mismatch returns HTTP 403
+  `iawm_scope_denied`. The check happens **after** the HMAC verification
+  to avoid leaking scope information to unauthenticated callers. Legacy
+  keys without an explicit scope list remain fully-scoped, so the v0.19
+  upgrade does not break existing installs.
+- **Consequences**: an HMAC secret tied to e.g. only `read` cannot
+  trigger any write; an infra-scoped key cannot leak via a Divi or
+  content path. Scope assignment is prefix-based so new routes inherit
+  the right scope automatically by their family. The admin UI lets the
+  operator generate, retighten or rotate scopes without leaving WP.
 
 ## D-010 — Public open source distribution
 

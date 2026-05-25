@@ -96,7 +96,10 @@ class IAWM_REST {
 	 * @return WP_REST_Response
 	 */
 	public static function handle_status() {
-		$creds = IAWM_Settings::get_credentials();
+		$creds      = IAWM_Settings::get_credentials();
+		$scopes     = IAWM_Settings::get_scopes();
+		$agent_id   = class_exists( 'IAWM_Agent_User' ) ? IAWM_Agent_User::get_user_id() : 0;
+		$agent_user = $agent_id > 0 ? get_userdata( $agent_id ) : null;
 
 		return new WP_REST_Response(
 			array(
@@ -105,7 +108,15 @@ class IAWM_REST {
 				'service'       => 'IA Webmaster Bridge',
 				'version'       => IAWM_VERSION,
 				'key_id'        => $creds ? $creds['key_id'] : null,
+				'scopes'        => null === $scopes ? '*' : $scopes,
 				'kill_switch'   => IAWM_Settings::is_kill_switch_on(),
+				'agent_user'    => $agent_user instanceof WP_User
+					? array(
+						'id'    => (int) $agent_user->ID,
+						'login' => $agent_user->user_login,
+						'role'  => IAWM_Agent_User::ROLE_KEY,
+					)
+					: null,
 				'env'           => self::environment(),
 				'time'          => current_time( 'c' ),
 			),
