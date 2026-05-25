@@ -99,6 +99,74 @@
 
 ---
 
+## Phase 4 — Database tools (plugin v0.25.0)
+
+### Untested as of this writing
+
+- [ ] **Database info** — `iawm_database_info()`.
+  - Expected: list of tables with engine, rows, sizes; `db_prefix` returned.
+
+- [ ] **Export selected tables** — `iawm_database_export({tables: ["wp_options"], label: "Smoke export"})`.
+  - Expected: `exported: true, backup_id: N`.
+  - Verify the backup payload via `iawm_backup_get({id: N, include_payload: true})` — should show SQL containing `DROP TABLE IF EXISTS \`wp_options\`` and INSERTs.
+
+- [ ] **Valid SELECT** — `iawm_database_query({sql: "SELECT option_name, option_value FROM wp_options WHERE option_name = 'siteurl'"})`.
+  - Expected: `row_count: 1`, the row in `rows`.
+
+- [ ] **Invalid query (UPDATE)** — `iawm_database_query({sql: "UPDATE wp_options SET option_value = 'x'"})`.
+  - Expected: **HTTP 400 `iawm_invalid_query`** "Only SELECT (or WITH ... SELECT)…".
+
+- [ ] **Invalid query (semicolon)** — `iawm_database_query({sql: "SELECT 1; DROP TABLE wp_users"})`.
+  - Expected: **HTTP 400 `iawm_invalid_query`** "Multiple statements are not allowed".
+
+- [ ] **Search-replace dry-run** — `iawm_database_search_replace({search: "Hello world", replace: "Salut le monde", dry_run: true})`.
+  - Expected: `dry_run: true, total_changed: 0` (assuming "Hello world" is not in any post/option). For a real test, install hello-dolly first and search for "Quel and his band of Dixieland 7".
+
+- [ ] **Search-replace confirmation gate** — same call without `dry_run` and without `confirmation_token`.
+  - Expected: HTTP 202, `requires_confirmation: true`, `confirmation_token: "..."` (64 hex chars), `summary.targets` listing the (table, column) pairs that will be scanned.
+  - Then re-issue the EXACT same body with `confirmation_token: <token>`.
+  - Expected: real apply, `dry_run: false`, total_changed reported.
+
+- [ ] **Token replay refusal** — re-issue the same body with the SAME token again.
+  - Expected: **HTTP 400 `iawm_invalid_confirmation`** — token is single-use.
+
+- [ ] **Cleanup** — `iawm_backup_delete({id: N})` for the export, then optionally `iawm_database_search_replace` again to reverse a real change.
+
+## Phase 5.3 — Confirmation tokens (plugin v0.24.0)
+
+### Untested as of this writing
+
+- [ ] **First call without token returns 202 + token** —
+  `iawm_backup_restore({id: <some backup>})` (non-dry_run, no token).
+  - Expected: HTTP 202, `requires_confirmation: true`, `confirmation_token: "..."`, `summary.preview` describing what the restore would do.
+
+- [ ] **Second call with token applies** — re-issue with the same body + token.
+  - Expected: HTTP 200, restore applied.
+
+- [ ] **Mismatched body refuses token** — first call with `{id: 1}` gets token T; then submit `{id: 2, confirmation_token: T}`.
+  - Expected: **HTTP 400 `iawm_invalid_confirmation`** (body hash mismatch).
+
+- [ ] **Dry-run bypasses token** — `iawm_backup_restore({id: 1, dry_run: true})`.
+  - Expected: HTTP 200, normal dry-run response, no token needed.
+
+- [ ] **Token expiration** — issue a token, wait 6 minutes, try to use it.
+  - Expected: **HTTP 400 `iawm_invalid_confirmation`** (transient expired).
+
+## Phase 4 — Core WordPress update (plugin v0.23.0)
+
+### Untested as of this writing
+
+- [ ] **Core info** — `iawm_core_info()`.
+  - Expected: `current_version: "7.0"`, `php_version: "8.2.29"`, `available: {...}` or `null`, `has_update: false` (or true).
+
+- [ ] **Dry-run when no update available** — `iawm_core_update({dry_run: true})`.
+  - Expected: `no_update: true` if site is on the latest version. No token issued.
+
+- [ ] **Confirmation flow if an update IS available** —
+  - First call: `iawm_core_update({})`. Expected: HTTP 202, `requires_confirmation: true`, summary with current_version + would_update_to + php_required.
+  - Second call with token: applies the update. Expected: `updated: true, previous_version, new_version, pre_op_backup_id`.
+  - ⚠️ Only run this on a non-prod site you don't mind testing on.
+
 ## Phase 4 — Plugin updates (plugin v0.22.0)
 
 ### Untested as of this writing

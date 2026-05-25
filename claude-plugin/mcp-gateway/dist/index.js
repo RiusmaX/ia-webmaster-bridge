@@ -33204,6 +33204,80 @@ function registerDivi(server, client) {
     async (args) => toToolResult("divi/page/write", await client.post("/divi/page/write", args))
   );
 }
+function registerDatabase(server, client) {
+  server.registerTool(
+    "iawm_database_info",
+    {
+      title: "Database overview",
+      description: "Lists every table in the WordPress database with engine, approximate row count, data size and index size. Read-only. Useful as a starting point before /database/export or /database/search-replace.",
+      inputSchema: {}
+    },
+    async () => toToolResult("database/info", await client.post("/database/info", {}))
+  );
+  server.registerTool(
+    "iawm_database_export",
+    {
+      title: "Export selected tables",
+      description: "Dumps the named tables as SQL into a backup record (the same store the auto pre-op backups use). Returns the new backup_id; retrieve the payload via iawm_backup_get with include_payload=true, or replay it via iawm_backup_restore.",
+      inputSchema: {
+        tables: external_exports.array(external_exports.string()).describe("Fully-qualified table names (e.g. wp_options, wp_postmeta)"),
+        label: external_exports.string().optional().describe("Human-readable label")
+      }
+    },
+    async (args) => toToolResult("database/export", await client.post("/database/export", args))
+  );
+  server.registerTool(
+    "iawm_database_query",
+    {
+      title: "Run a SELECT query",
+      description: "Runs an ad-hoc read-only SQL query. Strict validation: must start with SELECT (or WITH ... SELECT); no `;`, no INTO OUTFILE / INTO DUMPFILE / LOAD_FILE / BENCHMARK / SLEEP(); a LIMIT is forcibly appended (max 200 by default). Returns rows as an array of associative records.",
+      inputSchema: {
+        sql: external_exports.string().describe("SELECT (or WITH ... SELECT) statement"),
+        limit: external_exports.number().int().optional().describe("Row cap (1-200, default 200)")
+      }
+    },
+    async (args) => toToolResult("database/query", await client.post("/database/query", args))
+  );
+  server.registerTool(
+    "iawm_database_search_replace",
+    {
+      title: "Serialization-safe search/replace",
+      description: "Replaces a string by another across a fixed allow-list of (table, column) pairs (options.option_value, posts.post_content/excerpt/title, *meta.meta_value, comments.comment_content). PHP-serialised payloads are walked recursively so length counters stay valid. Always call once with `dry_run: true` first to see counts + samples. A real (non-dry_run) call requires a two-step confirmation: the first call without `confirmation_token` returns `requires_confirmation: true` with a fresh token; re-issue the EXACT SAME body with `confirmation_token: <that token>` to apply.",
+      inputSchema: {
+        search: external_exports.string().describe("String to find"),
+        replace: external_exports.string().describe("Replacement string"),
+        targets: external_exports.array(external_exports.tuple([external_exports.string(), external_exports.string()])).optional().describe("Optional explicit [table, column] pairs; defaults to the full allow-list"),
+        dry_run: external_exports.boolean().optional().describe("True to report counts + samples without applying (RECOMMENDED first pass)"),
+        confirmation_token: external_exports.string().optional().describe("Token returned by the first non-dry_run call. Required to actually apply.")
+      }
+    },
+    async (args) => toToolResult("database/search-replace", await client.post("/database/search-replace", args))
+  );
+}
+function registerCore(server, client) {
+  server.registerTool(
+    "iawm_core_info",
+    {
+      title: "WordPress core version info",
+      description: "Returns the current WordPress version, the PHP version running on the server, and whether a core update is available (with the target version + PHP/MySQL requirements). Read-only.",
+      inputSchema: {}
+    },
+    async () => toToolResult("core/info", await client.post("/core/info", {}))
+  );
+  server.registerTool(
+    "iawm_core_update",
+    {
+      title: "Apply WordPress core update",
+      description: "Updates WordPress to the latest version offered by WP.org for this site. The most destructive operation in the API \u2014 runs a PHP version pre-flight, snapshots the plugin state (pre_op_backup_id), and only then invokes Core_Upgrader. A real (non-dry_run) update requires a TWO-STEP flow: the first call returns `requires_confirmation: true` + a fresh `confirmation_token` + a summary (current_version, would_update_to, php_required); re-issue the SAME body with the token in `confirmation_token` to apply. Tokens are single-use, expire after 5 minutes, and are bound to the exact body.",
+      inputSchema: {
+        dry_run: external_exports.boolean().optional().describe("True to preview what would happen without applying (no token needed)"),
+        skip_backup: external_exports.boolean().optional().describe("Skip the pre-op snapshot (use only on chained ops)"),
+        confirmation_token: external_exports.string().optional().describe("Token returned by the first non-dry_run call. Required to actually apply.")
+      }
+    },
+    async (args) => toToolResult("core/update", await client.post("/core/update", args))
+  );
+}
 function registerThemes(server, client) {
   server.registerTool(
     "iawm_themes_info",
@@ -33306,10 +33380,11 @@ function registerBackup(server, client) {
     "iawm_backup_restore",
     {
       title: "Restore a backup",
-      description: "Restores a previously taken snapshot. dry_run=true returns the diff (options to overwrite, plugins to (de)activate, tables to replay) WITHOUT applying. Without dry_run, the snapshot is applied and the record is stamped as restored. Use with care; this is the most invasive operation in the API.",
+      description: "Restores a previously taken snapshot. dry_run=true returns the diff WITHOUT applying \u2014 no token needed. A real (non-dry_run) restore is a TWO-STEP operation: first call without `confirmation_token` returns `requires_confirmation: true` with a fresh token AND a preview summary; re-issue the SAME body with `confirmation_token: <that token>` to actually apply. Tokens are single-use, expire after 5 minutes and are bound to the exact body \u2014 issued for one restore, they cannot be replayed for another.",
       inputSchema: {
         id: external_exports.number().int().describe("Backup id to restore"),
-        dry_run: external_exports.boolean().optional().describe("True to preview the diff without applying (RECOMMENDED first pass)")
+        dry_run: external_exports.boolean().optional().describe("True to preview the diff without applying (RECOMMENDED first pass, no token needed)"),
+        confirmation_token: external_exports.string().optional().describe("Token returned by the first non-dry_run call. Required to actually apply.")
       }
     },
     async (args) => toToolResult("backup/restore", await client.post("/backup/restore", args))
@@ -33347,6 +33422,8 @@ function registerTools(server, client) {
   registerConfig(server, client);
   registerPlugins(server, client);
   registerThemes(server, client);
+  registerCore(server, client);
+  registerDatabase(server, client);
   registerSeo(server, client);
   registerDivi(server, client);
   registerBackup(server, client);

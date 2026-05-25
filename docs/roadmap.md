@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-3 complete; Phase 4 (themes) + Phase 5.1 (dedicated user + scopes) + 5.2 (auto backup before destructive) shipped · Last updated: 2026-05-25
+> Status: Phases 0-3 complete; Phase 4 (plugins/themes/core/database) shipped; Phase 5.1 + 5.2 + 5.3 shipped · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -57,9 +57,11 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] Plugin capabilities (install, activate, deactivate) — advanced in Phase 3 to integrate Rank Math
 - [x] Theme capabilities: `/themes/info`, `/themes/list`, `/themes/install`, `/themes/activate`, `/themes/update`. WP.org-only source, slug validation, auto-snapshot of theme-related options before any write
 - [x] Plugin updates via `/plugins/update`. Self-update of the bridge plugin refused. Auto-snapshot of plugin state pre-op
-- [ ] Controlled database capabilities (export, query, search-replace)
+- [x] WordPress core update via `/core/info` + `/core/update`. PHP version pre-flight, plugin-state snapshot pre-op, dry_run preview, confirmation token mandatory for the real apply
+- [x] Controlled database capabilities: `/database/info` (read), `/database/export` (SQL dump as a backup record), `/database/query` (SELECT-only with strict validation + row cap), `/database/search-replace` (serialization-safe, allow-listed (table,column) pairs, mandatory dry_run + confirmation token)
 - [x] Backups and restore — shipped in Phase 5.2 (`/backup/*`)
 - [ ] SSH/WP-CLI fallback channel documented
+- [ ] Cron capabilities (read/program scheduled tasks)
 
 ## Phase 5 — Security & safeguards (hardening)
 
@@ -71,8 +73,8 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] **5.2** — `IAWM_Backup` module: snapshot/restore for WP options, plugin activation state and SQL tables; `wp_iawm_backups` table + `/backup/*` routes (list/get/create/restore/delete/prune)
 - [x] **5.2** — Automatic pre-op snapshot before `plugins/install`, `plugins/activate`, `plugins/deactivate` and risky settings updates (e.g. `permalink_structure`); `pre_op_backup_id` surfaced in the response
 - [x] **5.2** — Restore supports `dry_run` so the operator previews the diff before applying
+- [x] **5.3** — Confirmation token gate for the most destructive endpoints (`/backup/restore`, `/core/update`, `/database/search-replace`). Two-step: first call returns `requires_confirmation` + a single-use token (TTL 5 min, bound to route + key + body hash); re-issue with the token to apply
 - [x] Kill switch (Phase 1)
-- [ ] Explicit confirmations for risky actions (e.g. `restore`, `infra:write` ops) — Phase 5.3
 - [ ] Key rotation policy (documented procedure)
 - [ ] Light penetration test of the plugin
 

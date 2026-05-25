@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       IA Webmaster Bridge
  * Description:       Adapter that lets an AI (Claude) act as a webmaster on this WordPress site. Exposes a controlled, signed REST API under the ia-webmaster/v1 namespace.
- * Version:           0.22.0
+ * Version:           0.25.0
  * Requires at least: 7.0
  * Requires PHP:      7.4
  * Author:            Marius Sergent
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'IAWM_VERSION', '0.22.0' );
+define( 'IAWM_VERSION', '0.25.0' );
 define( 'IAWM_REST_NAMESPACE', 'ia-webmaster/v1' );
 define( 'IAWM_PLUGIN_FILE', __FILE__ );
 define( 'IAWM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -26,6 +26,7 @@ define( 'IAWM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-settings.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-support.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-agent-user.php';
+require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-confirmation.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-auth.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-rest.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-admin.php';
@@ -42,6 +43,8 @@ require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-divi.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-divi-theme-builder.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-backup.php';
 require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-themes.php';
+require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-core.php';
+require_once IAWM_PLUGIN_DIR . 'includes/class-iawm-database.php';
 
 // Database schema creation / migration on plugin activation.
 register_activation_hook( IAWM_PLUGIN_FILE, array( 'IAWM_Audit', 'maybe_upgrade' ) );
@@ -65,6 +68,8 @@ IAWM_Diagnostics::init();
 IAWM_Config::init();
 IAWM_Plugins::init();
 IAWM_Themes::init();
+IAWM_Core::init();
+IAWM_Database::init();
 IAWM_Seo::init();
 IAWM_Divi::init();
 IAWM_Divi_Theme_Builder::init();

@@ -1,6 +1,6 @@
 # Spec 06 — Infrastructure plan
 
-- **Status**: In implementation (plugins + themes + backups shipped)
+- **Status**: In implementation (plugins, themes, core update, DB tools, backups shipped — cron remaining)
 - **Phase**: 4
 - **Priority**: Medium
 - **Last updated**: 2026-05-25
@@ -42,17 +42,29 @@ plugins, themes, database, backups, scheduled tasks, updates.
 
 ## Implemented (Phase 4 to date)
 
-- **Plugins**: install / activate / deactivate / info, via
+- **Plugins**: install / activate / deactivate / **update** / info, via
   `IAWM_Plugins`. WP.org-only source; the bridge plugin itself cannot
-  be deactivated via the API.
+  be deactivated or self-updated via the API.
 - **Themes**: install / activate / update / info / list, via
   `IAWM_Themes`. WP.org-only source; strict slug validation; deletion
   intentionally not exposed.
+- **WordPress core**: `/core/info` + `/core/update`, via `IAWM_Core`.
+  PHP version pre-flight, plugin-state snapshot pre-op, dry_run preview,
+  confirmation token gate (Phase 5.3) for the real apply.
+- **Database**:
+  - `/database/info`: tables + sizes (read-only).
+  - `/database/export`: SQL dump of named tables into a backup record.
+  - `/database/query`: SELECT-only, validated (no `;`, no `INTO OUTFILE`,
+    no `BENCHMARK`/`SLEEP()`/`LOAD_FILE`, forced LIMIT cap).
+  - `/database/search-replace`: serialization-safe walker against an
+    explicit allow-list of (table, column) pairs; mandatory `dry_run`
+    + confirmation token for a real apply.
 - **Backups**: snapshot + restore, via `IAWM_Backup` (`options`,
   `plugins_state`, `tables` kinds). Auto-triggered before
   `plugins/install`, `plugins/activate`, `plugins/deactivate`,
-  `themes/install`, `themes/activate`, `themes/update` and risky
-  settings updates. Restore supports `dry_run`.
+  `plugins/update`, `themes/install`, `themes/activate`, `themes/update`,
+  `core/update` and risky settings updates. Restore supports `dry_run`
+  and is gated by the Phase 5.3 confirmation token.
 
 ## Open questions
 

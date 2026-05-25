@@ -1,6 +1,6 @@
 # Spec 02 — Security & guardrails
 
-- **Status**: In implementation (Phase 5.1 + 5.2 shipped)
+- **Status**: In implementation (Phase 5.1 + 5.2 + 5.3 shipped)
 - **Phase**: Cross-cutting (built from Phase 1, hardened in Phase 5)
 - **Priority**: High
 - **Last updated**: 2026-05-25
@@ -74,9 +74,15 @@ and guardrails against dangerous operations (decision D-005).
   feed to `/backup/restore` (with `dry_run` first) to roll back. The
   same `/backup/*` routes also expose manual snapshots and a SQL-level
   `tables` kind for future Phase 4 database operations.
-- **Explicit confirmation** — to be implemented in Phase 5.3. Actions
-  classified "at risk" will require a confirmation token distinct from
-  the initial call.
+- **Explicit confirmation** — *implemented since v0.24.0 (Phase 5.3)*.
+  The most destructive endpoints (`/backup/restore`, `/core/update`,
+  `/database/search-replace`) require a **two-step** pattern: the first
+  non-`dry_run` call returns `requires_confirmation: true` with a
+  fresh, single-use token (5-minute TTL) and a summary of what would
+  happen; the SAME body re-issued with `confirmation_token: <token>`
+  applies the action. Tokens are bound to the (route, key id, body
+  hash) tuple so a token cannot be replayed against a different call.
+  `dry_run` requests are exempt (a preview never mutates state).
 - **Kill switch**: a plugin setting instantly disables all write
   capabilities.
 

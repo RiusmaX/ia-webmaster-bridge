@@ -185,6 +185,56 @@ new one.
   callers retain control. Backup table needs periodic pruning, exposed
   via `/backup/prune`.
 
+## D-015 — Confirmation tokens, single-use, body-bound
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: backups + scopes drastically reduce risk, but the most
+  destructive actions (restoring a snapshot, updating WP core, running
+  a real search-replace across the DB) still mutate the site in ways
+  that are hard or impossible to undo. We want explicit, parameterised
+  consent for those — not a flag in a config file.
+- **Decision**: introduce `IAWM_Confirmation`. The endpoints in
+  `REQUIRES_CONFIRMATION` (currently `/backup/restore`, `/core/update`,
+  `/database/search-replace`) require a two-step pattern: the first
+  call (no token, no `dry_run`) returns
+  `requires_confirmation: true` with a fresh 32-byte hex token and a
+  summary; the same call re-issued with `confirmation_token: <token>`
+  in the body actually applies the action. Tokens are single-use,
+  expire after 5 minutes, and are bound to a sha256 of the
+  (route, key id, normalised body) tuple. `dry_run` requests are
+  exempt (a preview never mutates state).
+- **Consequences**: the agent has to perform a deliberate two-step
+  flow for destructive actions, which is the entire point. Token
+  storage uses WordPress transients keyed by sha256(token), so the
+  raw token never appears in the DB. Combined with HMAC, scope check,
+  audit log and pre-op backups, this gives the final gate before a
+  destructive write.
+
+## D-016 — Database operations: explicit allow-list, never raw shell
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: WP-CLI's `search-replace` is the canonical "post-domain-
+  move" tool, and a SQL console is the canonical debugging tool — but
+  exposing either as a raw passthrough to an AI agent would be an
+  enormous attack surface, even with HMAC and audit. We need a
+  shaped, opinionated surface that covers the legitimate use cases.
+- **Decision**: ship four narrow endpoints — `/database/info`,
+  `/database/export`, `/database/query`, `/database/search-replace`.
+  Reads (info, query) are gated by `infra:write` (query because it can
+  still be a load DoS, and to stay aligned with WP-CLI semantics).
+  `/database/query` is restricted to SELECT/WITH; semicolons,
+  `INTO OUTFILE`, `LOAD_FILE`, `BENCHMARK`, `SLEEP()` are refused; a
+  LIMIT is forcibly appended. `/database/search-replace` only operates
+  on an allow-list of (table, column) pairs that are known to need it
+  (options, posts, *meta, comments) and walks PHP-serialised payloads
+  recursively to keep length counters valid. Real applies are gated by
+  D-015's confirmation token.
+- **Consequences**: ad-hoc INSERTs / UPDATEs / DELETEs go through their
+  business endpoints (`content/*`, `config/*`, `themes/*`, etc.) where
+  rules and audit are tighter. The agent has enough to perform a domain
+  move or a structured data audit, but cannot drop a table or write
+  raw SQL.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

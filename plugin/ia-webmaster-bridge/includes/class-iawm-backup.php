@@ -766,6 +766,25 @@ class IAWM_Backup {
 		$dry_run = ! empty( $params['dry_run'] );
 		$key_id  = (string) $request->get_header( 'X-IAWM-Key' );
 
+		// Phase 5.3: a real restore (not dry_run) requires an explicit
+		// confirmation token. The first call returns the token + a
+		// summary of what the restore would do; the second call applies.
+		$summary = array();
+		if ( ! $dry_run ) {
+			$preview = self::restore( $id, true, $key_id );
+			if ( empty( $preview['ok'] ) ) {
+				return new WP_REST_Response( $preview, 400 );
+			}
+			$summary = array(
+				'kind'    => isset( $preview['kind'] ) ? $preview['kind'] : null,
+				'preview' => $preview,
+			);
+		}
+		$confirm = IAWM_Confirmation::guard( $request, $params, $summary );
+		if ( null !== $confirm ) {
+			return $confirm;
+		}
+
 		$result = self::restore( $id, $dry_run, $key_id );
 		$code   = ! empty( $result['ok'] ) ? 200 : 400;
 
