@@ -18,6 +18,24 @@
  *     `iawm_agent` role can do — never raw super-admin powers;
  *   - the human operator's admin account is untouched.
  *
+ * ### Multisite behaviour
+ *
+ * On a WordPress multisite network, **users are global** but **roles are
+ * per-site**. To keep the same security guarantees on a network:
+ *
+ *   - The `iawm-agent` user is created **once** for the whole network.
+ *   - The `iawm_agent` role is installed on **each sub-site** that has
+ *     the plugin active, and the user is granted that role on every
+ *     such sub-site (never network-wide super-admin).
+ *   - On `install()` we walk every sub-site (when network-activated) or
+ *     just the current one (per-site activation) and call
+ *     `switch_to_blog()` so each sub-site gets both the role and the
+ *     role assignment.
+ *   - On new sub-site creation (`wp_initialize_site`), the main plugin
+ *     bootstrap re-runs `install_for_current_site()`, which calls back
+ *     into this module so the new sub-site is provisioned without
+ *     operator intervention.
+ *
  * @package IA_Webmaster_Bridge
  */
 
@@ -58,24 +76,92 @@ class IAWM_Agent_User {
 	 * Installs or upgrades the agent role + user if the stored version is
 	 * lower than INSTALL_VERSION. Safe to call repeatedly.
 	 *
+	 * Only provisions the **current** site (whatever `get_option()` /
+	 * `get_current_blog_id()` resolves to). On a network-activated
+	 * multisite, every sub-site reaches this code on its own first
+	 * request, so the cumulative effect provisions the whole network
+	 * lazily. The activation hook handles the initial bulk install.
+	 *
 	 * @return void
 	 */
 	public static function maybe_install() {
 		if ( (int) get_option( self::OPTION_INSTALL_VERSION, 0 ) >= self::INSTALL_VERSION ) {
 			return;
 		}
-		self::install();
+		self::install_for_current_site();
 		update_option( self::OPTION_INSTALL_VERSION, self::INSTALL_VERSION, true );
 	}
 
 	/**
 	 * Forces a fresh install (used by the plugin activation hook).
 	 *
+	 * On a single-site install: registers the role on the current site
+	 * and provisions the agent user.
+	 *
+	 * On multisite: makes sure the agent user exists globally (single
+	 * shared user across the whole network), then installs the role and
+	 * grants it on **every** sub-site of the network when invoked from
+	 * the network-activation path, or just the current sub-site
+	 * otherwise. Idempotent — safe to re-run.
+	 *
+	 * @param bool $network_wide When true (set by the network activation
+	 *                           hook), provision every sub-site of the
+	 *                           network. When false, only the current
+	 *                           site. Ignored outside multisite.
 	 * @return void
 	 */
-	public static function install() {
+	public static function install( $network_wide = false ) {
+		// Always ensure the (global on multisite, local otherwise) user exists.
+		$user_id = self::ensure_global_user();
+
+		if ( is_multisite() && $network_wide ) {
+			// Iterate every sub-site and install role + role assignment there.
+			$sites = function_exists( 'get_sites' ) ? get_sites( array( 'number' => 0 ) ) : array();
+			foreach ( $sites as $site ) {
+				$blog_id = (int) $site->blog_id;
+				switch_to_blog( $blog_id );
+				self::install_for_current_site( $user_id );
+				restore_current_blog();
+			}
+			return;
+		}
+
+		// Single-site, or per-site activation on a multisite: just here.
+		self::install_for_current_site( $user_id );
+	}
+
+	/**
+	 * Installs the role on the current site and grants it to the agent user.
+	 *
+	 * Safe to call inside a `switch_to_blog()` block: every option / role
+	 * call routes to the active blog.
+	 *
+	 * Used by:
+	 *   - the network activation loop (one call per sub-site),
+	 *   - the per-site activation path (one call total),
+	 *   - the `wp_initialize_site` hook when a new sub-site is created
+	 *     after network activation,
+	 *   - the lazy `maybe_install()` upgrade path.
+	 *
+	 * @param int|null $user_id Pre-resolved agent user id; resolved here
+	 *                          if null.
+	 * @return void
+	 */
+	public static function install_for_current_site( $user_id = null ) {
 		self::install_role();
-		self::ensure_user();
+
+		if ( null === $user_id ) {
+			$user_id = self::ensure_global_user();
+		}
+		if ( ! $user_id ) {
+			return;
+		}
+
+		// Make sure the user is a member of this site with the agent role.
+		self::assign_role_on_current_site( $user_id );
+
+		// Record the id locally so per-site reads are fast.
+		update_option( self::OPTION_USER_ID, (int) $user_id, true );
 	}
 
 	/**
@@ -196,21 +282,39 @@ class IAWM_Agent_User {
 	}
 
 	/**
-	 * Ensures the agent user exists, has the agent role, and is recorded
-	 * in the OPTION_USER_ID option. Idempotent.
+	 * Ensures the agent user exists, has the agent role on the current
+	 * site, and is recorded in the OPTION_USER_ID option. Idempotent.
+	 *
+	 * Kept as a thin wrapper around the multisite-aware
+	 * `ensure_global_user()` + `assign_role_on_current_site()` pair so
+	 * legacy callers keep working.
 	 *
 	 * @return int|null User ID, or null if creation failed.
 	 */
 	public static function ensure_user() {
+		$user_id = self::ensure_global_user();
+		if ( ! $user_id ) {
+			return null;
+		}
+		self::assign_role_on_current_site( $user_id );
+		update_option( self::OPTION_USER_ID, (int) $user_id, true );
+		return (int) $user_id;
+	}
+
+	/**
+	 * Ensures the agent user exists. **Single user across the whole
+	 * network** on multisite — created once and reused for every
+	 * sub-site.
+	 *
+	 * Does **not** touch role assignment on the current site; callers
+	 * should pair this with `assign_role_on_current_site()`.
+	 *
+	 * @return int|null User ID, or null if creation failed.
+	 */
+	public static function ensure_global_user() {
 		$existing = get_user_by( 'login', self::USER_LOGIN );
 
 		if ( $existing instanceof WP_User ) {
-			// Make sure the role assignment is correct (no admin promotion).
-			$has_role = in_array( self::ROLE_KEY, (array) $existing->roles, true );
-			if ( ! $has_role ) {
-				$existing->set_role( self::ROLE_KEY );
-			}
-			update_option( self::OPTION_USER_ID, (int) $existing->ID, true );
 			return (int) $existing->ID;
 		}
 
@@ -219,6 +323,10 @@ class IAWM_Agent_User {
 		$password = wp_generate_password( 32, true, true );
 		$email    = self::placeholder_email();
 
+		// We pass an explicit `role` so WordPress sets it on the **creation
+		// blog** (this also adds the global user to that blog on multisite).
+		// `assign_role_on_current_site()` re-runs the assignment on every
+		// blog that needs it.
 		$user_id = wp_insert_user(
 			array(
 				'user_login'   => self::USER_LOGIN,
@@ -237,12 +345,62 @@ class IAWM_Agent_User {
 			return null;
 		}
 
-		update_option( self::OPTION_USER_ID, (int) $user_id, true );
 		return (int) $user_id;
 	}
 
 	/**
+	 * Grants the agent role on the **current** site (respects any active
+	 * `switch_to_blog()` context).
+	 *
+	 * On multisite, also calls `add_user_to_blog()` first so the global
+	 * user becomes a member of this sub-site before the role is
+	 * assigned. The function is idempotent: re-running it on a site
+	 * where the assignment is already correct is a no-op.
+	 *
+	 * Important: we **never** grant super-admin or any network-wide
+	 * capability — only the per-site `iawm_agent` role.
+	 *
+	 * @param int $user_id Agent user id.
+	 * @return void
+	 */
+	public static function assign_role_on_current_site( $user_id ) {
+		$user_id = (int) $user_id;
+		if ( $user_id <= 0 ) {
+			return;
+		}
+
+		// On multisite, make sure the user belongs to the current blog
+		// before we touch its roles.
+		if ( is_multisite() && function_exists( 'is_user_member_of_blog' ) ) {
+			$blog_id = function_exists( 'get_current_blog_id' ) ? (int) get_current_blog_id() : 0;
+			if ( $blog_id > 0 && ! is_user_member_of_blog( $user_id, $blog_id ) ) {
+				if ( function_exists( 'add_user_to_blog' ) ) {
+					add_user_to_blog( $blog_id, $user_id, self::ROLE_KEY );
+				}
+			}
+		}
+
+		$user = get_userdata( $user_id );
+		if ( ! ( $user instanceof WP_User ) ) {
+			return;
+		}
+
+		// `set_role()` replaces any existing role mapping on the current
+		// blog with just the agent role — the right policy here, since we
+		// do not want the agent inheriting an editorial role someone
+		// granted by accident.
+		$has_role = in_array( self::ROLE_KEY, (array) $user->roles, true );
+		if ( ! $has_role || count( (array) $user->roles ) > 1 ) {
+			$user->set_role( self::ROLE_KEY );
+		}
+	}
+
+	/**
 	 * Returns the agent user ID. Lazily ensures the user exists.
+	 *
+	 * On multisite: returns the global agent user's id. The
+	 * `OPTION_USER_ID` cache is per-site; if it is missing on this
+	 * sub-site, we look the user up globally by login.
 	 *
 	 * @return int User ID; 0 if creation failed.
 	 */
@@ -251,6 +409,15 @@ class IAWM_Agent_User {
 
 		if ( $user_id > 0 && get_userdata( $user_id ) ) {
 			return $user_id;
+		}
+
+		// Try the global lookup first — on multisite the user may exist
+		// already (created on the main site) but the per-site option
+		// hasn't been populated yet on this sub-site.
+		$existing = get_user_by( 'login', self::USER_LOGIN );
+		if ( $existing instanceof WP_User ) {
+			update_option( self::OPTION_USER_ID, (int) $existing->ID, true );
+			return (int) $existing->ID;
 		}
 
 		// Stale or missing — try to (re)create.

@@ -1,6 +1,6 @@
 # Roadmap
 
-> Status: Phases 0-6 complete; Phase 7 (production hardening) in progress, v1.0.0 target imminent · Last updated: 2026-05-25
+> Status: Phases 0-8 complete; current release **v1.2.0** · Last updated: 2026-05-25
 
 Phased action plan. Boxes reflect real progress. Security
 (`specs/02-security.md`) is cross-cutting: built in from Phase 1 and hardened
@@ -88,15 +88,15 @@ continuously, with Phase 5 being the formal hardening pass.
 - [x] `seo-wordpress` skill (SEO audit, Rank Math, semantic structure)
 - [x] `create-divi-page` skill (prompt → full Divi page workflow)
 - [x] Normalized SEO API with Rank Math backend
-- [ ] Yoast SEO backend as an alternative (#33 — deferred to Phase 8)
+- [x] Yoast SEO backend as an alternative (#33 — shipped in v1.2.0)
 - [x] **Per-site context module** (`IAWM_Context`, `/site-context/*`, admin "Context" tab) — v1.1.0
 - [x] 4 workflow skills: `safe-plugin-update`, `design-system-first`, `site-smoke-test`, `prod-deployment-checklist` — v1.0.0
 - [x] `site-context-discovery` skill (bootstraps the context from observable signals) — v1.1.0
 - [x] `site-status-report` skill (compiled health + content + audit + updates report) — v1.1.0
 - [x] `scheduled-routines` skill (programs periodic checks via the cron module) — v1.1.0
-- [ ] Broken-links scanner — deferred to Phase 8
+- [x] Broken-links scanner — shipped in v1.2.0 (`IAWM_LinkChecker`)
 
-## Phase 7 — Production hardening (in progress, target v1.0.0)
+## Phase 7 — Production hardening *(complete — v1.0.0)*
 
 Master tracker: [`phase-7-action-plan.md`](phase-7-action-plan.md).
 
@@ -118,49 +118,56 @@ Master tracker: [`phase-7-action-plan.md`](phase-7-action-plan.md).
   with status bar, kill-switch toggle, IP allow-list editor,
   retention sliders, audit viewer, smoke-test buttons; danger zone
   visually separated; mobile responsive
-- [ ] **7.5** — i18n plugin admin: wrap user-visible strings in
+- [x] **7.5** — i18n plugin admin: wrap user-visible strings in
   `__()`, generate `.pot`, ship `fr_FR` translation
-- [ ] **7.6** — PHPUnit tests on critical paths (auth, scopes,
+- [x] **7.6** — PHPUnit tests on critical paths (auth, scopes,
   backups, confirmation tokens, self-protection)
-- [ ] **7.7** — Skills assemblies: `safe-plugin-update`,
+- [x] **7.7** — Skills assemblies: `safe-plugin-update`,
   `design-system-first`, `site-smoke-test`,
   `prod-deployment-checklist`
 - [x] **7.8** — Doc pass (this pass): README + new
   `production-deployment.md`, `security-model.md`, `CHANGELOG.md`,
   `CONTRIBUTING.md`; refresh of `CLAUDE.md`, `operations.md`,
   `decisions.md` (D-020 through D-023), this roadmap
-- [ ] **7.9** — Pentest dry-run against the local site
-- [ ] **7.10** — Final integration + **v1.0.0** tag + GitHub release
+- [x] **7.9** — Pentest dry-run against the local site
+- [x] **7.10** — Final integration + **v1.0.0** tag + GitHub release
 
-## Phase 8 — Backlog after v1.0.0
+## Phase 8 — Backlog after v1.0.0 *(closed — v1.2.0)*
 
-Nice-to-haves to ship under the 1.x line. None of these block v1.0.0;
-all are tracked here so they don't fall through the cracks.
+All items from the original Phase 8 backlog have shipped, plus two
+additions (broken-links scanner and 404 tracker) that emerged during
+the cycle. Two long-tail items stay open as Phase 9.
 
-- [ ] **Yoast SEO backend** as an alternative to Rank Math (#33).
-  Adapter mapping is already in place, only the toggle + tests
-  remain.
-- [ ] **WordPress multisite** support. Today the plugin assumes a
-  single-site install; the dedicated agent user lives on the main
-  site only, the audit table is per-site, and the IP allow-list is
-  network-shared at best. A clean multisite pass means deciding
-  per-site vs network-wide for each of those.
-- [ ] **WooCommerce reference page**. The 25 Woo modules are already
-  in the auto-discovered registry (D-018) but no parametric pattern
-  composes a "complete WooCommerce product page" yet. One reference
-  pattern (single-product layout + cart + cross-sell) would unlock
-  e-commerce site generation in one prompt.
-- [ ] **Deeper Divi modules**: build typed builders + opinionated
+- [x] **Yoast SEO backend** as an alternative to Rank Math (#33).
+  Auto-detected alongside Rank Math; same normalized API on both
+  sides. (Decision D-025, v1.2.0.)
+- [x] **WordPress multisite** support. Agent user is global, agent
+  role and per-feature tables are per-site, new sub-sites get
+  provisioned automatically via `wp_initialize_site`. New
+  `/status/network` endpoint + `IAWM_Network_Admin` Network Admin
+  page. (Decision D-027, v1.2.0.)
+- [x] **WooCommerce Theme Builder helper** (`IAWM_WooCommerce`). No
+  parametric pattern needed — the 25 Woo modules in the
+  auto-discovered registry (D-018) compose well via
+  `iawm_divi_theme_builder_compose`. New endpoints surface the four
+  canonical contexts (shop, single-product, cart, checkout), each
+  with a suggested module list and a Theme Builder `use_on`
+  expression. New doc: `docs/woocommerce-integration.md`. (v1.2.0.)
+- [x] **Broken-links scanner** (`IAWM_LinkChecker`). Walks every
+  published post type, HEAD→GET probe, classifies failures, dedups
+  in-scan and against the existing issues table.
+  (Decision D-028, v1.2.0.)
+- [x] **404 tracker** (`IAWM_FourOhFour`). Hooks `template_redirect`,
+  URL+IP transient dedup at insert time, optional sampling, daily
+  prune cron. (Decision D-026, v1.2.0.)
+
+### Carried over to Phase 9
+
+- [ ] **Deeper Divi module builders**: typed builders + opinionated
   defaults for the long tail of native modules currently only
   exposed through the auto-discovered registry (the 105-element
   catalog) — today 41 have explicit builders, the rest are
   free-form-only.
-- [ ] **Per-site context file** (Phase 6 carry-over). A
-  `iawm-context.md` checked in on the operator side that records
-  brand vocabulary, off-limits content, preferred patterns.
-- [ ] **Scheduled routines** (Phase 6 carry-over). The agent could
-  run a weekly "site health" routine without operator prompting,
-  posting the report to a configured channel.
 - [ ] **Webhook signing** for outbound notifications (smoke test
   failure → Slack, audit alert → email).
 

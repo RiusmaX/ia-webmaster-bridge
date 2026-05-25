@@ -1,6 +1,6 @@
 # Technical architecture
 
-> Status: Under design · Last updated: 2026-05-21
+> Status: Under design · Last updated: 2026-05-25 (multisite section)
 
 ## Overview
 
@@ -93,3 +93,26 @@ evolution of the protocol).
 `Local (LocalWP)` → `small prod` → `large prod`. Each target is a profile in
 the MCP bridge. We only promote to a higher target after stability on the
 previous one. See `docs/roadmap.md`.
+
+## Multisite behaviour
+
+The plugin is multisite-tolerant. The activation hook detects
+`$network_wide` and either provisions a single site or loops over every
+sub-site via `switch_to_blog()` to install tables, role and role
+assignment. New sub-sites created later are picked up automatically
+through `wp_initialize_site`.
+
+Everything that lives in `$wpdb->prefix` (audit log, backup table, 404
+log) and every plugin option (credentials, kill switch, IP allow-list)
+is therefore **per-site**. The dedicated agent user is **global** —
+one user across the whole network — but its `iawm_agent` role is
+granted **per sub-site**, never network-wide super-admin.
+
+An authenticated endpoint (`POST /status/network`) reports the
+topology to Claude (is_multisite, current_blog_id, sites_in_network,
+optional sub-site list on the main site). A read-only network admin
+page at **Network Admin → Settings → IA Webmaster Bridge** gives the
+operator a one-screen overview of every sub-site's IA-Webmaster state.
+
+See [`multisite.md`](multisite.md) for the full model and known
+limitations.

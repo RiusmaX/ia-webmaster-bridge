@@ -1,6 +1,6 @@
 # Capabilities — what you can ask Claude to do
 
-> Status: Living · Last updated: 2026-05-25 (v1.1.0)
+> Status: Living · Last updated: 2026-05-25 (v1.1.0 + multisite support)
 
 This is the **operator-facing tour** of the IA Webmaster Bridge
 surface: every family of capabilities, the MCP tools that back them,
@@ -30,9 +30,12 @@ the outcome and Claude composes the right MCP calls under the
 | Update WordPress core itself | `iawm_core_*` |
 | Inspect and program WP-Cron events | `iawm_cron_*` |
 | Run an operational health check after a destructive op | `iawm_diagnostics_smoke`, `iawm_diagnostics_check_self` |
+| Investigate 404s actually hit by visitors (broken inbound URLs) | `iawm_404_list`, `iawm_404_stats`, `iawm_404_delete`, `iawm_404_clear` |
+| Proactively scan your own content for broken `<a href>` links | `iawm_links_scan`, `iawm_links_list`, `iawm_links_resolve`, `iawm_links_delete` |
 | Read / write the per-site brand context | `iawm_site_context_*` |
 | List or look up Divi 5 modules and their attributes | `iawm_divi_modules_catalog`, `iawm_divi_module_info` |
 | Audit who did what on the site | `iawm_audit` |
+| Discover whether the site is a multisite (and which sub-site is targeted) | `iawm_status_network` |
 
 ---
 
@@ -136,6 +139,30 @@ from patterns or free-form blocks, write them back bit-faithful.
 See [`docs/divi5-compose-dsl.md`](divi5-compose-dsl.md) for the
 composer reference and [`docs/divi5-modules-catalog.md`](divi5-modules-catalog.md)
 for the full module list with attribute paths.
+
+#### WooCommerce
+
+The 25 WooCommerce Divi 5 modules ship with full read/write support.
+They're meant to live inside Divi **Theme Builder templates** — Shop
+archive, Single product, Cart, Checkout — rather than inside
+standalone pages.
+
+- **Detection**: `iawm_woocommerce_status` — `is_active`, version,
+  products count, currency, page ids (shop/cart/checkout/myaccount),
+  and `has_template_for.{shop, single_product, cart, checkout}`.
+- **Catalog**: `iawm_woocommerce_contexts` — canonical mapping of WC
+  context → suggested modules + Divi `use_on` expression for
+  template assignment.
+
+> *"Build a single-product Theme Builder template using the standard
+> WooCommerce module stack."*
+
+> *"Audit the WooCommerce setup of this site: is it active, how many
+> products, what's already templated."*
+
+See [`docs/woocommerce-integration.md`](woocommerce-integration.md)
+for the full walkthrough, the four context module lists, and when to
+prefer Theme Builder templates over standalone pages for WC modules.
 
 ---
 
@@ -317,15 +344,30 @@ selection and on-page tuning.
 
 ---
 
-### 7. Diagnostics — system, plugins, themes, logs, smoke, self-check
+### 7. Diagnostics — system, plugins, themes, logs, smoke, self-check, 404 tracker, broken-links scanner
 
-Read-only operational visibility.
+Read-only operational visibility, plus two complementary link-health
+tools:
+
+- **Reactive 404 tracker** (`iawm_404_*`): every front-end 404 a
+  visitor hits is recorded (with dedup so a retrying crawler folds
+  into a single row) and exposed for the agent to investigate.
+- **Proactive broken-links scanner** (`iawm_links_*`): walks every
+  published post + page, extracts `<a href>` targets and probes each
+  one with HEAD (falling back to GET). Findings land in
+  `wp_iawm_link_issues` and get triaged by outcome bucket (`404`,
+  `410`, `timeout`, `dns`, `ssl`, `other`). Synchronous and capped at
+  500 URLs per scan — operators that need a recurring run schedule it
+  themselves via the `scheduled-routines` skill.
 
 #### Tools
 
 `iawm_diagnostics_system`, `iawm_diagnostics_plugins`,
 `iawm_diagnostics_themes`, `iawm_diagnostics_logs`,
-`iawm_diagnostics_smoke`, `iawm_diagnostics_check_self`.
+`iawm_diagnostics_smoke`, `iawm_diagnostics_check_self`,
+`iawm_404_list`, `iawm_404_stats`, `iawm_404_delete`, `iawm_404_clear`,
+`iawm_links_scan`, `iawm_links_list`, `iawm_links_resolve`,
+`iawm_links_delete`.
 
 #### Example prompts
 
@@ -339,6 +381,18 @@ Read-only operational visibility.
 
 > *"Run the self-check — confirm the agent user, the audit table,
 > the backup table and the rotation cron jobs are all in place."*
+
+> *"Show me the top 404s of the last 30 days — which dead URLs are
+> being hit hardest? Suggest redirects for the top 5."*
+
+> *"List 404s where the referer is google.com — these are search
+> results pointing at removed pages."*
+
+> *"Scan the site for broken outbound links — give me a triage list
+> grouped by outcome (404, timeout, DNS, SSL)."*
+
+> *"Scan only pages 12, 34 and 56 for broken links and tell me which
+> ones changed since last week."*
 
 ---
 
@@ -488,6 +542,12 @@ catalogue.
   are served by elegantthemes.com to the Visual Builder, not via REST
   on the local site. See [`docs/design-system.md`](design-system.md)
   §"Pre-configured layouts" for the hybrid workflow.
+- **No network-wide key on multisite.** Each sub-site holds its own
+  HMAC keys, kill switch and audit log. The plugin is multisite-
+  tolerant (both network-activation and per-site activation work, and
+  new sub-sites are auto-provisioned), but there is no single key that
+  spans the whole network. See [`docs/multisite.md`](multisite.md) for
+  the full model.
 
 ---
 
@@ -502,3 +562,4 @@ catalogue.
 - [`docs/divi5-modules-catalog.md`](divi5-modules-catalog.md) — the 105-module registry.
 - [`docs/divi5-compose-dsl.md`](divi5-compose-dsl.md) — page composer DSL.
 - [`docs/architecture.md`](architecture.md) — three-component architecture.
+- [`docs/multisite.md`](multisite.md) — multisite support: what is per-site, what is global, install topologies.

@@ -1,6 +1,6 @@
 # Operations runbook
 
-> Status: Living · Last updated: 2026-05-25 (added translation workflow)
+> Status: Living · Last updated: 2026-05-25 (multisite section)
 
 Documented procedures for the human operator. Each procedure is
 written assuming the plugin and gateway are healthy; if they are not,
@@ -104,6 +104,36 @@ small.
 
 ---
 
+## Multisite
+
+The plugin is multisite-tolerant. Most operators run single-site
+installs and can ignore this section, but the headline rules for a
+WordPress multisite network are:
+
+- **Network-activate the plugin** from Network Admin → Plugins if every
+  sub-site of the network should be reachable via the bridge. The
+  activation walks every existing sub-site and provisions its tables,
+  role and role assignment. New sub-sites are auto-provisioned at
+  creation time.
+- **Per-site activate** instead if only one or two blogs need the
+  bridge.
+- **One key per sub-site.** Keys are per-site, the kill switch is
+  per-site, the audit log is per-site. Each blog you operate gets its
+  own profile in `~/.iawm/config.json`.
+- The dedicated agent user (`iawm-agent`) is **global** — one user
+  across the whole network — but its `iawm_agent` role is granted
+  **per sub-site** (never network-wide super-admin).
+- A read-only network admin overview is added at **Network Admin →
+  Settings → IA Webmaster Bridge**: one row per sub-site with key
+  count, kill switch state, last audit timestamp and next cron run.
+- From Claude, call the `iawm_status_network` MCP tool to discover
+  whether the connection is on a multisite and which blog it targets.
+
+Full details, design rationale and known limitations live in
+[`multisite.md`](multisite.md).
+
+---
+
 ## Safe plugin update workflow
 
 Reference workflow combining the Phase 4 + Phase 5 building blocks.
@@ -126,6 +156,53 @@ Use this checklist for every plugin update on production:
 
 The same shape applies to theme updates (`iawm_themes_update`) and
 core updates (`iawm_core_update`).
+
+---
+
+## Broken links
+
+The plugin ships a proactive scanner that walks every published post +
+page, extracts each `<a href>` from `post_content`, probes the target
+with `wp_remote_head` (falling back to `wp_remote_get` when the remote
+refuses HEAD), and records non-OK outcomes in `wp_iawm_link_issues`.
+It complements the reactive 404 tracker: the scanner finds broken
+links **before** a visitor hits one, the tracker reports what visitors
+have **already** failed to load.
+
+### Scan workflow
+
+1. `iawm_links_scan({ dry_run: true })` — preview the next scan
+   without writing rows. Useful to size the run on a new site (the
+   response surfaces `scanned_links`, `issues_found` and
+   `duration_ms`).
+2. `iawm_links_scan()` — full scan. Note the returned
+   `issues_new` (rows actually inserted, ignoring duplicates of
+   still-unresolved findings) — that's the number to triage.
+3. `iawm_links_list({ outcome: "404" })` — review by bucket. Buckets:
+   `404`, `410`, `timeout`, `dns`, `ssl`, `other`.
+4. Fix the link in the source post, then either:
+   - `iawm_links_resolve({ issue_id })` to close it (keeps an audit
+     row, pruned after the retention window), or
+   - `iawm_links_delete({ issue_id })` to remove it entirely.
+
+### Sizing and cadence
+
+A scan is **synchronous** and capped at 500 URLs by default
+(`iawm_link_checker_max_per_scan`). Most of the wall time is remote
+HTTP latency — budget several seconds per ~50 links. For sites that
+exceed the cap, do NOT auto-schedule the scan from the plugin: drive
+it from a cron job set up with the `scheduled-routines` skill so the
+operator owns the cadence (weekly is a sensible default for medium
+sites).
+
+To bound the blast radius on a big site:
+
+```
+iawm_links_scan({ post_ids: [12, 34, 56], include_external: true })
+```
+
+Scoping to a list of post IDs keeps the run predictable and avoids
+hitting unrelated remote hosts.
 
 ---
 
@@ -193,6 +270,94 @@ role & user**.
 Not exposed through the API. If you need to change a WP constant
 (e.g. `WP_DEBUG`, `DISALLOW_FILE_EDIT`), use SSH and edit the file by
 hand — this is intentional.
+
+---
+
+## 404 monitoring
+
+The plugin records every 404 hit it receives so the operator (and the
+agent) can investigate broken inbound URLs over time. This is the
+**reactive** counterpart to the broken-links scanner: it tells you what
+the outside world is actually requesting and failing to fetch, whereas
+the scanner audits your own content proactively.
+
+### What gets logged
+
+Every front-end 404 fires `template_redirect` at priority 999 (so any
+redirect plugin that might rescue a 404 has had its chance first). At
+that point the tracker checks:
+
+- The request is genuinely a 404 (`is_404()` true).
+- The path is NOT in the always-skipped list:
+  `/wp-admin`, `/wp-login.php`, `/wp-cron.php`, `/xmlrpc.php`, `/feed`
+  (or any `*/feed` variant). These are infrastructure paths whose 404s
+  are noise.
+- The sampling roll fires. Sampling rate is the denominator of a 1/N
+  probability, configured via the `iawm_404_sampling_rate` option:
+  `1` (default) records everything, `10` records 1 in 10, `100`
+  records 1 in 100. The default is full capture — only crank it up if
+  the table grows unmanageable on a high-traffic site.
+
+When the request passes those checks, a row is either inserted or its
+counter is bumped:
+
+- **Dedup key**: `sha1(requested_url + '|' + ip)`, stored as a transient
+  with a 60-second TTL. On a hit, we increment the most recent row's
+  `hit_count` + `last_seen` — no new row. On a miss, we set the
+  transient and INSERT a fresh row with `hit_count = 1`. The intent: a
+  single retrying crawler folds into one row, while three different
+  visitors hitting the same broken URL each get their own (the
+  distinction is useful when investigating).
+
+Schema (`wp_iawm_404_log`):
+
+| Column          | Type           | Notes |
+|-----------------|----------------|-------|
+| `id`            | BIGINT PK      | Auto-increment row id |
+| `created_at`    | DATETIME (GMT) | First time this URL+IP was seen |
+| `requested_url` | VARCHAR(2048)  | Path + query, indexed on a 191-char prefix |
+| `referer`       | VARCHAR(2048)  | `HTTP_REFERER`, may be NULL |
+| `user_agent`    | VARCHAR(512)   | Truncated to 512 chars |
+| `ip`            | VARCHAR(45)    | IPv4 or IPv6 |
+| `hit_count`     | INT UNSIGNED   | Burst counter, ≥ 1 |
+| `last_seen`     | DATETIME (GMT) | Updated on every dedup-bump |
+
+### Retention
+
+The cron job `iawm_prune_404_log` fires daily at 03:30 site time and
+deletes rows older than `iawm_404_retention_days` (default **30 days**,
+clamped to [1, 365]). The three rotation jobs are offset so they don't
+all hit wpdb at the same minute: audit at 03:00, backup at 03:15, 404 at
+03:30.
+
+### How to investigate
+
+The agent has four MCP tools for this:
+
+- `iawm_404_list` — paginated list of recent rows. Default window is the
+  last 7 days; pass `since` (ISO 8601) to widen it.
+- `iawm_404_stats` — aggregate counters, top 10 missing URLs by total
+  hits, top 5 referers. The fast first read when you don't know where
+  to start.
+- `iawm_404_delete` — remove a single row once you've resolved the
+  underlying broken link (or installed a redirect).
+- `iawm_404_clear` — empty the whole table. Two-step destructive
+  operation: the first call returns a confirmation token + a summary
+  showing how many rows will be deleted; the second call applies it.
+
+Typical workflow:
+
+1. *"Show me the top 404s of the last 30 days."* — Claude calls
+   `iawm_404_stats`, sorts the surface by hit count.
+2. For each high-volume URL, decide:
+   - **Stale internal link** → fix it in the source page.
+   - **Removed page, search engine still indexes it** → add a 301
+     redirect (or restore the page if it should still exist).
+   - **Bot probing for vulnerabilities** (`/wp-config.php~`,
+     `/.env`, …) → ignore; the WAF/firewall layer is the right place
+     to block these.
+3. Delete the row once handled, or leave it and rely on the 30-day
+   retention to age it out.
 
 ---
 

@@ -68,6 +68,17 @@ class IAWM_REST {
 				),
 			)
 		);
+
+		// /status/network — multisite topology (authenticated).
+		register_rest_route(
+			IAWM_REST_NAMESPACE,
+			'/status/network',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( __CLASS__, 'handle_status_network' ),
+				'permission_callback' => array( 'IAWM_Auth', 'guard_read' ),
+			)
+		);
 	}
 
 	/**
@@ -141,6 +152,78 @@ class IAWM_REST {
 			),
 			200
 		);
+	}
+
+	/**
+	 * POST /status/network — multisite topology overview.
+	 *
+	 * Returns whether this WordPress install is a multisite, and if so,
+	 * which sub-site the request currently lives on. On the main site of
+	 * a network the response additionally includes the total sub-site
+	 * count and a compact list of sites (id, URL, name).
+	 *
+	 * This is read-only and authenticated under the `read` scope. It is
+	 * deliberately small so Claude can call it cheaply at the start of a
+	 * session to know whether multisite-specific reasoning applies.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function handle_status_network() {
+		$is_multisite     = is_multisite();
+		$current_blog_id  = function_exists( 'get_current_blog_id' ) ? (int) get_current_blog_id() : 0;
+		$is_main_site     = $is_multisite ? (bool) is_main_site() : true;
+		$network_id       = $is_multisite && function_exists( 'get_current_network_id' )
+			? (int) get_current_network_id()
+			: 0;
+
+		$payload = array(
+			'ok'              => true,
+			'is_multisite'    => $is_multisite,
+			'is_main_site'    => $is_main_site,
+			'current_blog_id' => $current_blog_id,
+			'network_id'      => $network_id,
+			'sites_in_network' => null,
+			'sites'            => null,
+		);
+
+		if ( $is_multisite && function_exists( 'get_sites' ) ) {
+			// Compute the total count regardless of which sub-site we're on
+			// — `get_sites` is allowed across the whole network from any
+			// blog context, and this lets the caller see the topology
+			// even from a secondary sub-site.
+			$payload['sites_in_network'] = (int) get_sites( array( 'count' => true ) );
+
+			// Only echo the per-site list from the main site to keep the
+			// payload small and the surface predictable.
+			if ( $is_main_site ) {
+				$sites = get_sites( array( 'number' => 100 ) );
+				$list  = array();
+				foreach ( $sites as $site ) {
+					$bid  = (int) $site->blog_id;
+					$info = get_blog_details( $bid, false );
+					$list[] = array(
+						'blog_id'   => $bid,
+						'url'       => $info ? (string) $info->siteurl : '',
+						'name'      => $info ? (string) $info->blogname : '',
+						'is_active' => $info ? ! (int) $info->deleted && ! (int) $info->archived : true,
+					);
+				}
+				$payload['sites'] = $list;
+			}
+		}
+
+		// Plugin network-activation flag is useful for the operator.
+		$payload['plugin_network_active'] = false;
+		if ( $is_multisite ) {
+			if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
+			$payload['plugin_network_active'] = (bool) is_plugin_active_for_network(
+				plugin_basename( IAWM_PLUGIN_FILE )
+			);
+		}
+
+		return new WP_REST_Response( $payload, 200 );
 	}
 
 	/**

@@ -12,6 +12,115 @@ where they moved together:
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-05-25 — plugin 1.2.0, gateway 1.2.0
+
+Phase 8 closure — Yoast SEO backend, WooCommerce/Theme Builder helper,
+broken-links scanner, 404 tracker, and multisite tolerance ship together.
+
+### Added
+
+- **Yoast SEO backend** (#33). `IAWM_Seo` now auto-detects Yoast
+  alongside Rank Math and reads/writes the per-postmeta keys Yoast
+  uses (`_yoast_wpseo_title`, `_yoast_wpseo_metadesc`,
+  `_yoast_wpseo_focuskw`, `_yoast_wpseo_canonical`, OpenGraph + Twitter
+  pairs, and the noindex/nofollow flag pair stored as separate
+  `'1'` / `''` postmeta). The MCP surface (`iawm_seo_status`,
+  `iawm_seo_page_get`, `iawm_seo_page_update`) is unchanged; only the
+  backend dispatcher learned a new branch. (Decision D-025.)
+- **WooCommerce Theme Builder helper** (`IAWM_WooCommerce`). Two
+  read-only endpoints: `/woocommerce/status` (reports plugin activity,
+  version, products_count, currency, shop/cart/checkout/myaccount
+  page ids, and which template contexts already have a Theme Builder
+  layout) and `/woocommerce/contexts` (returns the four canonical
+  contexts — shop, single-product, cart, checkout — each with a
+  pre-built list of `suggested_modules` and the matching Divi
+  Theme-Builder `use_on` assignment expression). MCP tools:
+  `iawm_woocommerce_status`, `iawm_woocommerce_contexts`. No new
+  parametric pattern: the 25 Woo modules are already in the
+  auto-discovered registry (D-018), so callers compose pages via
+  `iawm_divi_theme_builder_compose` using the suggested module list.
+  New doc: `docs/woocommerce-integration.md`.
+- **Broken-links scanner** (`IAWM_LinkChecker`). New per-site table
+  `wp_iawm_link_issues` (id, found_at, source_post_id, target_url,
+  status_code, outcome ∈ {404, 410, timeout, dns, ssl, other},
+  redirect_to, is_internal, resolved_at). Scan walks the published
+  content set (posts + pages + custom post types), extracts links via
+  DOMDocument with a regex fallback, deduplicates inside the scan
+  and against the existing table, then probes each target with HEAD
+  → GET fallback (servers that reject HEAD with 400/403/405/501 get
+  retried) and a 100 ms throttle. Endpoints: `/diagnostics/links/scan`
+  (infra:write, returns a scan summary), `/diagnostics/links/list`
+  (filter by outcome and resolved state), `/diagnostics/links/resolve`
+  (mark fixed), `/diagnostics/links/delete`. MCP tools:
+  `iawm_links_scan`, `iawm_links_list`, `iawm_links_resolve`,
+  `iawm_links_delete`. (Decision D-028.)
+- **404 tracker** (`IAWM_FourOhFour`). New per-site table
+  `wp_iawm_404_log` (id, created_at, requested_url, referer,
+  user_agent, ip, hit_count, last_seen). Hooks `template_redirect`
+  at priority 999 and bails on wp-admin/wp-login/wp-cron/xmlrpc/feed.
+  Dedup transient `iawm_404_dedup_{sha1(url|ip)}` with a 60 s TTL
+  suppresses crawler log-spam at the row-insert level; distinct IPs
+  still increment `hit_count` on the existing row. Sampling rate
+  configurable via `iawm_404_sampling_rate` (default 1 — record every
+  hit). Endpoints: `/diagnostics/404/list` (paginated), `/stats`
+  (top URLs + totals + outcome histogram), `/delete` (content:write,
+  per-row), `/clear` (infra:write + confirmation token).
+  Cron prune at 03:30 (offset from audit 03:00, backups 03:15).
+  MCP tools: `iawm_404_list`, `iawm_404_stats`, `iawm_404_delete`,
+  `iawm_404_clear`. (Decision D-026.)
+- **Multisite tolerance**. Plugin install logic refactored: the agent
+  WordPress user is provisioned **once globally** on the network
+  (`IAWM_Agent_User::ensure_global_user`), but the `iawm_agent` role
+  and the per-site tables (audit, backups, 404 log, link issues) are
+  installed **per sub-site** under that sub-site's `$wpdb->prefix`.
+  Network-activation walks `get_sites()` inside `switch_to_blog()`
+  loops; newly-created sub-sites are provisioned automatically via
+  the `wp_initialize_site` hook (legacy `wpmu_new_blog` registered
+  for pre-WP-5.1). New `POST /status/network` endpoint returns
+  topology (`is_multisite`, `is_main_site`, `current_blog_id`,
+  `network_id`, `sites_in_network`, `sites[]` from the main site,
+  `plugin_network_active`). New `IAWM_Network_Admin` module adds a
+  Network Admin → Settings page listing every sub-site with its key
+  count, kill-switch state, last audit row and next cron timestamp
+  (paginated, 50/page, read-only). MCP tool: `iawm_status_network`.
+  New doc: `docs/multisite.md`. (Decision D-027.)
+
+### Changed
+
+- `IAWM_REST::register_routes` registers four new namespaces:
+  `/woocommerce/*`, `/diagnostics/links/*`, `/diagnostics/404/*` and
+  `/status/network`. Auth rules updated: `diagnostics/links/scan` and
+  `diagnostics/404/clear` require `infra:write`; `diagnostics/404/clear`
+  is added to `IAWM_Confirmation::REQUIRES_CONFIRMATION`.
+- Roadmap: Phase 8 marked complete except the two carry-overs kept
+  intentionally open (deeper Divi module builders, webhook signing).
+- Spec 06 (infrastructure): broken-links scanner and 404 tracker
+  documented as part of the infrastructure plane.
+
+### Fixed
+
+- `IAWM_Seo` no longer rejects requests when only Yoast is active —
+  previously returned `yoast_not_implemented` even though the adapter
+  was implementation-ready.
+
+### Decisions
+
+- **D-025** — Yoast SEO unlocked as a first-class backend (postmeta
+  shape mapped 1:1 with the normalized SEO payload, separate
+  noindex/nofollow flags stored as `'1'` / `''` postmeta).
+- **D-026** — 404 tracker uses a URL+IP dedup transient (60 s TTL) to
+  suppress log-spam at the row-insert level while still counting hits
+  from distinct IPs; optional sampling for very high-traffic sites.
+- **D-027** — Multisite tolerance: the agent WordPress user is global,
+  the agent role and the per-feature tables are per-site. New
+  sub-sites get provisioned automatically via `wp_initialize_site`
+  when the plugin is network-activated.
+- **D-028** — Broken-links scanner scope: walks published content
+  only, HEAD-first with GET fallback for HEAD-hostile servers,
+  classifies WP_Error by message substring (timeout / dns / ssl /
+  other), 100 ms inter-request throttle, dedup inside the scan and
+  against the existing issues table.
+
 ## [1.1.0] — 2026-05-25 — plugin 1.1.0, gateway 1.1.0
 
 Phase 6 (Webmaster layer) closure. Spec 07 is now Implemented.

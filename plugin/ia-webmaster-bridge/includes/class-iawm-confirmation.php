@@ -55,6 +55,7 @@ class IAWM_Confirmation {
 		'/backup/restore',
 		'/core/update',
 		'/database/search-replace',
+		'/diagnostics/404/clear',
 	);
 
 	/**

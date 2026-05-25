@@ -165,13 +165,15 @@ class IAWM_Auth {
 	 *
 	 *  - registered with `guard_read`  → `read`
 	 *  - registered with `guard_write` → write scope based on path prefix:
-	 *      - `/divi/*`      → `divi:write`
-	 *      - `/config/*`    → `config:write`
-	 *      - `/plugins/*`   → `infra:write`
-	 *      - `/themes/*`    → `infra:write` (Phase 4)
-	 *      - `/database/*`  → `infra:write` (Phase 4)
-	 *      - `/backup/*`    → `infra:write` (Phase 5.2)
-	 *      - any other      → `content:write`
+	 *      - `/diagnostics/404/clear`  → `infra:write`
+	 *      - `/diagnostics/links/scan` → `infra:write`
+	 *      - `/divi/*`                 → `divi:write`
+	 *      - `/config/*`               → `config:write`
+	 *      - `/plugins/*`              → `infra:write`
+	 *      - `/themes/*`               → `infra:write` (Phase 4)
+	 *      - `/database/*`             → `infra:write` (Phase 4)
+	 *      - `/backup/*`               → `infra:write` (Phase 5.2)
+	 *      - any other                 → `content:write`
 	 *
 	 * @param WP_REST_Request $request       Incoming request.
 	 * @param bool            $require_write True if the route was registered with guard_write.
@@ -194,13 +196,18 @@ class IAWM_Auth {
 		$suffix = substr( $route, strlen( $ns ) );
 
 		// Write endpoints — categorise by family.
+		// Longest-prefix-first wins: `diagnostics/404/clear` must match
+		// BEFORE any generic `diagnostics/` rule would (we don't have one
+		// today, but ordering is part of the contract).
 		$prefix_map = array(
-			'divi/'     => IAWM_Settings::SCOPE_DIVI_WRITE,
-			'config/'   => IAWM_Settings::SCOPE_CONFIG_WRITE,
-			'plugins/'  => IAWM_Settings::SCOPE_INFRA_WRITE,
-			'themes/'   => IAWM_Settings::SCOPE_INFRA_WRITE,
-			'database/' => IAWM_Settings::SCOPE_INFRA_WRITE,
-			'backup/'   => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'diagnostics/404/clear'   => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'diagnostics/links/scan'  => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'divi/'                   => IAWM_Settings::SCOPE_DIVI_WRITE,
+			'config/'                 => IAWM_Settings::SCOPE_CONFIG_WRITE,
+			'plugins/'                => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'themes/'                 => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'database/'               => IAWM_Settings::SCOPE_INFRA_WRITE,
+			'backup/'                 => IAWM_Settings::SCOPE_INFRA_WRITE,
 		);
 
 		foreach ( $prefix_map as $prefix => $scope ) {

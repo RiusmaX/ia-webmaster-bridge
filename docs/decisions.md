@@ -490,6 +490,132 @@ new one.
   MCP tools + admin tab + `site-context-discovery` skill that
   bootstraps the context from observable signals on a fresh install.
 
+## D-025 — Yoast SEO as a first-class backend alongside Rank Math
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: until v1.1.0 `IAWM_Seo` exposed a normalized API but
+  only had a Rank Math backend; a Yoast branch existed but bailed out
+  with `yoast_not_implemented`. Several user sites run Yoast and need
+  the same MCP surface (`iawm_seo_page_get` / `iawm_seo_page_update`)
+  without a backend swap.
+- **Decision**: implement the Yoast branch fully and auto-detect
+  which plugin is active. The normalized payload (title, description,
+  focus keyword, canonical, OpenGraph triplet, Twitter pair,
+  noindex/nofollow) maps 1:1 to Yoast postmeta. The only structural
+  difference vs Rank Math: Yoast stores noindex/nofollow as two
+  separate postmeta entries (`_yoast_wpseo_meta-robots-noindex` and
+  `_yoast_wpseo_meta-robots-nofollow`) with values `'1'` / `''`,
+  while Rank Math serializes them in a single list under
+  `rank_math_robots`. The dispatcher branches at the get/set level so
+  the API stays identical.
+- **Consequences**:
+  - Sites can switch between Rank Math and Yoast without touching
+    Claude's prompts or workflows.
+  - If both plugins are active (rare but possible during a migration),
+    the dispatcher picks Rank Math first as the historical default;
+    operators can force Yoast by deactivating Rank Math.
+  - The skill `seo-wordpress` documents both backends as
+    interchangeable.
+
+## D-026 — 404 tracker uses URL+IP transient dedup, optional sampling
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: a per-request log of every 404 on a high-traffic site
+  would balloon the `wp_iawm_404_log` table within hours: a single
+  vulnerability scanner hits hundreds of paths from one IP, and good
+  search engines hit the same broken URL repeatedly. We want signal,
+  not row count.
+- **Decision**: insert at most one row per `(url, IP)` pair per 60 s
+  via a transient `iawm_404_dedup_{sha1(url|ip)}`. When the dedup key
+  exists, we **update** the existing row (bump `hit_count`, refresh
+  `last_seen`) instead of inserting a new one. Distinct IPs still
+  create distinct rows the first time they hit a URL — useful to
+  tell "one scanner" from "many users hitting a broken link". Add
+  an optional sampling denominator (`iawm_404_sampling_rate`,
+  default 1 = record everything) so very high-traffic sites can
+  trade resolution for table size.
+- **Consequences**:
+  - Table size stays bounded (~tens of thousands of rows on a normal
+    site; scanner spikes don't explode it).
+  - Distinct-IP rollup gives a real popularity signal without storing
+    one row per hit.
+  - The 60 s transient TTL is short enough that real visitors are not
+    silently dropped if they share a NATed IP; it's long enough to
+    absorb scanner bursts.
+  - Daily prune at 03:30 (offset from audit 03:00 and backup 03:15)
+    keeps cron load distributed.
+
+## D-027 — Multisite tolerance: global user, per-site role and tables
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: until v1.1.0 the plugin assumed a single-site install.
+  The agent WordPress user was created on whatever site happened to
+  run activation; the audit, backup, link-issues and 404 tables were
+  installed per `$wpdb->prefix` (so per-site by accident) but only on
+  the activation site; the role assignment lived on a single site
+  too. Network-activating the plugin left every sub-site half-broken.
+- **Decision**:
+  - The dedicated `iawm-agent` WordPress user is created **once
+    globally** for the network (`IAWM_Agent_User::ensure_global_user`).
+    The user record is shared; only the per-site capability mapping
+    is local.
+  - The `iawm_agent` **role** and every per-feature table (audit,
+    backups, link issues, 404 log) are installed **per sub-site**
+    inside a `switch_to_blog()` loop on network activation, and
+    automatically on new sub-sites via `wp_initialize_site`
+    (`wpmu_new_blog` registered as a legacy fallback for pre-WP-5.1).
+  - The auth, scopes and credentials options stay per-site: each
+    sub-site has its own keys and kill switch. This matches the
+    natural blast-radius boundary of multisite — operators routinely
+    delegate sub-sites to separate teams.
+  - A new `IAWM_Network_Admin` adds a Network Admin → Settings page
+    listing every sub-site (blog id, URL, key count, kill switch
+    state, last audit row, next cron timestamp).
+  - A new `/status/network` endpoint exposes topology so Claude can
+    detect a multisite at session start without paying the cost of
+    enumerating sites.
+- **Consequences**:
+  - Single-site installs are unaffected; the new code paths are
+    guarded by `is_multisite()`.
+  - Operators can audit network-wide health from one place without
+    having to switch_to_blog manually.
+  - Credentials sharing across sub-sites is **not** automatic on
+    purpose — each sub-site issues its own keys, which keeps blast
+    radius local.
+
+## D-028 — Broken-links scanner scope: published content, HEAD→GET, throttled
+
+- Date: 2026-05-25 · Status: Accepted
+- **Context**: a broken-link audit could mean many things — only the
+  homepage, every published page, every revision, every comment,
+  external links only, etc. We need a deterministic scope that runs
+  in reasonable time on a real site and produces actionable output.
+- **Decision**:
+  - Scope: every **published** post in every public post type
+    (`posts`, `pages`, plus any custom post type registered as
+    public). Drafts, trash, attachments, revisions are skipped.
+  - Extraction: `DOMDocument::loadHTML` of the rendered post content,
+    pulling every `<a href>` and `<img src>`. Regex fallback if
+    DOMDocument errors. Skip `#anchor`, `mailto:`, `tel:`,
+    `javascript:`, `data:`.
+  - Probe: HEAD request first (fast, cheap); on 400/403/405/501
+    or other "HEAD-hostile" responses, retry with GET. 100 ms
+    throttle between requests to avoid hammering the host.
+  - Classification: HTTP status code if available; otherwise classify
+    `WP_Error` by message substring (`timeout` / `dns` / `ssl` /
+    `other`). Redirects (3xx) are followed and the final URL is
+    recorded as `redirect_to`.
+  - Dedup: in-scan (don't probe the same URL twice in one run) **and**
+    against the existing `wp_iawm_link_issues` table (don't re-record
+    a known-unresolved issue, just refresh `found_at`).
+- **Consequences**:
+  - One scan of a 200-post site finishes in 1–3 minutes on a typical
+    server; the throttle keeps it polite.
+  - Drafts are not scanned because they're not visible to users; this
+    matches the "find what your visitors see broken" use-case.
+  - Internal vs external is recorded so operators can fix internal
+    issues directly and choose whether external dead links matter.
+
 ## D-010 — Public open source distribution
 
 - Date: 2026-05-22 · Status: Accepted

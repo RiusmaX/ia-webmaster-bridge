@@ -5,7 +5,11 @@
  * Relies on an SEO backend active on the site. Supported backends, in
  * order of priority, are:
  *  - Rank Math (`seo-by-rank-math/rank-math.php`).
- *  - Yoast SEO (`wordpress-seo/wp-seo.php`) — backlog.
+ *  - Yoast SEO (`wordpress-seo/wp-seo.php`).
+ *
+ * Both backends are interchangeable from the caller's point of view —
+ * the same normalised field names apply, and `iawm_seo_status` reports
+ * which backend is currently active.
  *
  * Field names are **normalised** in this API (independent of the
  * underlying plugin): meta_title, meta_description, focus_keyword,
@@ -62,6 +66,15 @@ class IAWM_Seo {
 	 *
 	 * @var array
 	 */
+	/**
+	 * Mapping normalised name -> Yoast meta_key.
+	 *
+	 * Yoast keeps each robots flag in its own postmeta — see
+	 * `read_yoast_robots()` / `write_yoast_robots()` for that special
+	 * case (unlike Rank Math which serialises them into a single key).
+	 *
+	 * @var array
+	 */
 	const YOAST_MAP = array(
 		'meta_title'           => '_yoast_wpseo_title',
 		'meta_description'     => '_yoast_wpseo_metadesc',
@@ -74,6 +87,12 @@ class IAWM_Seo {
 		'twitter_description'  => '_yoast_wpseo_twitter-description',
 		'twitter_image_id'     => '_yoast_wpseo_twitter-image-id',
 	);
+
+	/** Yoast postmeta key for noindex (value: `1` when noindexed). */
+	const YOAST_NOINDEX = '_yoast_wpseo_meta-robots-noindex';
+
+	/** Yoast postmeta key for nofollow (value: `1` when nofollowed). */
+	const YOAST_NOFOLLOW = '_yoast_wpseo_meta-robots-nofollow';
 
 	/**
 	 * Hooks up route registration.
@@ -202,14 +221,6 @@ class IAWM_Seo {
 			);
 		}
 
-		if ( self::BACKEND_YOAST === $backend ) {
-			return IAWM_Support::rest_error(
-				'yoast_not_implemented',
-				__( 'The Yoast backend is not yet implemented (backlog).', 'ia-webmaster-bridge' ),
-				501
-			);
-		}
-
 		$map    = self::get_map( $backend );
 		$fields = array();
 		foreach ( $map as $name => $meta_key ) {
@@ -217,12 +228,17 @@ class IAWM_Seo {
 			$fields[ $name ] = '' === $value ? null : $value;
 		}
 
-		// Rank Math specific: robots is a serialised list.
+		// Backend-specific robots flags.
 		if ( self::BACKEND_RANK_MATH === $backend ) {
+			// Rank Math: serialised list under a single key.
 			$robots = get_post_meta( $post_id, 'rank_math_robots', true );
 			$robots = is_array( $robots ) ? $robots : array();
 			$fields['robots_noindex']  = in_array( 'noindex', $robots, true );
 			$fields['robots_nofollow'] = in_array( 'nofollow', $robots, true );
+		} elseif ( self::BACKEND_YOAST === $backend ) {
+			// Yoast: one postmeta per flag, value `1` when set.
+			$fields['robots_noindex']  = '1' === (string) get_post_meta( $post_id, self::YOAST_NOINDEX, true );
+			$fields['robots_nofollow'] = '1' === (string) get_post_meta( $post_id, self::YOAST_NOFOLLOW, true );
 		}
 
 		return new WP_REST_Response(
@@ -278,35 +294,35 @@ class IAWM_Seo {
 				503
 			);
 		}
-		if ( self::BACKEND_YOAST === $backend ) {
-			return IAWM_Support::rest_error(
-				'yoast_not_implemented',
-				__( 'The Yoast backend is not yet implemented (backlog).', 'ia-webmaster-bridge' ),
-				501
-			);
-		}
-
 		$map      = self::get_map( $backend );
 		$applied  = array();
 		$rejected = array();
 
-		// Robots (special case for Rank Math).
-		$robots_update = null;
-		if ( self::BACKEND_RANK_MATH === $backend
-			&& ( isset( $fields['robots_noindex'] ) || isset( $fields['robots_nofollow'] ) )
-		) {
-			$existing = get_post_meta( $post_id, 'rank_math_robots', true );
-			$existing = is_array( $existing ) ? $existing : array();
+		// Robots — handled differently per backend.
+		$robots_update = null;        // Rank Math: list to serialise back.
+		$yoast_robots  = array();     // Yoast: per-flag postmeta writes.
+		if ( isset( $fields['robots_noindex'] ) || isset( $fields['robots_nofollow'] ) ) {
+			if ( self::BACKEND_RANK_MATH === $backend ) {
+				$existing = get_post_meta( $post_id, 'rank_math_robots', true );
+				$existing = is_array( $existing ) ? $existing : array();
 
-			if ( isset( $fields['robots_noindex'] ) ) {
-				$existing = array_values( array_diff( $existing, array( 'noindex', 'index' ) ) );
-				$existing[] = $fields['robots_noindex'] ? 'noindex' : 'index';
+				if ( isset( $fields['robots_noindex'] ) ) {
+					$existing = array_values( array_diff( $existing, array( 'noindex', 'index' ) ) );
+					$existing[] = $fields['robots_noindex'] ? 'noindex' : 'index';
+				}
+				if ( isset( $fields['robots_nofollow'] ) ) {
+					$existing = array_values( array_diff( $existing, array( 'nofollow', 'follow' ) ) );
+					$existing[] = $fields['robots_nofollow'] ? 'nofollow' : 'follow';
+				}
+				$robots_update = array_values( array_unique( $existing ) );
+			} elseif ( self::BACKEND_YOAST === $backend ) {
+				if ( isset( $fields['robots_noindex'] ) ) {
+					$yoast_robots[ self::YOAST_NOINDEX ] = $fields['robots_noindex'] ? '1' : '';
+				}
+				if ( isset( $fields['robots_nofollow'] ) ) {
+					$yoast_robots[ self::YOAST_NOFOLLOW ] = $fields['robots_nofollow'] ? '1' : '';
+				}
 			}
-			if ( isset( $fields['robots_nofollow'] ) ) {
-				$existing = array_values( array_diff( $existing, array( 'nofollow', 'follow' ) ) );
-				$existing[] = $fields['robots_nofollow'] ? 'nofollow' : 'follow';
-			}
-			$robots_update = array_values( array_unique( $existing ) );
 			unset( $fields['robots_noindex'], $fields['robots_nofollow'] );
 		}
 
@@ -329,11 +345,28 @@ class IAWM_Seo {
 			}
 		}
 
-		if ( null !== $robots_update && ! $dry_run ) {
-			update_post_meta( $post_id, 'rank_math_robots', $robots_update );
+		// Apply backend-specific robots.
+		if ( self::BACKEND_RANK_MATH === $backend && null !== $robots_update ) {
+			if ( ! $dry_run ) {
+				update_post_meta( $post_id, 'rank_math_robots', $robots_update );
+			}
 			$applied[] = array( 'field' => 'robots', 'meta_key' => 'rank_math_robots', 'value' => $robots_update );
-		} elseif ( null !== $robots_update ) {
-			$applied[] = array( 'field' => 'robots', 'meta_key' => 'rank_math_robots', 'value' => $robots_update );
+		}
+		if ( self::BACKEND_YOAST === $backend && ! empty( $yoast_robots ) ) {
+			foreach ( $yoast_robots as $meta_key => $value ) {
+				if ( ! $dry_run ) {
+					if ( '' === $value ) {
+						delete_post_meta( $post_id, $meta_key );
+					} else {
+						update_post_meta( $post_id, $meta_key, $value );
+					}
+				}
+				$applied[] = array(
+					'field'    => str_contains( $meta_key, 'noindex' ) ? 'robots_noindex' : 'robots_nofollow',
+					'meta_key' => $meta_key,
+					'value'    => $value,
+				);
+			}
 		}
 
 		return new WP_REST_Response(

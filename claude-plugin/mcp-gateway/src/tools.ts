@@ -73,6 +73,16 @@ function registerSystem(server: McpServer, client: IawmClient): void {
   );
 
   server.registerTool(
+    "iawm_status_network",
+    {
+      title: "Multisite topology",
+      description:
+        "Reports whether this WordPress install is a multisite and, if so, which sub-site the connection currently targets. Returns is_multisite, is_main_site, current_blog_id, network_id, sites_in_network, and (on the main site only) a compact list of sub-sites. Call once at the start of a session if you need to know whether multisite-specific reasoning applies.",
+    },
+    async () => toToolResult("status/network", await client.post("/status/network", {})),
+  );
+
+  server.registerTool(
     "iawm_audit",
     {
       title: "Audit log",
@@ -1138,6 +1148,33 @@ function registerDivi(server: McpServer, client: IawmClient): void {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* WooCommerce (Theme Builder context hints + site audit)              */
+/* ------------------------------------------------------------------ */
+
+function registerWooCommerce(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_woocommerce_status",
+    {
+      title: "WooCommerce site audit",
+      description:
+        "Read-only audit of the site's WooCommerce setup: whether the plugin is active, its version, the published products count, the configured currency, the ids of the Shop / Cart / Checkout / My-Account pages, and which Divi Theme Builder templates already cover the WooCommerce contexts (shop archive, single product, cart, checkout). The 25 WooCommerce Divi 5 modules are designed to live inside Theme Builder templates, not standalone pages — call this tool first to know whether WooCommerce is available and what's already templated before composing.",
+    },
+    async () => toToolResult("woocommerce/status", await client.post("/woocommerce/status", {})),
+  );
+
+  server.registerTool(
+    "iawm_woocommerce_contexts",
+    {
+      title: "WooCommerce template contexts catalog",
+      description:
+        "Returns the canonical mapping of WooCommerce Theme Builder contexts (shop, single-product, cart, checkout) to the Divi 5 modules typically used in each — plus the Divi `use_on` assignment expressions for `iawm_divi_theme_builder_template_assign`. The 25 WooCommerce modules CAN be composed inside standalone pages via `iawm_divi_page_compose`, but it's idiomatic to use them inside Theme Builder templates assigned to the relevant WC contexts. Consult this catalog before building a WooCommerce Theme Builder template so you pick the right modules for the right template type.",
+    },
+    async () =>
+      toToolResult("woocommerce/contexts", await client.post("/woocommerce/contexts", {})),
+  );
+}
+
 /**
  * Registers every gateway tool on the MCP server.
  *
@@ -1581,6 +1618,198 @@ function registerBackup(server: McpServer, client: IawmClient): void {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* 404 tracker — reactive monitoring of failed visitor requests        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The 404 tracker is the REACTIVE counterpart to a broken-links scanner.
+ *
+ * - 404 tracker (`iawm_404_*`): observes what the OUTSIDE WORLD is
+ *   actually requesting and failing to fetch. Tells you which URLs are
+ *   being hit that don't exist — usually removed pages a search engine
+ *   still has indexed, mistyped sitemap entries, broken backlinks from
+ *   other sites, or bots probing for known vulnerabilities.
+ *
+ * - Broken-links scanner (`iawm_links_scan`): walks YOUR OWN content
+ *   looking for stale outbound or internal links before a visitor hits
+ *   one.
+ *
+ * The two are complementary — use the tracker when you suspect external
+ * traffic is bouncing, use the scanner when you want to audit your own
+ * site.
+ */
+function registerFourOhFour(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_404_list",
+    {
+      title: "List recent 404 hits",
+      description:
+        "Lists 404 hits actually received by visitors over a time window, newest first. Each row carries the requested URL, referer, user-agent, IP, first-seen and last-seen timestamps, and a hit_count (incremented when the same URL is re-hit by the same IP inside a 60-second dedup window). Use this to investigate which non-existent URLs the outside world is fetching — typically removed pages search engines still index, mistyped sitemap entries, or broken backlinks. For PROACTIVE link-checking of your own content, use the broken-links scanner (`iawm_links_scan`) instead.",
+      inputSchema: {
+        limit: z.number().int().min(1).max(100).optional().describe("Per-page (1-100, default 50)"),
+        offset: z.number().int().min(0).optional().describe("Offset (>=0, default 0)"),
+        since: z
+          .string()
+          .optional()
+          .describe(
+            "ISO 8601 lower bound on created_at (e.g. 2026-05-01T00:00:00Z). Defaults to now - 7 days.",
+          ),
+      },
+    },
+    async (args) => toToolResult("diagnostics/404/list", await client.post("/diagnostics/404/list", args)),
+  );
+
+  server.registerTool(
+    "iawm_404_stats",
+    {
+      title: "Aggregate 404 metrics",
+      description:
+        "Returns aggregate metrics over the same time window as `iawm_404_list`: total unique URLs, total hit count (sum of hit_count across all rows), top 10 most-requested missing URLs, and top 5 referers driving 404s. Use this to spot the URL with 10000 hits worth fixing (or redirecting) before looking at the long tail.",
+      inputSchema: {
+        since: z
+          .string()
+          .optional()
+          .describe("ISO 8601 lower bound on created_at. Defaults to now - 7 days."),
+      },
+    },
+    async (args) => toToolResult("diagnostics/404/stats", await client.post("/diagnostics/404/stats", args)),
+  );
+
+  server.registerTool(
+    "iawm_404_delete",
+    {
+      title: "Delete a 404 log entry",
+      description:
+        "Permanently removes one row from the 404 log (e.g. once you've resolved the underlying broken link). Scope: content:write.",
+      inputSchema: {
+        id: z.number().int().describe("404 log row id"),
+      },
+    },
+    async (args) => toToolResult("diagnostics/404/delete", await client.post("/diagnostics/404/delete", args)),
+  );
+
+  server.registerTool(
+    "iawm_404_clear",
+    {
+      title: "Clear the entire 404 log",
+      description:
+        "Empties the whole 404 log table. TWO-STEP destructive operation: first call without `confirmation_token` returns `requires_confirmation: true` with a fresh token and a summary (row count to be deleted); re-issue the SAME body with `confirmation_token: <that token>` to actually wipe. Tokens are single-use, expire after 5 minutes and are bound to the body. Scope: infra:write.",
+      inputSchema: {
+        confirmation_token: z
+          .string()
+          .optional()
+          .describe("Token returned by the first call. Required to actually clear."),
+      },
+    },
+    async (args) => toToolResult("diagnostics/404/clear", await client.post("/diagnostics/404/clear", args)),
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Broken-links scanner — proactive audit of your own content          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The broken-links scanner walks published posts + pages, extracts every
+ * `<a href>` from `post_content`, and probes each unique URL with
+ * `wp_remote_head` (falling back to GET when the remote refuses HEAD).
+ * Non-OK outcomes (4xx / 5xx, timeout, DNS, SSL) land in
+ * `wp_iawm_link_issues` for review.
+ *
+ * Pacing: there's a 100 ms throttle between distinct probes, and a hard
+ * cap of `OPTION_MAX_LINKS` (default 500) URLs per scan to bound runtime.
+ * Rule of thumb: budget several seconds per ~50 links — most of the wall
+ * time is remote HTTP latency. For sites that exceed the cap, drive the
+ * scan from a cron job (see the `scheduled-routines` skill).
+ *
+ * Each `iawm_links_scan` response surfaces `issues_found` (total non-OK
+ * results this run) AND `issues_new` (rows actually inserted — re-scans
+ * skip pairs that already have an unresolved row).
+ *
+ * Complementary to the 404 tracker (`iawm_404_*`): the scanner finds
+ * problems BEFORE a visitor does; the tracker reports problems visitors
+ * have ALREADY hit.
+ */
+function registerLinkChecker(server: McpServer, client: IawmClient): void {
+  server.registerTool(
+    "iawm_links_scan",
+    {
+      title: "Scan content for broken links",
+      description:
+        "Walks published posts + pages, extracts every <a href>, and probes each unique URL with HEAD (falling back to GET when the server refuses HEAD). Non-OK results are recorded in the link-issues table. SYNCHRONOUS — budget several seconds per ~50 links because most wall time is remote HTTP latency. The response surfaces `issues_found` (total non-OK this run) AND `issues_new` (newly recorded rows: re-scans skip pairs that still have an unresolved row, so the count of new issues is what actually matters for triage). Capped at 500 URLs/run by default. Scope: infra:write.",
+      inputSchema: {
+        post_ids: z
+          .array(z.number().int())
+          .optional()
+          .describe("Subset of post / page IDs to scan. Omit to scan every published post + page."),
+        include_internal: z
+          .boolean()
+          .optional()
+          .describe("Probe internal URLs (same host as the site). Default true."),
+        include_external: z
+          .boolean()
+          .optional()
+          .describe("Probe external URLs. Default true."),
+        dry_run: z
+          .boolean()
+          .optional()
+          .describe("If true, returns findings WITHOUT writing them to the issues table. Useful for previewing a scan."),
+      },
+    },
+    async (args) => toToolResult("diagnostics/links/scan", await client.post("/diagnostics/links/scan", args)),
+  );
+
+  server.registerTool(
+    "iawm_links_list",
+    {
+      title: "List recorded link issues",
+      description:
+        "Paginated list of recorded broken-link findings. Filter by outcome bucket ('404', '410', 'timeout', 'dns', 'ssl', 'other') or source_post_id. By default only unresolved issues are returned — pass only_unresolved=false to also see closed ones. The response includes a `total` count for the filter so the UI can paginate. Scope: read.",
+      inputSchema: {
+        limit: z.number().int().optional().describe("Per-page (1-200, default 50)"),
+        offset: z.number().int().optional().describe("Offset (>=0, default 0)"),
+        outcome: z
+          .string()
+          .optional()
+          .describe("Filter by outcome: '404', '410', 'timeout', 'dns', 'ssl', 'other'"),
+        source_post_id: z.number().int().optional().describe("Filter by source post id"),
+        only_unresolved: z
+          .boolean()
+          .optional()
+          .describe("Return only unresolved rows (default true)"),
+      },
+    },
+    async (args) => toToolResult("diagnostics/links/list", await client.post("/diagnostics/links/list", args)),
+  );
+
+  server.registerTool(
+    "iawm_links_resolve",
+    {
+      title: "Mark a link issue resolved",
+      description:
+        "Stamps an issue as resolved (sets resolved_at to NOW). Resolved rows are kept for auditability and are pruned automatically after the retention window. Use this after fixing the underlying link in the source post. Scope: content:write.",
+      inputSchema: {
+        issue_id: z.number().int().describe("Issue id to resolve"),
+      },
+    },
+    async (args) => toToolResult("diagnostics/links/resolve", await client.post("/diagnostics/links/resolve", args)),
+  );
+
+  server.registerTool(
+    "iawm_links_delete",
+    {
+      title: "Delete a link issue row",
+      description:
+        "Permanently deletes an issue row — use this for stale findings you don't want to keep in the audit trail. Prefer `iawm_links_resolve` for normal cleanup (it preserves the record). Scope: content:write.",
+      inputSchema: {
+        issue_id: z.number().int().describe("Issue id to delete"),
+      },
+    },
+    async (args) => toToolResult("diagnostics/links/delete", await client.post("/diagnostics/links/delete", args)),
+  );
+}
+
 export function registerTools(server: McpServer, client: IawmClient): void {
   registerSystem(server, client);
   registerContent(server, client);
@@ -1596,6 +1825,9 @@ export function registerTools(server: McpServer, client: IawmClient): void {
   registerCron(server, client);
   registerSeo(server, client);
   registerDivi(server, client);
+  registerWooCommerce(server, client);
   registerBackup(server, client);
   registerContext(server, client);
+  registerFourOhFour(server, client);
+  registerLinkChecker(server, client);
 }
