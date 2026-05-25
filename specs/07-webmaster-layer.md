@@ -1,9 +1,9 @@
 # Spec 07 — Webmaster layer (skills & workflows)
 
-- **Status**: Draft
+- **Status**: In progress (7 skills shipped; per-site context + documented workflows pending)
 - **Phase**: 6
 - **Priority**: Medium
-- **Last updated**: 2026-05-21
+- **Last updated**: 2026-05-25
 
 ## Goal
 

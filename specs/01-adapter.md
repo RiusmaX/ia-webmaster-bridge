@@ -1,9 +1,9 @@
 # Spec 01 — Adapter (plugin + MCP gateway)
 
-- **Status**: Draft
+- **Status**: Implemented
 - **Phase**: 1–2
 - **Priority**: High
-- **Last updated**: 2026-05-21
+- **Last updated**: 2026-05-25
 
 ## Goal
 

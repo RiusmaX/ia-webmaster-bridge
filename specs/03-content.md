@@ -1,9 +1,9 @@
 # Spec 03 — Content plan
 
-- **Status**: Draft
+- **Status**: Implemented
 - **Phase**: 2
 - **Priority**: High
-- **Last updated**: 2026-05-21
+- **Last updated**: 2026-05-25
 
 ## Goal
 

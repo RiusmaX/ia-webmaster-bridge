@@ -1,9 +1,9 @@
 # Spec 05 — Configuration plan
 
-- **Status**: Draft
+- **Status**: Implemented (general settings, users; theme options live with each builder)
 - **Phase**: 2
 - **Priority**: Medium
-- **Last updated**: 2026-05-21
+- **Last updated**: 2026-05-25
 
 ## Goal
 

@@ -1,9 +1,9 @@
 # Spec 04 — Divi 5 plan (priority)
 
-- **Status**: In progress (Phase 3.1 — reverse engineering)
+- **Status**: Implemented (Phase 3.1 through 3.6 complete; unified composer shipped)
 - **Phase**: 3
 - **Priority**: Top
-- **Last updated**: 2026-05-23
+- **Last updated**: 2026-05-25
 
 ## Goal
 
