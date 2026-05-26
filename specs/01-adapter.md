@@ -1,6 +1,6 @@
 # Spec 01 — Adapter (plugin + MCP gateway)
 
-- **Status**: Implemented (plugin v1.2.0, gateway v1.2.0, 100 MCP tools mapped to ~100 REST routes)
+- **Status**: Implemented (plugin v1.3.0, gateway v1.3.0, 108 MCP tools mapped to ~108 REST routes)
 - **Phase**: 1–2
 - **Priority**: High
 - **Last updated**: 2026-05-25
@@ -43,7 +43,7 @@ components: the **WordPress plugin** and the **local MCP gateway**.
   (`@modelcontextprotocol/sdk`).
 - **Tool catalogue is declared statically** in `src/tools.ts`: every MCP
   tool has a Zod schema for its inputs and a typed handler that translates
-  the call into a signed HTTPS request (see spec 02). 100 tools in v1.2.0.
+  the call into a signed HTTPS request (see spec 02). 108 tools in v1.3.0.
 - **Profiles**: a configuration file outside the repo
   (`~/.iawm/config.json`) describes each target (local, prod A, prod B) with
   its `baseUrl`, `keyId` and `secret`. One gateway process per profile;

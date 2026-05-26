@@ -184,6 +184,24 @@ Master tracker: [`phase-9-action-plan.md`](phase-9-action-plan.md).
   Remains the next deployment milestone.
 - [x] **9.8** — v1.3.0 release
 
+## Phase 10 — Operator polish *(in progress — target v1.4.0)*
+
+Master tracker: [`phase-10-action-plan.md`](phase-10-action-plan.md).
+
+Closes the three D-030 trade-offs deferred from v1.3.0 (webhook secret
+encryption, admin tab UI, audit.alert event firing) and adds three
+operator skills that orchestrate the v1.3.0 APIs.
+
+- [ ] **10.0** — Action plan + doc refresh (4 stale figures)
+- [ ] **10.1** — Skill `webhook-setup`
+- [ ] **10.2** — Skill `content-rollback`
+- [ ] **10.3** — Pseudonymisation step in `prod-deployment-checklist`
+- [ ] **10.4** — Encrypt webhook `signing_secret` at rest. Decision
+  D-032.
+- [ ] **10.5** — Webhooks admin tab in wp-admin
+- [ ] **10.6** — `audit.alert` event firing via tail watcher
+- [ ] **10.7** — v1.4.0 release
+
 ## Deployment milestones
 
 - [x] Stable on the local site (validated end-to-end 2026-05-25)

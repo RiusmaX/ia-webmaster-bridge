@@ -150,6 +150,63 @@ Only **after** the three checks above are green:
 - Run one harmless write (e.g. create a draft page titled "deployment
   smoke") and confirm it appears in `iawm_audit`. Delete the draft after.
 
+## Configure observability (optional but recommended)
+
+### Webhook for smoke-test failures
+
+If the operator wants to be paged when the site goes unhealthy, wire
+at least one outbound webhook subscribed to `smoke.failed` before
+opening the door. Reach for the `webhook-setup` skill — it walks
+through Slack vs generic JSON receiver vs PagerDuty, generates the
+signing secret, and verifies HMAC validation on the receiver side.
+
+Quick decision aid:
+- **No alerting infra yet?** Slack incoming webhook — fastest, no
+  signature verification on Slack's side but useful for visibility.
+- **Pager rotation in place?** Route through a verifying receiver
+  (PagerDuty Events v2 or similar) so leaked URLs can't inject
+  fake events.
+
+### Audit-log pseudonymisation
+
+If a **third party can read the audit log** — most commonly a hosting
+log shipper, a SIEM agent, a monitoring sidecar, or a read-only
+monitoring key — enable pseudonymisation so sensitive parameters
+(user passwords on creation, webhook signing secrets) are stored as
+SHA-256 short-prefix sentinels (`<redacted:sha256:abc123def456>`)
+instead of plaintext.
+
+Toggle lives in **WP admin → IA Webmaster Bridge → Cleanup**
+(`iawm_audit_pseudonymise` option, default off for v1.3.0+
+back-compat). Existing audit rows stay readable as-is; only new
+writes apply the masking.
+
+Confirm it's working after enabling:
+
+```
+iawm_audit({ limit: 1 })   # after a config/users/create call
+```
+
+The `params.password` field should show `<redacted:sha256:...>` and
+NOT the cleartext value. If it still shows cleartext, double-check
+the toggle persisted (the option is per-site on multisite).
+
+Decision rationale: D-031.
+
+### Audit-alert webhooks (v1.4+)
+
+If the audit pseudonymisation is on AND a webhook is registered for
+`audit.alert`, the audit tail watcher (every 5 min cron) will fire
+when one of the rules trips:
+
+- `scope_denied_burst` — 5+ scope-denied responses from the same key
+  in 60 s
+- `kill_switch_toggled` — fires once per toggle
+- `auth_failure_burst` — 10+ HMAC verification failures from the
+  same IP in 60 s
+
+Operator toggles in the same Cleanup tab. Decision D-030.
+
 ## Document the baseline
 
 Record, in the project notes (outside this repo):

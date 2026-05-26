@@ -1,8 +1,8 @@
 # Skills catalog
 
-> Status: Living · Last updated: 2026-05-25 (v1.2.0)
+> Status: Living · Last updated: 2026-05-25 (v1.4.0)
 
-The IA Webmaster Bridge ships **15 Claude Code skills** — reusable
+The IA Webmaster Bridge ships **17 Claude Code skills** — reusable
 workflows that compose the underlying MCP tools into recognisable
 operator procedures. Each skill is a markdown file with YAML
 frontmatter under `claude-plugin/skills/<slug>/SKILL.md`; Claude
@@ -33,6 +33,8 @@ knowing what's available helps you ask precisely.
 | [`site-status-report`](#site-status-report) | Weekly compiled health + content + audit + updates report | read |
 | [`scheduled-routines`](#scheduled-routines) | Program periodic site checks via WP-Cron | read + infra:write |
 | [`broken-links-audit`](#broken-links-audit) | Find broken outgoing links + triage incoming 404s, with concrete fix actions | read + infra:write + content:write |
+| [`webhook-setup`](#webhook-setup) | Register and verify an HMAC-signed outbound webhook destination | read + config:write |
+| [`content-rollback`](#content-rollback) | Restore an earlier revision of a post / page, with confirmation token + symmetric undo | read + content:write |
 
 ---
 
@@ -213,6 +215,37 @@ quarterly brand-drift check.
 **Prompt example**:
 > *"Set up the weekly site status report every Monday at 9 AM and
 > a quarterly reminder to rotate my API keys."*
+
+### webhook-setup
+
+Register an outbound webhook destination end-to-end: pick channel
+(Slack / generic JSON / PagerDuty), generate a strong signing secret,
+register via `iawm_webhooks_create` with the desired event list
+(`smoke.failed`, `audit.alert`, `key_rotation.reminder`, `test.ping`,
+or the `"*"` wildcard), send a `test.ping`, and verify the receiver
+validates the HMAC signature correctly using the recipe in
+`docs/operations.md`. Handles the "show the plaintext secret once,
+then it's gone" UX.
+
+**Prompt example**:
+> *"Wire a Slack alert for smoke-test failures — channel is
+> #ops-alerts in our workspace, here's the incoming webhook URL."*
+
+### content-rollback
+
+Restore an earlier revision of a post or page. Lists revisions
+(`iawm_content_revisions_list`), inspects candidates
+(`iawm_content_revisions_get`, with build-mode detection so Divi vs
+Gutenberg pages take the right write path), dry-runs the restore to
+surface the diff + the confirmation token, applies with the token,
+and **captures the auto-created revision id** as the symmetric undo
+handle (the Phase 9.5 mechanism: `wp_restore_post_revision` itself
+creates a fresh revision capturing pre-restore state). Smoke-tests
+after the restore.
+
+**Prompt example**:
+> *"The homepage edit from yesterday broke something — restore the
+> version from before."*
 
 ### broken-links-audit
 

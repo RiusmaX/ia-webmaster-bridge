@@ -623,7 +623,7 @@ new one.
   the plugin's `/capabilities` endpoint at startup and generate its
   MCP tools from the returned schemas. Two years later, the catalogue
   is **declared statically** in `claude-plugin/mcp-gateway/src/tools.ts`
-  (100 tools in v1.2.0), each with a Zod input schema and a typed
+  (108 tools in v1.3.0), each with a Zod input schema and a typed
   handler. No `/capabilities` endpoint exists on the plugin side.
 - **Decision**: ratify the static approach as the long-term shape.
   Adding a capability requires a coordinated edit on both sides
@@ -707,19 +707,29 @@ new one.
     usually long enough for the operator to notice through another
     channel anyway.
 - **Trade-offs**:
-  - **Plaintext secret at rest**. Encrypting the secret with a key
-    derived from `wp-config.php`'s `AUTH_KEY` would be nice but it
-    only really helps against an attacker who can dump the DB
-    without also having `wp-config.php`. In practice both sit on
-    the same filesystem, so the marginal benefit is small. v1.4 may
-    add it once the admin UI lands; for v1.3 we ship plaintext and
-    document it loudly here so operators rotate secrets if their DB
-    is ever exposed.
-  - **No admin UI in v1.3**. Endpoints + MCP tools + cron are
-    enough for the Claude-driven workflow we ship; humans without
-    Claude can call the endpoints via wp-cli or `curl`. A future
-    v1.4 will add an admin tab so plain wp-admin operators can
-    manage webhooks without leaving the UI.
+  - **Plaintext secret at rest** (resolved in v1.4.0 — see
+    [D-032](#d-032--webhook-signing-secret-encryption-at-rest-aes-256-cbc-derived-from-auth_key)).
+    The original v1.3.0 trade-off below is preserved for context;
+    v1.4 added an `IAWM_Crypto` helper that wraps the secret in an
+    `iawm-enc:v1:` envelope on INSERT/UPDATE and unwraps it at
+    HMAC time, with a one-time migration of legacy plaintext rows.
+    Original reasoning: encrypting with a key derived from
+    `wp-config.php`'s `AUTH_KEY` only really helps against an
+    attacker who can dump the DB without also having
+    `wp-config.php`. In practice both sit on the same filesystem,
+    so the marginal benefit is small — but small isn't zero, and
+    the implementation cost turned out to be modest, so v1.4
+    addressed it.
+  - **No admin UI in v1.3** — *resolved in v1.4.0*. Endpoints + MCP
+    tools + cron were enough for the Claude-driven workflow shipped
+    in v1.3.0, but a wp-admin-only operator had to reach for wp-cli
+    or `curl` to manage webhooks. v1.4.0's Phase 10.5 adds a
+    dedicated "Webhooks" tab to the plugin's settings page covering
+    create / edit / toggle / test / delete / rotate-secret. Both the
+    admin UI and the existing REST endpoints / MCP tools route
+    through the same `IAWM_Webhook::{create,update,delete,test,
+    rotate_secret}` helpers, so the management surface stays
+    unified across humans and Claude.
   - **One drain schedule shared with future modules**. The custom
     `iawm_5min` schedule is registered by `IAWM_Webhook` but other
     modules can re-use it; this keeps cron clean even as the
@@ -729,8 +739,18 @@ new one.
   five `config/webhooks/*` REST routes, five mirrored MCP tools, a
   cron-registered drainer, and a `class_exists`-wrapped hook call
   from the diagnostics smoke handler for the first concrete event
-  (`smoke.failed`). Audit-alert event firing is deferred to v1.4
-  once an audit-tail watcher exists.
+  (`smoke.failed`). Audit-alert event firing was originally deferred
+  to v1.4 but **resolved in v1.4.0** (Phase 10.6): an audit-tail
+  watcher in `IAWM_Audit::tail_watcher()` scans new audit rows every
+  5 minutes (re-using the `iawm_5min` schedule, offset +90 s from the
+  drainer) and evaluates three rules — `scope_denied_burst`,
+  `kill_switch_toggled`, `auth_failure_burst` — each firing
+  `audit.alert` with `{rule, summary, trigger_audit_id, window_start,
+  window_end, details}`. The watcher is opt-out via the
+  `iawm_audit_alert_enabled` admin toggle and the per-rule
+  `iawm_audit_alert_rules` CSV. Burst rules use namespaced transients
+  (`iawm_audit_alert_*`) keyed by `key_id` or `ip` for a 60-second
+  sliding window; each fire resets the counter to avoid alert spam.
 
 ## D-031 — Audit-log pseudonymisation: opt-in, dot-path-declared, SHA-256 short-prefix sentinel
 
@@ -814,6 +834,125 @@ new one.
     `config/webhooks/create` and `config/webhooks/update` in its own
     module and calls `IAWM_Audit::write()` with the resolved list.
   - Spec 02 open question marked resolved.
+
+## D-032 — Webhook signing-secret encryption at rest: AES-256-CBC derived from AUTH_KEY
+
+- Date: 2026-05-26 · Status: Accepted
+- **Context**: D-030 shipped the v1.3.0 outbound-webhook stack with
+  the `signing_secret` column stored as plaintext, and explicitly
+  deferred encryption-at-rest. The deferred trade-off argued the
+  marginal benefit was small because `wp-config.php` (which carries
+  `AUTH_KEY`) lives on the same filesystem as the database — but
+  small isn't zero. Real-world DB leaks happen through paths the
+  filesystem ACLs do not: an unattended SQL dump pushed to the wrong
+  backup bucket, a misconfigured backup share, a developer copying
+  the database to a staging host without scrubbing it, or a hosting
+  provider's read-only replica getting indexed somewhere. In all
+  those scenarios the attacker gets the DB but not `wp-config.php`,
+  and a plaintext secret is exactly the kind of credential they can
+  use to impersonate the legitimate sender to every receiver this
+  site has registered. Phase 10.4 closes the v1.3 trade-off.
+- **Decision**:
+  - **Cipher**: AES-256-CBC with `OPENSSL_RAW_DATA`, 16-byte
+    random IV per row (`openssl_random_pseudo_bytes`).
+  - **Key**: 32 raw bytes derived as
+    `sha256( AUTH_KEY . '|iawm-webhook-secret' )`. The fixed salt
+    suffix scopes the derived key to webhook secrets so a future
+    feature can derive a sibling key for another purpose with a
+    different suffix and not collide.
+  - **Envelope**: `iawm-enc:v1:<base64(iv)>:<base64(ciphertext)>`.
+    The `v1` token is a hard version marker so a future v2 scheme
+    can coexist with v1 rows without a one-shot migration.
+  - **Backward compatibility**: values that do NOT start with
+    `iawm-enc:v1:` are returned as-is by the decryptor — that is
+    the legacy plaintext fallback that keeps pre-encryption rows
+    readable across the v1.3 → v1.4 upgrade.
+  - **One-time migration**: `IAWM_Webhook::maybe_migrate_secrets_to_encrypted()`
+    runs on `plugins_loaded` (priority 20, after `maybe_upgrade`)
+    once per `IAWM_VERSION` (option `iawm_webhook_secrets_migrated`),
+    walks `wp_iawm_webhooks`, and rewrites every non-encrypted
+    `signing_secret` in place. Idempotent (a re-run skips encrypted
+    rows via the envelope sniff) and wrapped in `try/catch` so a
+    bad row cannot crash the page load.
+  - **Read path**: every place that needs the cleartext secret to
+    compute an HMAC (`deliver_row`, `handle_test`) calls
+    `IAWM_Crypto::decrypt()` on the column value. Legacy plaintext
+    rows pass through untouched until the migration overwrites
+    them.
+  - **API surface unchanged**: list/get responses still never
+    include the secret, regardless of state — encryption is a
+    storage detail, not an API contract change.
+- **Rationale**:
+  - **AES-256-CBC, not GCM**. GCM provides built-in authenticated
+    encryption, which is stronger in theory. We picked CBC because
+    (a) we do not need tampering detection here — the secret is
+    opaque and any corrupted decrypt simply produces a bad HMAC,
+    which the receiver rejects exactly like a stale secret; (b)
+    authenticated modes add tag-handling complexity (tag length,
+    tag-as-AAD surface) we would otherwise have to specify and
+    test; (c) the threat model is confidentiality-at-rest only —
+    integrity of the secret is moot if an attacker can already
+    write to the DB. CBC keeps the surface area small.
+  - **Derive from `AUTH_KEY`, not a separate key**. `AUTH_KEY`
+    already protects the most sensitive data WordPress itself
+    stores (user passwords via the `wp_hash_password` salt chain,
+    auth cookies). Reusing it keeps the operator's key-management
+    surface to a single place: rotating `AUTH_KEY` rotates this
+    key too, and a backup that excludes `wp-config.php` already
+    excludes both. A separate key would have meant a new option
+    (`iawm_webhook_master_key`), new rotation tooling, and a new
+    backup-exclude rule operators would have to remember.
+  - **Versioned envelope**. The `iawm-enc:v1:` prefix is a hard
+    sniff target. The decryptor can branch on the version token,
+    so a v2 scheme (e.g. moving to GCM, switching to a per-tenant
+    key) can coexist with v1 rows for as long as needed without a
+    blocking migration.
+  - **Per-row IV**. The IV is generated fresh on every encrypt and
+    stored alongside the ciphertext in the envelope. No IV reuse
+    across rows, no IV reuse across re-saves of the same row, no
+    deterministic encryption surface.
+- **Trade-offs**:
+  - **`AUTH_KEY` rotation invalidates every stored secret**. If an
+    operator rotates `AUTH_KEY` (recommended periodically per WP
+    security best practice), every encrypted `signing_secret`
+    becomes undecryptable. The decryptor returns an empty string,
+    the HMAC is computed over empty, and every receiver rejects.
+    The operator must re-register the affected webhooks with their
+    intended secrets. Documented in operations.md; a future
+    enhancement could pre-migrate during an `AUTH_KEY` rotation,
+    but that requires the old key to still be readable, which is
+    not the case at rotation time.
+  - **Failed `openssl_encrypt` returns empty rather than
+    plaintext**. The crypto helper refuses to silently downgrade
+    to plaintext if OpenSSL fails (bad cipher name, no entropy,
+    missing extension). The trade-off is that a broken environment
+    blanks the column instead of leaving plaintext in place; we
+    chose blank-and-loud over plaintext-and-quiet because the
+    failure surface is observable (HMAC fails, receivers reject)
+    where a silent plaintext fallback would defeat the whole
+    point.
+  - **CBC has no integrity check**. Combined with the threat model
+    (DB write access ⇒ game over already) this is acceptable; if
+    we later need integrity, the v2 envelope token gives us a
+    clean migration path.
+- **Implementation**:
+  - `IAWM_Crypto` (`includes/class-iawm-crypto.php`): `encrypt`,
+    `decrypt`, `is_encrypted`, private `derive_key`.
+  - `IAWM_Webhook::create()` and `IAWM_Webhook::update()` wrap the
+    operator-supplied secret with `IAWM_Crypto::encrypt()` before
+    INSERT/UPDATE.
+  - `IAWM_Webhook::deliver_row()` and `IAWM_Webhook::handle_test()`
+    decrypt with `IAWM_Crypto::decrypt()` before computing the
+    HMAC.
+  - `IAWM_Webhook::maybe_migrate_secrets_to_encrypted()` (hooked on
+    `plugins_loaded:20`) rewrites legacy plaintext rows once per
+    version bump.
+  - `IAWM_FALLBACK_KEY` sentinel constant: if `AUTH_KEY` is
+    undefined (which never happens on a real WP install), the
+    helper falls back to `IAWM_FALLBACK_KEY` and logs a
+    `_doing_it_wrong`. The fallback exists to keep test
+    environments and CI pipelines that bypass the full WP
+    bootstrap working; it must not be relied upon in production.
 
 ## D-010 — Public open source distribution
 

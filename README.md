@@ -4,24 +4,24 @@
 > action signed.
 
 ![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)
-![Plugin](https://img.shields.io/badge/plugin-1.3.0-brightgreen)
-![Gateway](https://img.shields.io/badge/gateway-1.3.0-brightgreen)
-![Status](https://img.shields.io/badge/status-v1.3.0-brightgreen)
+![Plugin](https://img.shields.io/badge/plugin-1.4.0-brightgreen)
+![Gateway](https://img.shields.io/badge/gateway-1.4.0-brightgreen)
+![Status](https://img.shields.io/badge/status-v1.4.0-brightgreen)
 ![Tools](https://img.shields.io/badge/MCP%20tools-108-blue)
-![Skills](https://img.shields.io/badge/skills-15-blue)
+![Skills](https://img.shields.io/badge/skills-17-blue)
 ![Divi modules](https://img.shields.io/badge/Divi%205%20modules-105-blue)
 
 ## Status
 
-**v1.3.0 — production ready, polish complete.** Phases 0-9 closed
-code-side (9.7 small-prod validation is the next deployment
-milestone); specs 01-07 all Implemented. Numbers at a glance:
+**v1.4.0 — operator polish.** Phases 0-10 closed code-side
+(9.7 small-prod validation remains the next deployment milestone);
+specs 01-07 all Implemented. Numbers at a glance:
 
 - **108 MCP tools** exposed to Claude (≈108 signed REST routes on the
   WordPress side, grouped in 25 modules).
 - **79 typed Divi 5 builders** (47 → 79 in Phase 9) covering native
   modules + 10 WooCommerce modules with opinionated defaults.
-- **15 Claude Code skills** covering content, design, marketing, SEO,
+- **17 Claude Code skills** covering content, design, marketing, SEO,
   Divi authoring, safe plugin updates, design-system-first builds,
   smoke testing, production deployment, per-site context discovery,
   scheduled routines, status reporting, audits.
@@ -59,7 +59,7 @@ switch.
 
 A condensed tour. The full catalogue of the **108 MCP tools** with
 example prompts is in [`docs/capabilities.md`](docs/capabilities.md);
-the **15 Claude Code skills** that compose those tools into
+the **17 Claude Code skills** that compose those tools into
 recognisable workflows are documented in
 [`docs/skills.md`](docs/skills.md).
 
@@ -179,7 +179,7 @@ Operator-facing:
 
 - [`docs/capabilities.md`](docs/capabilities.md) — comprehensive
   tour of the 108 capabilities with example prompts.
-- [`docs/skills.md`](docs/skills.md) — the 15 Claude Code skills
+- [`docs/skills.md`](docs/skills.md) — the 17 Claude Code skills
   that compose the tools into operator workflows.
 - [`docs/operations.md`](docs/operations.md) — operator runbook (key
   rotation, multi-operator, safe-update workflow, WP-CLI fallback,

@@ -125,17 +125,22 @@ decisions D-018 + D-019). Remaining items:
   this module's mobile variant to X". The full multi-state map lives
   in `docs/divi5-format.md`; opinionated helpers can be added on
   demand.
-- **Deeper Divi module builders** (Phase 9 explicit). 47 builders
-  typed today, 58 modules remaining in free-form-only via the
-  auto-discovered registry. Decision D-018 documents the registry; a
-  prioritisation pass is the next step.
+- **Deeper Divi module builders** (Phase 9 + long tail). **79
+  builders typed today** (47 → 79 in Phase 9: 22 native + 10
+  WooCommerce). About 26 modules remain in free-form-only via the
+  auto-discovered registry — split between ~11 natives (of which
+  most are child-only modules or fullwidth variants) and ~16
+  WooCommerce. Decision D-018 documents the registry; the next
+  prioritisation pass is the small "shop + 4 checkout" lot if a
+  target site needs a 100 % typed checkout template.
 - **Third-party Divi modules** (Divi Supreme, etc.). The
   auto-discovery scanner picks them up if they register cleanly, but
   no opinionated patterns are shipped. Out of scope until a target
   site demands it.
-- **Testimonials carousel variant**. `patterns/testimonials.ts`
-  currently ships only the grid variant; a slider variant is a known
-  TODO (P1 polish).
+
+Settled (removed from this list): testimonials carousel variant —
+**shipped in v1.3.0 (Phase 9.1)**, the `testimonials` pattern now
+accepts `variant: "grid" | "carousel"`.
 
 Settled (removed from the list): native storage shape — confirmed
 post_content + Divi 5 module markup, no dedicated table; "portability"

@@ -36,6 +36,7 @@ class IAWM_Admin {
 	private static function tabs() {
 		return array(
 			'keys'     => array( 'label' => __( 'API Keys', 'ia-webmaster-bridge' ),  'icon' => '\f160' ), // dashicons-admin-network
+			'webhooks' => array( 'label' => __( 'Webhooks', 'ia-webmaster-bridge' ),  'icon' => '\f465' ), // dashicons-rss
 			'agent'    => array( 'label' => __( 'Agent', 'ia-webmaster-bridge' ),     'icon' => '\f110' ), // dashicons-businessman
 			'security' => array( 'label' => __( 'Security', 'ia-webmaster-bridge' ),  'icon' => '\f332' ), // dashicons-shield
 			'cleanup'  => array( 'label' => __( 'Cleanup', 'ia-webmaster-bridge' ),   'icon' => '\f182' ), // dashicons-trash
@@ -241,6 +242,89 @@ class IAWM_Admin {
 				$notice = 'kill_off';
 				break;
 
+			case 'webhook_save':
+				$tab    = 'webhooks';
+				$result = self::handle_webhook_save();
+				$notice = $result['notice'];
+				if ( ! empty( $result['args'] ) ) {
+					$args = array_merge( $args, $result['args'] );
+				}
+				break;
+
+			case 'webhook_delete':
+				$tab = 'webhooks';
+				$id  = isset( $_POST['iawm_webhook_id'] ) ? (int) $_POST['iawm_webhook_id'] : 0;
+				if ( $id > 0 && IAWM_Webhook::delete( $id ) ) {
+					$notice = 'webhook_deleted';
+				} else {
+					$notice = 'webhook_error';
+				}
+				break;
+
+			case 'webhook_toggle':
+				$tab = 'webhooks';
+				$id  = isset( $_POST['iawm_webhook_id'] ) ? (int) $_POST['iawm_webhook_id'] : 0;
+				$enabled = ! empty( $_POST['iawm_webhook_enabled_new'] );
+				if ( $id > 0 ) {
+					$upd = IAWM_Webhook::update( $id, array( 'enabled' => $enabled ) );
+					$notice = is_wp_error( $upd ) ? 'webhook_error' : 'webhook_toggled';
+				} else {
+					$notice = 'webhook_error';
+				}
+				break;
+
+			case 'webhook_test':
+				$tab = 'webhooks';
+				$id  = isset( $_POST['iawm_webhook_id'] ) ? (int) $_POST['iawm_webhook_id'] : 0;
+				if ( $id > 0 ) {
+					$res = IAWM_Webhook::test( $id );
+					if ( is_wp_error( $res ) ) {
+						$notice = 'webhook_test_error';
+						$args['error_message'] = $res->get_error_message();
+					} elseif ( ! empty( $res['ok'] ) ) {
+						$notice = 'webhook_test_ok';
+						$args['test_status'] = isset( $res['status'] ) ? (int) $res['status'] : 0;
+					} else {
+						$notice = 'webhook_test_fail';
+						if ( isset( $res['status'] ) ) {
+							$args['test_status'] = (int) $res['status'];
+						}
+						if ( isset( $res['transport_error'] ) ) {
+							$args['error_message'] = (string) $res['transport_error'];
+						}
+					}
+				} else {
+					$notice = 'webhook_error';
+				}
+				break;
+
+			case 'webhook_rotate_secret':
+				$tab = 'webhooks';
+				$id  = isset( $_POST['iawm_webhook_id'] ) ? (int) $_POST['iawm_webhook_id'] : 0;
+				if ( $id > 0 ) {
+					$res = IAWM_Webhook::rotate_secret( $id );
+					if ( is_wp_error( $res ) ) {
+						$notice = 'webhook_error';
+					} else {
+						$notice = 'webhook_secret_rotated';
+						// Stash the freshly-rotated plaintext secret in a
+						// short-lived transient so render_tab_webhooks can
+						// show it ONCE. Keyed per-user + per-webhook so two
+						// concurrent admins don't collide. 60-second TTL is
+						// plenty for the immediate POST-redirect-GET round
+						// trip.
+						set_transient(
+							self::webhook_secret_transient_key( $id ),
+							(string) $res['signing_secret'],
+							60
+						);
+						$args['new_webhook_secret'] = $id;
+					}
+				} else {
+					$notice = 'webhook_error';
+				}
+				break;
+
 			case 'reinstall_agent':
 				if ( class_exists( 'IAWM_Agent_User' ) ) {
 					IAWM_Agent_User::install();
@@ -265,9 +349,18 @@ class IAWM_Admin {
 				$days = isset( $_POST['iawm_audit_days'] ) ? (int) $_POST['iawm_audit_days'] : 90;
 				$keep = isset( $_POST['iawm_backup_keep'] ) ? (int) $_POST['iawm_backup_keep'] : 50;
 				$pseudo = isset( $_POST['iawm_audit_pseudonymise'] ) ? 1 : 0;
+				$alert_enabled = isset( $_POST['iawm_audit_alert_enabled'] ) ? 1 : 0;
+				$alert_rules_raw = isset( $_POST['iawm_audit_alert_rules'] ) && is_array( $_POST['iawm_audit_alert_rules'] )
+					? array_map( 'sanitize_key', wp_unslash( $_POST['iawm_audit_alert_rules'] ) )
+					: array();
+				// Constrain to the known rule catalogue so unknown checkbox values cannot sneak in.
+				$known_rules = array( 'scope_denied_burst', 'kill_switch_toggled', 'auth_failure_burst' );
+				$alert_rules = array_values( array_intersect( $known_rules, $alert_rules_raw ) );
 				update_option( IAWM_Audit::OPTION_RETENTION_DAYS, max( 1, min( 3650, $days ) ), true );
 				update_option( IAWM_Backup::OPTION_RETENTION_N, max( 1, min( 10000, $keep ) ), true );
 				update_option( IAWM_Audit::OPTION_PSEUDONYMISE, $pseudo, true );
+				update_option( IAWM_Audit::OPTION_ALERT_ENABLED, $alert_enabled, true );
+				update_option( IAWM_Audit::OPTION_ALERT_RULES, implode( ',', $alert_rules ), true );
 				$notice = 'retention_saved';
 				break;
 
@@ -391,6 +484,7 @@ class IAWM_Admin {
 			<div class="iawm-tab-panel">
 				<?php
 				switch ( $current_tab ) {
+					case 'webhooks': self::render_tab_webhooks(); break;
 					case 'agent':    self::render_tab_agent();    break;
 					case 'security': self::render_tab_security(); break;
 					case 'cleanup':  self::render_tab_cleanup();  break;
@@ -688,6 +782,453 @@ class IAWM_Admin {
 	}
 
 	/* ----------------------------------------------------------------- */
+	/* Tab: webhooks                                                      */
+	/* ----------------------------------------------------------------- */
+
+	/**
+	 * Known event names the admin form exposes as multi-checkboxes. Anything
+	 * not in this list is preserved by `webhook_save` when editing, so an
+	 * operator who configured an unusual event via curl/MCP does not lose it
+	 * just because they touched the row in the admin UI. The wildcard `*` is
+	 * surfaced as its own checkbox.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function webhook_known_events() {
+		return array(
+			'smoke.failed'          => __( 'Smoke test failed', 'ia-webmaster-bridge' ),
+			'audit.alert'           => __( 'Audit alert', 'ia-webmaster-bridge' ),
+			'key_rotation.reminder' => __( 'API-key rotation reminder', 'ia-webmaster-bridge' ),
+			'test.ping'             => __( 'Test ping', 'ia-webmaster-bridge' ),
+		);
+	}
+
+	/**
+	 * Transient key used to relay a freshly-rotated or freshly-created
+	 * signing secret across the post-redirect-get hop. Keyed per-user so
+	 * two simultaneous admins do not see each other's secret.
+	 *
+	 * @param int $webhook_id Webhook id.
+	 * @return string
+	 */
+	private static function webhook_secret_transient_key( $webhook_id ) {
+		return 'iawm_webhook_secret_' . get_current_user_id() . '_' . (int) $webhook_id;
+	}
+
+	/**
+	 * Parses the events checkboxes + wildcard checkbox out of `$_POST`.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function webhook_events_from_post() {
+		$out = array();
+		if ( ! empty( $_POST['iawm_webhook_wildcard'] ) ) {
+			$out[] = '*';
+		}
+		$raw = isset( $_POST['iawm_webhook_events'] ) ? (array) wp_unslash( $_POST['iawm_webhook_events'] ) : array();
+		foreach ( $raw as $event ) {
+			$event = sanitize_text_field( (string) $event );
+			if ( '' !== $event ) {
+				$out[] = $event;
+			}
+		}
+		// `IAWM_Webhook::create/update` reject an empty events list with a
+		// 400 — returning an empty array here lets the helper surface that
+		// error consistently.
+		return array_values( array_unique( $out ) );
+	}
+
+	/**
+	 * Saves a webhook from the admin form. Creates when no id is supplied,
+	 * updates otherwise. Returns `{ notice, args }` so the caller can wire
+	 * the notice into the post-redirect-get redirect.
+	 *
+	 * @return array{notice:string,args:array}
+	 */
+	private static function handle_webhook_save() {
+		$id      = isset( $_POST['iawm_webhook_id'] ) ? (int) $_POST['iawm_webhook_id'] : 0;
+		$label   = isset( $_POST['iawm_webhook_label'] ) ? sanitize_text_field( wp_unslash( $_POST['iawm_webhook_label'] ) ) : '';
+		$url     = isset( $_POST['iawm_webhook_url'] ) ? esc_url_raw( wp_unslash( $_POST['iawm_webhook_url'] ) ) : '';
+		$enabled = ! empty( $_POST['iawm_webhook_enabled'] );
+		$events  = self::webhook_events_from_post();
+		$secret_input = isset( $_POST['iawm_webhook_secret'] ) ? (string) wp_unslash( $_POST['iawm_webhook_secret'] ) : '';
+
+		// Refuse non-https destinations early — the spec calls for it and
+		// the underlying helper also gates URL validity. Surface a precise
+		// error so the operator does not have to dig.
+		if ( '' === $url || 0 !== stripos( $url, 'https://' ) ) {
+			return array(
+				'notice' => 'webhook_error_https',
+				'args'   => array(),
+			);
+		}
+
+		if ( $id > 0 ) {
+			// EDIT: always re-send label/url/events/enabled; only touch the
+			// secret when the operator typed a new value.
+			$args = array(
+				'label'           => $label,
+				'destination_url' => $url,
+				'events'          => $events,
+				'enabled'         => $enabled,
+			);
+			if ( '' !== $secret_input ) {
+				$args['signing_secret'] = $secret_input;
+			}
+			$res = IAWM_Webhook::update( $id, $args );
+			if ( is_wp_error( $res ) ) {
+				return array(
+					'notice' => 'webhook_error',
+					'args'   => array( 'error_message' => $res->get_error_message() ),
+				);
+			}
+			return array(
+				'notice' => 'webhook_updated',
+				'args'   => array(),
+			);
+		}
+
+		// CREATE: generate a strong secret unless the operator typed their
+		// own. The plaintext value is stashed in a 60-second transient so
+		// the tab can display it once after the redirect.
+		$plaintext_secret = '' !== $secret_input ? $secret_input : IAWM_Webhook::generate_secret();
+
+		$res = IAWM_Webhook::create(
+			array(
+				'label'           => $label,
+				'destination_url' => $url,
+				'signing_secret'  => $plaintext_secret,
+				'events'          => $events,
+				'enabled'         => $enabled,
+			)
+		);
+		if ( is_wp_error( $res ) ) {
+			return array(
+				'notice' => 'webhook_error',
+				'args'   => array( 'error_message' => $res->get_error_message() ),
+			);
+		}
+
+		$new_id = isset( $res['id'] ) ? (int) $res['id'] : 0;
+		if ( $new_id > 0 ) {
+			set_transient(
+				self::webhook_secret_transient_key( $new_id ),
+				$plaintext_secret,
+				60
+			);
+		}
+
+		return array(
+			'notice' => 'webhook_created',
+			'args'   => array( 'new_webhook_secret' => $new_id ),
+		);
+	}
+
+	/**
+	 * Renders the Webhooks tab.
+	 *
+	 * @return void
+	 */
+	private static function render_tab_webhooks() {
+		if ( ! class_exists( 'IAWM_Webhook' ) ) {
+			?>
+			<div class="iawm-empty-state">
+				<h3><?php esc_html_e( 'Webhook module unavailable', 'ia-webmaster-bridge' ); ?></h3>
+				<p><?php esc_html_e( 'The IAWM_Webhook class could not be loaded.', 'ia-webmaster-bridge' ); ?></p>
+			</div>
+			<?php
+			return;
+		}
+
+		$webhooks      = IAWM_Webhook::list_webhooks();
+		$latest_outbox = IAWM_Webhook::latest_outbox_by_webhook();
+		$known_events  = self::webhook_known_events();
+
+		// Are we editing a specific row?
+		$edit_id      = isset( $_GET['edit_webhook'] ) ? (int) $_GET['edit_webhook'] : 0;
+		$reveal_id    = isset( $_GET['new_webhook_secret'] ) ? (int) $_GET['new_webhook_secret'] : 0;
+		$reveal_value = '';
+		if ( $reveal_id > 0 ) {
+			$reveal_value = (string) get_transient( self::webhook_secret_transient_key( $reveal_id ) );
+			// One-shot reveal: delete after read.
+			delete_transient( self::webhook_secret_transient_key( $reveal_id ) );
+		}
+		?>
+
+		<div class="iawm-card">
+			<h2 class="iawm-card-title"><?php esc_html_e( 'Webhooks (outbound notifications)', 'ia-webmaster-bridge' ); ?></h2>
+			<p class="iawm-card-help">
+				<?php
+				echo wp_kses(
+					/* translators: <code> wraps a file path; left verbatim. */
+					__( 'Register HTTPS endpoints that receive HMAC-signed events from this site. Used for smoke-test alerts and (soon) audit alerts. See <code>docs/operations.md</code> for the receiver verification recipe.', 'ia-webmaster-bridge' ),
+					array( 'code' => array() )
+				);
+				?>
+			</p>
+		</div>
+
+		<?php if ( $reveal_id > 0 && '' !== $reveal_value ) : ?>
+			<div class="iawm-secret-display" style="margin-bottom:20px;">
+				<p>
+					<?php
+					printf(
+						/* translators: %d: webhook id. */
+						esc_html__( '⚠️ Signing secret for webhook #%d (copy now — it will not be shown again):', 'ia-webmaster-bridge' ),
+						(int) $reveal_id
+					);
+					?>
+				</p>
+				<input type="text" class="large-text code" readonly value="<?php echo esc_attr( $reveal_value ); ?>" onclick="this.select();">
+				<p style="font-size:12px;color:#646970;margin-top:6px;">
+					<?php esc_html_e( 'Configure your receiver to verify with this exact value. The bridge stores it encrypted and never displays it again.', 'ia-webmaster-bridge' ); ?>
+				</p>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( empty( $webhooks ) ) : ?>
+			<div class="iawm-empty-state" style="margin-bottom:24px;">
+				<h3><?php esc_html_e( 'No webhook yet', 'ia-webmaster-bridge' ); ?></h3>
+				<p><?php esc_html_e( 'Create one below to receive signed notifications when interesting events happen.', 'ia-webmaster-bridge' ); ?></p>
+			</div>
+		<?php else : ?>
+			<table class="widefat striped" style="margin-bottom:24px;">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Label', 'ia-webmaster-bridge' ); ?></th>
+						<th><?php esc_html_e( 'Destination URL', 'ia-webmaster-bridge' ); ?></th>
+						<th><?php esc_html_e( 'Events', 'ia-webmaster-bridge' ); ?></th>
+						<th><?php esc_html_e( 'Enabled', 'ia-webmaster-bridge' ); ?></th>
+						<th><?php esc_html_e( 'Last drain', 'ia-webmaster-bridge' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'ia-webmaster-bridge' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $webhooks as $hook ) :
+						$hid    = (int) $hook['id'];
+						$events = is_array( $hook['events'] ) ? $hook['events'] : array();
+						$ob     = isset( $latest_outbox[ $hid ] ) ? $latest_outbox[ $hid ] : null;
+						$edit_url = add_query_arg(
+							array( 'page' => self::PAGE_SLUG, 'tab' => 'webhooks', 'edit_webhook' => $hid ),
+							admin_url( 'options-general.php' )
+						);
+						?>
+						<tr>
+							<td><strong><?php echo esc_html( $hook['label'] ); ?></strong><br><span style="font-size:11px;color:#646970;">#<?php echo (int) $hid; ?></span></td>
+							<td style="font-size:12px;word-break:break-all;font-family:ui-monospace,monospace;"><?php echo esc_html( $hook['destination_url'] ); ?></td>
+							<td style="font-size:12px;"><?php echo esc_html( implode( ', ', $events ) ); ?></td>
+							<td>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0;">
+									<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
+									<input type="hidden" name="iawm_tab" value="webhooks">
+									<input type="hidden" name="iawm_webhook_id" value="<?php echo (int) $hid; ?>">
+									<input type="hidden" name="iawm_webhook_enabled_new" value="<?php echo $hook['enabled'] ? '0' : '1'; ?>">
+									<?php wp_nonce_field( self::ACTION ); ?>
+									<button type="submit" name="iawm_op" value="webhook_toggle" class="button button-small">
+										<?php if ( $hook['enabled'] ) : ?>
+											<span class="iawm-pill iawm-pill-ok"><?php esc_html_e( 'on', 'ia-webmaster-bridge' ); ?></span>
+										<?php else : ?>
+											<span class="iawm-pill iawm-pill-neutral"><?php esc_html_e( 'off', 'ia-webmaster-bridge' ); ?></span>
+										<?php endif; ?>
+									</button>
+								</form>
+							</td>
+							<td style="font-size:12px;">
+								<?php if ( null === $ob ) : ?>
+									<span style="color:#a7aaad;"><?php esc_html_e( 'never fired', 'ia-webmaster-bridge' ); ?></span>
+								<?php else :
+									$status   = (string) $ob['status'];
+									$pill_cls = 'iawm-pill-neutral';
+									if ( 'sent' === $status ) {
+										$pill_cls = 'iawm-pill-ok';
+									} elseif ( 'pending' === $status ) {
+										$pill_cls = 'iawm-pill-warn';
+									} elseif ( 'failed' === $status || 'dead' === $status ) {
+										$pill_cls = 'iawm-pill-danger';
+									}
+									$when = $ob['last_attempt_at'] ? $ob['last_attempt_at'] : $ob['created_at'];
+									?>
+									<span class="iawm-pill <?php echo esc_attr( $pill_cls ); ?>"><?php echo esc_html( $status ); ?></span>
+									<br>
+									<code style="font-size:11px;"><?php echo esc_html( (string) $when ); ?></code>
+									<?php if ( ! empty( $ob['last_error'] ) ) : ?>
+										<div style="color:#d63638;font-size:11px;margin-top:2px;" title="<?php echo esc_attr( (string) $ob['last_error'] ); ?>">
+											<?php echo esc_html( mb_substr( (string) $ob['last_error'], 0, 60 ) ); ?>
+										</div>
+									<?php endif; ?>
+								<?php endif; ?>
+							</td>
+							<td>
+								<a class="button button-small" href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Edit', 'ia-webmaster-bridge' ); ?></a>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+									<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
+									<input type="hidden" name="iawm_tab" value="webhooks">
+									<input type="hidden" name="iawm_webhook_id" value="<?php echo (int) $hid; ?>">
+									<?php wp_nonce_field( self::ACTION ); ?>
+									<button type="submit" name="iawm_op" value="webhook_test" class="button button-small"><?php esc_html_e( 'Test', 'ia-webmaster-bridge' ); ?></button>
+								</form>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+									<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
+									<input type="hidden" name="iawm_tab" value="webhooks">
+									<input type="hidden" name="iawm_webhook_id" value="<?php echo (int) $hid; ?>">
+									<?php wp_nonce_field( self::ACTION ); ?>
+									<button type="submit" name="iawm_op" value="webhook_delete" class="button button-small button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Delete this webhook and all pending outbox rows? This cannot be undone.', 'ia-webmaster-bridge' ) ); ?>');"><?php esc_html_e( 'Delete', 'ia-webmaster-bridge' ); ?></button>
+								</form>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<?php
+		// Edit form when ?edit_webhook=<id>, otherwise the create form.
+		$editing = null;
+		if ( $edit_id > 0 ) {
+			foreach ( $webhooks as $h ) {
+				if ( (int) $h['id'] === $edit_id ) {
+					$editing = $h;
+					break;
+				}
+			}
+		}
+		self::render_webhook_form( $editing, $known_events );
+	}
+
+	/**
+	 * Renders the create / edit webhook form.
+	 *
+	 * @param array|null $editing      The webhook being edited, or null for create.
+	 * @param array      $known_events Map of event => label.
+	 * @return void
+	 */
+	private static function render_webhook_form( $editing, array $known_events ) {
+		$is_edit  = is_array( $editing );
+		$hid      = $is_edit ? (int) $editing['id'] : 0;
+		$label    = $is_edit ? (string) $editing['label'] : '';
+		$url      = $is_edit ? (string) $editing['destination_url'] : '';
+		$events   = $is_edit && isset( $editing['events'] ) && is_array( $editing['events'] ) ? $editing['events'] : array();
+		$enabled  = $is_edit ? (bool) $editing['enabled'] : true;
+		$wildcard = in_array( '*', $events, true );
+		?>
+		<div class="iawm-card">
+			<h2 class="iawm-card-title">
+				<?php if ( $is_edit ) : ?>
+					<?php
+					printf(
+						/* translators: %d: webhook id. */
+						esc_html__( 'Edit webhook #%d', 'ia-webmaster-bridge' ),
+						(int) $hid
+					);
+					?>
+				<?php else : ?>
+					<?php esc_html_e( 'Add a new webhook', 'ia-webmaster-bridge' ); ?>
+				<?php endif; ?>
+			</h2>
+			<p class="iawm-card-help">
+				<?php esc_html_e( 'Destination URL must be HTTPS. The signing secret is auto-generated on create and stored encrypted — copy it once when shown.', 'ia-webmaster-bridge' ); ?>
+			</p>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
+				<input type="hidden" name="iawm_tab" value="webhooks">
+				<?php if ( $is_edit ) : ?>
+					<input type="hidden" name="iawm_webhook_id" value="<?php echo (int) $hid; ?>">
+				<?php endif; ?>
+				<?php wp_nonce_field( self::ACTION ); ?>
+
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="iawm_webhook_label"><?php esc_html_e( 'Label', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<input id="iawm_webhook_label" type="text" name="iawm_webhook_label" class="regular-text" value="<?php echo esc_attr( $label ); ?>" placeholder="<?php esc_attr_e( 'e.g. Slack #ops alerts', 'ia-webmaster-bridge' ); ?>" required>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_webhook_url"><?php esc_html_e( 'Destination URL', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<input id="iawm_webhook_url" type="url" name="iawm_webhook_url" class="large-text code" value="<?php echo esc_attr( $url ); ?>" placeholder="https://hooks.example.com/iawm" pattern="https://.*" required>
+							<p class="description"><?php esc_html_e( 'Must start with https://', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Events', 'ia-webmaster-bridge' ); ?></th>
+						<td>
+							<fieldset>
+								<?php foreach ( $known_events as $event => $label_event ) :
+									$checked = in_array( $event, $events, true );
+									?>
+									<label style="display:block;margin:4px 0;">
+										<input type="checkbox" name="iawm_webhook_events[]" value="<?php echo esc_attr( $event ); ?>" <?php checked( $checked ); ?>>
+										<code><?php echo esc_html( $event ); ?></code> — <?php echo esc_html( $label_event ); ?>
+									</label>
+								<?php endforeach; ?>
+								<label style="display:block;margin:8px 0 4px;border-top:1px solid #f0f0f1;padding-top:8px;">
+									<input type="checkbox" name="iawm_webhook_wildcard" value="1" <?php checked( $wildcard ); ?>>
+									<code>*</code> — <?php esc_html_e( 'Subscribe to every event (current + future)', 'ia-webmaster-bridge' ); ?>
+								</label>
+							</fieldset>
+							<p class="description"><?php esc_html_e( 'Pick at least one event. Custom event names configured via MCP/curl appear here only if they match the standard list — others are stored verbatim and shown in the table above.', 'ia-webmaster-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_webhook_enabled"><?php esc_html_e( 'Enabled', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<label>
+								<input id="iawm_webhook_enabled" type="checkbox" name="iawm_webhook_enabled" value="1" <?php checked( $enabled ); ?>>
+								<?php esc_html_e( 'Deliver notifications to this endpoint', 'ia-webmaster-bridge' ); ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="iawm_webhook_secret"><?php esc_html_e( 'Signing secret', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<?php if ( $is_edit ) : ?>
+								<input id="iawm_webhook_secret" type="password" name="iawm_webhook_secret" class="regular-text" value="" placeholder="<?php esc_attr_e( '[hidden — leave blank to keep current]', 'ia-webmaster-bridge' ); ?>" autocomplete="new-password" minlength="16">
+								<p class="description">
+									<?php esc_html_e( 'Type a new value to replace the current secret, or use the dedicated button below to generate a strong one.', 'ia-webmaster-bridge' ); ?>
+								</p>
+							<?php else : ?>
+								<input id="iawm_webhook_secret" type="password" name="iawm_webhook_secret" class="regular-text" value="" placeholder="<?php esc_attr_e( '(leave blank — auto-generated)', 'ia-webmaster-bridge' ); ?>" autocomplete="new-password" minlength="16">
+								<p class="description">
+									<?php esc_html_e( 'Leave blank to let the bridge generate a 64-character secret. If you type your own, it must be at least 16 characters. The plaintext value is shown ONCE after saving.', 'ia-webmaster-bridge' ); ?>
+								</p>
+							<?php endif; ?>
+						</td>
+					</tr>
+				</table>
+
+				<p>
+					<button type="submit" name="iawm_op" value="webhook_save" class="button button-primary">
+						<?php echo $is_edit ? esc_html__( 'Save webhook', 'ia-webmaster-bridge' ) : esc_html__( 'Create webhook', 'ia-webmaster-bridge' ); ?>
+					</button>
+					<?php if ( $is_edit ) : ?>
+						<a class="button" href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => 'webhooks' ), admin_url( 'options-general.php' ) ) ); ?>">
+							<?php esc_html_e( 'Cancel', 'ia-webmaster-bridge' ); ?>
+						</a>
+					<?php endif; ?>
+				</p>
+			</form>
+
+			<?php if ( $is_edit ) : ?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f1;">
+					<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
+					<input type="hidden" name="iawm_tab" value="webhooks">
+					<input type="hidden" name="iawm_webhook_id" value="<?php echo (int) $hid; ?>">
+					<?php wp_nonce_field( self::ACTION ); ?>
+					<button type="submit" name="iawm_op" value="webhook_rotate_secret" class="button" onclick="return confirm('<?php echo esc_js( __( 'Rotate the signing secret? The new value will be shown ONCE — every receiver must be re-configured with the new value.', 'ia-webmaster-bridge' ) ); ?>');">
+						<?php esc_html_e( 'Rotate signing secret', 'ia-webmaster-bridge' ); ?>
+					</button>
+					<span class="description" style="margin-left:8px;">
+						<?php esc_html_e( 'Generates a fresh 64-char secret. Existing receivers must adopt the new value immediately.', 'ia-webmaster-bridge' ); ?>
+					</span>
+				</form>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/* ----------------------------------------------------------------- */
 	/* Tab: agent                                                         */
 	/* ----------------------------------------------------------------- */
 
@@ -855,6 +1396,16 @@ class IAWM_Admin {
 		$audit_rows = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . IAWM_Audit::table_name() );
 		$backup_rows= (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . IAWM_Backup::table_name() );
 		$pseudonymise = IAWM_Audit::is_pseudonymise_on();
+
+		// Phase 10.6 — audit-alert watcher controls.
+		$alert_enabled  = 1 === (int) get_option( IAWM_Audit::OPTION_ALERT_ENABLED, 1 );
+		$alert_rules_on = array_filter(
+			array_map(
+				'trim',
+				explode( ',', (string) get_option( IAWM_Audit::OPTION_ALERT_RULES, IAWM_Audit::DEFAULT_ALERT_RULES ) )
+			)
+		);
+		$next_alert     = wp_next_scheduled( IAWM_Audit::ALERT_HOOK );
 		?>
 		<div class="iawm-card">
 			<h2 class="iawm-card-title"><?php esc_html_e( 'Retention policy', 'ia-webmaster-bridge' ); ?></h2>
@@ -932,6 +1483,48 @@ class IAWM_Admin {
 								);
 								?>
 							</p>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="iawm_audit_alert_enabled"><?php esc_html_e( 'Audit alerts', 'ia-webmaster-bridge' ); ?></label></th>
+						<td>
+							<label>
+								<input id="iawm_audit_alert_enabled" type="checkbox" name="iawm_audit_alert_enabled" value="1" <?php checked( $alert_enabled ); ?>>
+								<?php esc_html_e( 'Fire the audit.alert webhook event when one of the rules below trips', 'ia-webmaster-bridge' ); ?>
+							</label>
+							<p class="description">
+								<?php
+								$next_alert_str = $next_alert
+									? '<code>' . esc_html( wp_date( 'Y-m-d H:i', $next_alert ) ) . '</code>'
+									: '<em>' . esc_html__( 'not scheduled', 'ia-webmaster-bridge' ) . '</em>';
+								echo wp_kses(
+									sprintf(
+										/* translators: 1: timestamp of the next audit-tail watch or "not scheduled". */
+										__( 'A WP-Cron job inspects new audit rows every 5 minutes and emits an <code>audit.alert</code> webhook event for each rule that trips. Next run: %1$s.', 'ia-webmaster-bridge' ),
+										$next_alert_str
+									),
+									array(
+										'code' => array(),
+										'em'   => array(),
+									)
+								);
+								?>
+							</p>
+							<fieldset style="margin-top:.5em;">
+								<legend class="screen-reader-text"><?php esc_html_e( 'Active rules', 'ia-webmaster-bridge' ); ?></legend>
+								<label style="display:block;">
+									<input type="checkbox" name="iawm_audit_alert_rules[]" value="scope_denied_burst" <?php checked( in_array( 'scope_denied_burst', $alert_rules_on, true ) ); ?>>
+									<code>scope_denied_burst</code> — <?php esc_html_e( '5+ scope_denied responses in 60 s from the same API key', 'ia-webmaster-bridge' ); ?>
+								</label>
+								<label style="display:block;">
+									<input type="checkbox" name="iawm_audit_alert_rules[]" value="kill_switch_toggled" <?php checked( in_array( 'kill_switch_toggled', $alert_rules_on, true ) ); ?>>
+									<code>kill_switch_toggled</code> — <?php esc_html_e( 'Any kill-switch toggle (admin form, wp-cli, programmatic)', 'ia-webmaster-bridge' ); ?>
+								</label>
+								<label style="display:block;">
+									<input type="checkbox" name="iawm_audit_alert_rules[]" value="auth_failure_burst" <?php checked( in_array( 'auth_failure_burst', $alert_rules_on, true ) ); ?>>
+									<code>auth_failure_burst</code> — <?php esc_html_e( '10+ HMAC auth failures in 60 s from the same IP', 'ia-webmaster-bridge' ); ?>
+								</label>
+							</fieldset>
 						</td>
 					</tr>
 				</table>
@@ -1406,8 +1999,10 @@ class IAWM_Admin {
 	 * @return void
 	 */
 	private static function render_notice( $notice ) {
-		$rejected = isset( $_GET['rejected_count'] ) ? (int) $_GET['rejected_count'] : 0;
-		$pruned   = isset( $_GET['pruned'] ) ? (int) $_GET['pruned'] : 0;
+		$rejected     = isset( $_GET['rejected_count'] ) ? (int) $_GET['rejected_count'] : 0;
+		$pruned       = isset( $_GET['pruned'] ) ? (int) $_GET['pruned'] : 0;
+		$test_status  = isset( $_GET['test_status'] ) ? (int) $_GET['test_status'] : 0;
+		$err_message  = isset( $_GET['error_message'] ) ? (string) sanitize_text_field( wp_unslash( $_GET['error_message'] ) ) : '';
 		$messages = array(
 			'key_created'       => array( 'success', __( 'New key created. The secret is shown once in its row below — copy it now, it cannot be displayed again.', 'ia-webmaster-bridge' ) ),
 			'secret_rotated'    => array( 'success', __( 'Secret rotated. Copy the new value into the gateway config.', 'ia-webmaster-bridge' ) ),
@@ -1445,6 +2040,53 @@ class IAWM_Admin {
 				),
 			),
 			'context_saved'     => array( 'success', __( 'Site context saved.', 'ia-webmaster-bridge' ) ),
+			'webhook_created'        => array( 'success', __( 'Webhook created. The signing secret is shown once below — copy it now.', 'ia-webmaster-bridge' ) ),
+			'webhook_updated'        => array( 'success', __( 'Webhook updated.', 'ia-webmaster-bridge' ) ),
+			'webhook_deleted'        => array( 'warning', __( 'Webhook deleted (along with any pending outbox rows).', 'ia-webmaster-bridge' ) ),
+			'webhook_toggled'        => array( 'success', __( 'Webhook enabled state toggled.', 'ia-webmaster-bridge' ) ),
+			'webhook_secret_rotated' => array( 'success', __( 'Signing secret rotated. The new value is shown once below — copy it now and reconfigure every receiver.', 'ia-webmaster-bridge' ) ),
+			'webhook_test_ok'        => array(
+				'success',
+				sprintf(
+					/* translators: %d: HTTP status code returned by the webhook receiver. */
+					__( 'Webhook test ping delivered (HTTP %d).', 'ia-webmaster-bridge' ),
+					$test_status
+				),
+			),
+			'webhook_test_fail'      => array(
+				'warning',
+				$test_status > 0
+					? sprintf(
+						/* translators: 1: HTTP status code, 2: receiver-side error message excerpt. */
+						__( 'Webhook test ping failed (HTTP %1$d). %2$s', 'ia-webmaster-bridge' ),
+						$test_status,
+						$err_message
+					)
+					: sprintf(
+						/* translators: %s: transport-level error message. */
+						__( 'Webhook test ping failed at transport: %s', 'ia-webmaster-bridge' ),
+						$err_message
+					),
+			),
+			'webhook_test_error'     => array(
+				'error',
+				sprintf(
+					/* translators: %s: error message. */
+					__( 'Webhook test failed: %s', 'ia-webmaster-bridge' ),
+					$err_message
+				),
+			),
+			'webhook_error_https'    => array( 'error', __( 'Webhook save failed: the destination URL must start with https://.', 'ia-webmaster-bridge' ) ),
+			'webhook_error'          => array(
+				'error',
+				'' !== $err_message
+					? sprintf(
+						/* translators: %s: underlying error message. */
+						__( 'Webhook save failed: %s', 'ia-webmaster-bridge' ),
+						$err_message
+					)
+					: __( 'Webhook operation failed.', 'ia-webmaster-bridge' ),
+			),
 		);
 
 		if ( ! isset( $messages[ $notice ] ) ) {

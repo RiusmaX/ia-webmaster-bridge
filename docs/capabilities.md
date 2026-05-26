@@ -553,7 +553,7 @@ catalogue.
 
 ## See also
 
-- [`docs/skills.md`](skills.md) — the 15 skills in detail.
+- [`docs/skills.md`](skills.md) — the 17 skills in detail.
 - [`docs/operations.md`](operations.md) — operator runbook.
 - [`docs/production-deployment.md`](production-deployment.md) — production install checklist.
 - [`docs/security-model.md`](security-model.md) — 8-layer defence in depth.

@@ -1,6 +1,6 @@
 # Spec 07 — Webmaster layer (skills & workflows)
 
-- **Status**: Implemented (15 skills shipped; per-site context module since v1.1.0; broken-links-audit workflow added in v1.2.0)
+- **Status**: Implemented (17 skills shipped; per-site context module since v1.1.0; broken-links-audit workflow added in v1.2.0; webhook-setup + content-rollback added in v1.4.0)
 - **Phase**: 6
 - **Priority**: Medium
 - **Last updated**: 2026-05-25
@@ -37,7 +37,7 @@ give Claude working methods, per-site context, and ready-to-use workflows.
 
 ## Expected workflows — current status
 
-15 skills in v1.2.0:
+17 skills in v1.4.0:
 
 | Workflow | Skill | Status |
 |---|---|---|
@@ -56,6 +56,8 @@ give Claude working methods, per-site context, and ready-to-use workflows.
 | Produce a site status report (content, performance, to-do) | `site-status-report` | ✅ Shipped (v1.1.0) |
 | Set up scheduled routines | `scheduled-routines` | ✅ Shipped (v1.1.0) |
 | Detect and fix broken links + audit 404 traffic | `broken-links-audit` | ✅ Shipped (v1.2.0) |
+| Register and verify an outbound webhook (HMAC-signed) | `webhook-setup` | ✅ Shipped (v1.4.0) |
+| Restore an earlier post revision with confirmation token | `content-rollback` | ✅ Shipped (v1.4.0) |
 
 ## Per-site context (shipped v1.1.0)
 

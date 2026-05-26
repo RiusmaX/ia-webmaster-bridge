@@ -12,6 +12,80 @@ where they moved together:
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-05-25 — plugin 1.4.0, gateway 1.4.0
+
+Phase 10 closure — operator polish. Resolves the three D-030
+trade-offs explicitly deferred from v1.3.0 (webhook secret encryption,
+admin tab UI, audit.alert event firing) and lands two new Claude Code
+skills that orchestrate the v1.3.0 APIs (webhooks + revisions). Phase
+9.7 — small-prod validation — remains the next deployment milestone.
+
+### Added
+
+- **`webhook-setup` skill** (10.1). Walks the operator from "I want
+  a Slack alert when smoke tests fail" to "the receiver is
+  verifying signatures" — channel choice (Slack / generic JSON /
+  PagerDuty), secret generation, registration, test ping, HMAC
+  verification on the receiver side.
+- **`content-rollback` skill** (10.2). Restore an earlier post or
+  page revision via the Phase 9.5 API. Captures the auto-created
+  revision id (the symmetric-undo handle) from the restore response
+  so the rollback chain is fully recoverable.
+- **`prod-deployment-checklist` skill** gains an "Observability"
+  section (10.3) covering smoke-failed webhook wiring,
+  audit-pseudonymisation toggle, and the audit-alert rule set.
+- **Webhook signing-secret encryption at rest** (10.4, D-032). New
+  `IAWM_Crypto` helper (AES-256-CBC, key derived from `AUTH_KEY`,
+  versioned `iawm-enc:v1:` envelope). `wp_iawm_webhooks.signing_secret`
+  is encrypted on INSERT/UPDATE and decrypted lazily by the cron
+  drainer. Backward-compatible: legacy plaintext rows sniff through
+  the envelope check and are migrated in-place on the first call
+  after the version bump.
+- **Webhooks admin tab** (10.5). New tab in the plugin settings
+  page lists configured webhooks (label, URL, events, enabled, last
+  drain), with add/edit/delete/test/rotate-secret actions. The
+  signing secret is shown ONCE at create or rotate time.
+- **`audit.alert` event firing** (10.6). New WP-Cron job
+  `iawm_audit_tail_watch` (every 5 minutes via the `iawm_5min`
+  schedule, offset 90 s from the webhook drainer) scans new audit
+  rows since a watermark and evaluates three rules:
+  `scope_denied_burst` (5+ scope-denied from one key in 60 s),
+  `kill_switch_toggled` (once per toggle), `auth_failure_burst`
+  (10+ HMAC failures from one IP in 60 s). Each match fires
+  `audit.alert` with rule id, summary, trigger audit id, window,
+  details. Operator toggle in the admin Cleanup tab.
+
+### Changed
+
+- `IAWM_Webhook::create/update` now encrypt the supplied
+  `signing_secret` before writing; `IAWM_Webhook::deliver_row()` and
+  the `test_webhook` handler decrypt before computing the HMAC.
+- `IAWM_Webhook` REST handlers refactored into reusable internal
+  helpers so the admin tab and the MCP path share the same writes.
+- `docs/operations.md` gains: receiver-verification reminder about
+  the now-encrypted-at-rest secret (`AUTH_KEY` rotation =
+  re-register affected webhooks), Audit-alerting section
+  documenting the three rules.
+
+### Decisions
+
+- **D-030** updated to mark its three v1.4-deferred trade-offs as
+  resolved (plaintext secret → encrypted via D-032; no admin tab →
+  shipped; no `audit.alert` firing → shipped with three rules).
+- **D-032** — Webhook signing-secret encryption at rest. AES-256-CBC
+  with key derived from `AUTH_KEY` (single key-management surface),
+  versioned `iawm-enc:v1:` envelope for forward compat, backward
+  compatibility via envelope sniffing on read. Trade-offs noted:
+  `AUTH_KEY` rotation invalidates stored secrets (operator
+  re-registers webhooks), encryption failure returns blank rather
+  than silently falling back to plaintext.
+
+### Notes
+
+Phase 9.7 (production validation on a small prod) remains
+operator-gated. v1.4.0 ships with every code-side deliverable
+complete; 9.7 is the next deployment milestone.
+
 ## [1.3.0] — 2026-05-25 — plugin 1.3.0, gateway 1.3.0
 
 Phase 9 closure — polish + long tail. Resolves every code-side item

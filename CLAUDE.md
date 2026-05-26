@@ -45,9 +45,9 @@ See [`docs/decisions.md`](docs/decisions.md). In short:
 
 ## Project status
 
-Phases 0–9 closed (code-side). **Current release: v1.3.0** (plugin +
-gateway both 1.3.0, **108 MCP tools**, **79 typed Divi builders**, **15
-Claude Code skills**, **31 decisions** on file). Phase 9.7 — small-prod
+Phases 0–10 closed (code-side). **Current release: v1.4.0** (plugin +
+gateway both 1.4.0, **108 MCP tools**, **79 typed Divi builders**, **17
+Claude Code skills**, **32 decisions** on file). Phase 9.7 — small-prod
 validation — remains the next deployment milestone (operator-gated).
 The sub-phase tracker lives in
 [`docs/phase-9-action-plan.md`](docs/phase-9-action-plan.md); the
@@ -88,11 +88,12 @@ Current high-level capabilities:
   pre-op backups, confirmation tokens, kill switch, HTTPS
   enforcement, IP allow-list. Eight-layer defence in depth — see
   [`docs/security-model.md`](docs/security-model.md).
-- **15 Claude Code skills** covering method, content authoring (incl.
+- **17 Claude Code skills** covering method, content authoring (incl.
   Divi), design / marketing / SEO, infra ops (safe-update,
   design-system-first, smoke-test, prod-deployment), governance
   (audit, context discovery, status report, scheduled routines,
-  broken-links audit). Catalogue: [`docs/skills.md`](docs/skills.md).
+  broken-links audit), and v1.4 operator polish (webhook-setup,
+  content-rollback). Catalogue: [`docs/skills.md`](docs/skills.md).
 
 ## Collaboration rules (to be followed by the agent)
 

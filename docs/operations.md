@@ -498,10 +498,12 @@ no fallback is required.
 
 When you register an outbound webhook via `iawm_webhooks_create`
 (Phase 9.4), the plugin POSTs signed JSON envelopes to your
-`destination_url` whenever any of the subscribed `events` fire (today
-that's just `smoke.failed`; future versions will add `audit.alert`
-and key-rotation reminders). Receivers verify the signature to make
-sure the request really came from this site.
+`destination_url` whenever any of the subscribed `events` fire.
+Two concrete events ship today — `smoke.failed` (since v1.3.0) and
+`audit.alert` (since v1.4.0; see the **Audit alerting** section
+below for the rule set). Key-rotation reminders are planned for a
+later release. Receivers verify the signature to make sure the
+request really came from this site.
 
 See [`D-030`](decisions.md#d-030--outbound-webhooks-hmac-sha256-over-ts--n-nonce--n-body-5-min-drainer-3-attempt-dead-letter)
 for the full design rationale and trade-offs.
@@ -640,3 +642,84 @@ def verify(headers, raw_body: bytes, secret: str) -> bool:
   `iawm_webhooks_update` with a fresh `signing_secret`. Update the
   receiver to accept either the old or the new secret for the
   duration of the rotation window, then drop the old one.
+- The `signing_secret` is now encrypted at rest in `wp_iawm_webhooks`
+  (v1.4+, see [`D-032`](decisions.md#d-032--webhook-signing-secret-encryption-at-rest-aes-256-cbc-derived-from-auth_key)).
+  Receiver verification is unchanged: use the same plaintext value
+  the operator originally supplied to `iawm_webhooks_create` /
+  `iawm_webhooks_update`. Encryption is internal to the plugin's
+  storage layer — the API never returns the secret in any state.
+  One operational consequence: rotating `wp-config.php`'s `AUTH_KEY`
+  invalidates every stored secret (the derived AES key changes), so
+  re-register the affected webhooks with their intended secrets
+  after any `AUTH_KEY` rotation.
+
+## Audit alerting
+
+In v1.4.0 the plugin emits a second concrete webhook event,
+`audit.alert`, driven by a 5-minute WP-Cron job
+(`iawm_audit_tail_watch`) that scans newly recorded audit rows and
+evaluates a small fixed rule set. Subscribe a webhook to `audit.alert`
+(via `iawm_webhooks_create` with `events: ["audit.alert"]`, or
+`"*"` for everything) to surface these to your monitoring channel.
+
+### Envelope payload
+
+The `payload` inside the standard envelope carries five fields plus
+rule-specific extras:
+
+```json
+{
+  "event": "audit.alert",
+  "site_url": "https://example.com",
+  "fired_at": "2026-05-26T10:14:02Z",
+  "payload": {
+    "rule": "scope_denied_burst",
+    "summary": "5+ scope_denied responses in 60s from key abc123 on routes content/*, divi/*",
+    "trigger_audit_id": 18452,
+    "window_start": 1716718430,
+    "window_end": 1716718482,
+    "details": { "key_id": "abc123", "route_families": ["content/*","divi/*"], "threshold": 5, "window_seconds": 60, "count": 5 }
+  }
+}
+```
+
+`trigger_audit_id` points to the row in `wp_iawm_audit_log` that
+tripped the rule, so an operator can drill into the full audit row
+(method, route, status, detail) for forensics.
+
+### Rules shipped in v1.4.0
+
+| Rule id | Trigger | Counter key |
+|---------|---------|-------------|
+| `scope_denied_burst` | At least 5 audit rows with `detail.error = "iawm_scope_denied"` from the same `key_id` within a 60-second sliding window. | per `key_id` |
+| `kill_switch_toggled` | Any flip of the `iawm_kill_switch` option (admin form, wp-cli, programmatic). Detected via a synthetic audit row written by an `update_option` listener so the rule is path-agnostic. | one-shot |
+| `auth_failure_burst` | At least 10 audit rows with `detail.error = "iawm_unauthorized"` from the same IP within a 60-second sliding window. HMAC checks happen before key resolution, so these rows never carry a `key_id`; the counter is keyed by IP. | per IP |
+
+Burst rules use namespaced WP transients (`iawm_audit_alert_sd_…`,
+`iawm_audit_alert_af_…`) with TTL equal to the window length. When
+the threshold is reached the alert fires once and the counter resets
+to avoid alert spam.
+
+### Operator knobs
+
+Both stored as plugin options, default-on, surfaced in
+**Settings → IA Webmaster Bridge → Audit log retention**:
+
+- `iawm_audit_alert_enabled` — master switch for the watcher. Off
+  means the cron job runs but immediately returns without evaluating
+  rules (the watermark does not advance).
+- `iawm_audit_alert_rules` — CSV of active rule ids. Trim the list
+  to silence individual rules without disabling the watcher entirely.
+
+### Idempotence and ordering
+
+- A monotonic watermark (`iawm_audit_alert_watermark`, the highest
+  audit `id` already evaluated) guarantees each row is examined at
+  most once even across cron restarts.
+- A single audit row can trip multiple rules; each trip fires its own
+  `audit.alert` event, so a downstream receiver may see two or three
+  events with the same `trigger_audit_id` but different `rule`
+  values.
+- The watcher caps each tick at 500 rows; on installs with a
+  recurring backlog (very rare in practice) several ticks will be
+  needed to catch up.

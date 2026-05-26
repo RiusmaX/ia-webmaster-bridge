@@ -1,6 +1,6 @@
 {
   "name": "ia-webmaster",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "AI-driven WordPress webmaster: connects Claude to a WordPress site (content, media, menus, configuration, diagnostics, plugins) via the IA Webmaster Bridge adapter — signed authentication and guardrails. Ships with design, marketing/conversion and SEO skills.",
   "author": {
     "name": "Marius Sergent"
